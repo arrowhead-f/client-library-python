@@ -10,11 +10,14 @@ class ArrowheadSystem():
 if __name__ == '__main__':
     test_system = ArrowheadSystem()
     clone_system = ArrowheadSystem()
+    wrong_system = ArrowheadSystem(port=8080)
     false_name_system = ArrowheadSystem(system_name='default')
     false_addr_system = ArrowheadSystem(address='0.0.0.0')
     false_port_system = ArrowheadSystem(port='8081')
     other_auth_system = ArrowheadSystem(authentication_info = 'test')
     print(test_system)
+    print(clone_system)
+    print(wrong_system)
 
     print(test_system == test_system)
     print(test_system == clone_system)
