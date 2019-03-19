@@ -2,10 +2,10 @@ from dataclasses import dataclass, field, asdict
 
 @dataclass
 class ArrowheadSystem():
-    system_name: str = 'Default'
+    systemName: str = 'Default'
     address: str = 'localhost'
     port: str = '8080'
-    authentication_info: str = field(compare=False, default='')
+    authenticationInfo: str = field(compare=False, default='')
     
 if __name__ == '__main__':
     test_system = ArrowheadSystem()
