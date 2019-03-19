@@ -1,24 +1,33 @@
 from flask import Flask, url_for
 import requests
 
+from arrowhead_system import ArrowheadSystem
+
+from dataclasses import asdict
 from pprint import pprint
 
 class ServiceProvider:
     """ Arrowhead service provider class """
     def __init__(self, 
             name='default', 
-            host='localhost', 
             service_uri='',
-            port='8080',
             metadata=dict(),
             interfaces='',
-            system_name='Default'):
+            provider_system = None,
+            provider_name = 'Default',
+            address = '127.0.0.1',
+            port = '8080'):
 
-        self.host = host
-        self.port = port
+        if provider_system:
+            self.provider_system = provider_system
+        else:
+            self.provider_system = ArrowheadSystem(
+                systemName = provider_name,
+                address = address,
+                port = port)
+        #self.consumer_system = consumer_system
         self.name = name
         self.uri = service_uri
-        self.system_name = system_name
         self.metadata = metadata
         self.service_routes = []
         self.service = Flask(__name__)
@@ -30,6 +39,13 @@ class ServiceProvider:
         def func_wrapper():
             return func(**kwargs)
 
+    def _extract_keys(self, ArrowheadSystem):
+        """ Returns the dictionary form of an ArrowheadSystem without
+        the authenticationInfo key and value """
+
+        keys = ['systemName', 'address', 'port']
+        return {key: asdict(ArrowheadSystem)[key] for key in keys}
+
     def _auth_entry(self):
         """ Creates authentication entry """
 
@@ -39,11 +55,7 @@ class ServiceProvider:
                 'address': '0.0.0.0',
                 'port': '8081'
             },
-            'providerList': [{
-                'systemName': self.system_name,
-                'address': self.host,
-                'port': self.port
-            }],
+            'providerList': [self._extract_keys(self.provider_system)],
             'serviceList': [{
                 'serviceDefinition': self.name,
                 'interfaces': [],
@@ -62,12 +74,9 @@ class ServiceProvider:
                 'interfaces': [],
                 'serviceMetadata': self.metadata
             },
-            'provider' : {
-                'systemName': self.system_name,
-                'address': self.host,
-                'port': self.port,
-            },
-            'serviceUri': self.uri,
+            # Filter out authentication info
+            'provider': self._extract_keys(self.provider_system),
+            'serviceURI': self.uri,
             'version': 0.0
         }
         return sr_entry
@@ -97,7 +106,8 @@ class ServiceProvider:
         self.publish()
 
         """ Run the service """
-        self.service.run(host=self.host, port=self.port)
+        self.service.run(host=self.provider_system.address, 
+            port=self.provider_system.port)
 
         """ Unpublish """
         self.unpublish()
@@ -105,9 +115,7 @@ class ServiceProvider:
 if __name__=='__main__':
     """ A bunch of test code """
     test_provider = ServiceProvider(service_uri='/TestProvider')
-    print(test_provider.service)
     pprint(test_provider.sr_entry)
-    print(type(test_provider.sr_entry))
     def hello(name):
         return f'hello {name}\n'
 
