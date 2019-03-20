@@ -6,6 +6,12 @@ class ArrowheadSystem():
     address: str = 'localhost'
     port: str = '8080'
     authenticationInfo: str = field(compare=False, default='')
+
+    @property
+    def no_auth(self):
+        return {'systemName': self.systemName,
+                'address': self.address,
+                'port': self.port}
     
 if __name__ == '__main__':
     test_system = ArrowheadSystem()
