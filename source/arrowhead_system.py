@@ -12,7 +12,7 @@ class ArrowheadSystem():
         return {'systemName': self.systemName,
                 'address': self.address,
                 'port': self.port}
-    
+
 if __name__ == '__main__':
     test_system = ArrowheadSystem()
     clone_system = ArrowheadSystem()
