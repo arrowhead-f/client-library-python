@@ -45,13 +45,6 @@ class ServiceProvider:
         def func_wrapper():
             return func(**kwargs)
 
-    def _extract_keys(self, ArrowheadSystem):
-        """ Returns the dictionary form of an ArrowheadSystem without
-        the authenticationInfo key and value """
-
-        keys = ['systemName', 'address', 'port']
-        return {key: asdict(ArrowheadSystem)[key] for key in keys}
-
     def _auth_entry(self):
         """ Creates authentication entry """
         try:
@@ -63,7 +56,7 @@ class ServiceProvider:
 
         auth_entry = {
                 'consumer': self.consumer_system.no_auth(),
-                'providerList': [self._extract_keys(self.provider_system)],
+                'providerList': [self.provider_system.no_auth],
                 'serviceList': [{
                     'serviceDefinition': self.name,
                     'interfaces': [],
@@ -128,7 +121,7 @@ if __name__=='__main__':
     def hello(name):
         return f'hello {name}\n'
 
-    test_provider.add_route(function_uri='/test', func=hello, name='Jacob')
+    test_provider.add_route(function_uri='/test', func=hello, name='Jacob', auth=True)
     print(test_provider.service_routes)
 
     test_provider.run(auth=False)
