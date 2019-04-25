@@ -10,10 +10,11 @@ class ServiceConsumer():
             port = '8080',
             authentication_info = '',
             consumer_system = None,
-            requested_service = {},
-            orchestration_flags = {},
+            requested_service = None,
+            # Why do I want to encode the requested service here?
+            orchestration_flags = None,
             service_registry = None,
-            orchestrator = None):
+            config_file = ''):
         if consumer_system:
         # Use the given consumer system
             self.system = consumer_system
@@ -23,10 +24,28 @@ class ServiceConsumer():
                     address, 
                     port, 
                     authentication_info)
-        self.req_service = requested_service
-        self.orch_flags = orchestration_flags
+        if not requested_service:
+            self.req_service = []
+        else:
+            self.req_service = requested_service
+
+        if not orchestration_flags:
+            self.orchestration_flags = {
+                    'onlyPreferred': False,
+                    'overrideStore': True,
+                    'externalServiceRequest': False,
+                    'enableInterCloud': False,
+                    'enableQoS': False,
+                    'matchmaking': False,
+                    'metadataSearch': False,
+                    'triggerInterCloud': False,
+                    'pingProviders': False
+                    }
+        else:
+            self.orchestration_flags = orchestration_flags
+        assert service_registry
         self.service_registry = service_registry
-        assert self.service_registry
+
         self.orchestrator, self.authorization = self.find_core_systems()
 
     @property
@@ -43,11 +62,16 @@ class ServiceConsumer():
 
     def service_query_form(self,
             service_definition = 'default',
-            interfaces = [],
-            service_metadata = {},
+            interfaces = None,
+            service_metadata = None,
             ping_providers = False,
             metadata_search = False):
         """ Note: This function should be in utils """
+        if not interfaces:
+            interfaces = []
+        if not service_metadata:
+            service_metadata = {}
+
         query_form = {
             'service': {
                 'serviceDefinition': service_definition,
@@ -80,21 +104,11 @@ class ServiceConsumer():
         return orchestrator, authorization_system
 
     def service_request_form(self, 
-            requested_service = {},
-            orchestration_flags = {}):
+            requested_service = None,
+            orchestration_flags = None):
         """ This function should be in utils """
-        if not orchestration_flags:
-            orchestration_flags = {
-                    'onlyPreferred': False,
-                    'overrideStore': True,
-                    'externalServiceRequest': False,
-                    'enableInterCloud': False,
-                    'enableQoS': False,
-                    'matchmaking': False,
-                    'metadataSearch': False,
-                    'triggerInterCloud': False,
-                    'pingProviders': False
-                    }
+        orchestration_flags = self.orchestration_flags
+
         service_request_form = {
                 'requesterSystem': asdict(self.system),
                 'requestedService': requested_service,
@@ -105,9 +119,6 @@ class ServiceConsumer():
                 }
         return service_request_form
 
-    def consume(self):
-        pass
-
     def service_query(self, service_query_form=None):
         if not self.service_registry:
             print("No service registry")
@@ -117,29 +128,40 @@ class ServiceConsumer():
             assert service_query_form
         sr_url = f'http://{self.service_registry.address}:{self.service_registry.port}/serviceregistry/query'
         response = requests.put(sr_url, json=service_query_form)
-        print(response.status_code)
+        #print(response.status_code)
         assert response.ok
         return response.json()
     
     def service_request(self, service_name = ''):
+        # Create service request form
         service_request_form = self.service_request_form(
                 requested_service = {'serviceDefinition': service_name,
                     'interfaces': [],
                     'serviceMetadata': {}})
-        pprint(service_request_form)
+        # Create orchestrator url
         orch_url = f'http://{self.orchestrator.address}:{self.orchestrator.port}/orchestrator/orchestration'
+        # Query the ochestration service
         response = requests.post(orch_url, json=service_request_form)
-        pprint(response.json())
+        # extract information from orchestration response
+        provider_system = response.json()['response'][0]['provider']
+        provider_service_uri = response.json()['response'][0]['serviceURI']
+        # Create uri for requested service
+        service_uri = f'http://{provider_system["address"]}:{provider_system["port"]}/{provider_service_uri}'
+        # Return uri for requested service
+        return service_uri
+
+    def consume(self):
+        pass
 
 if __name__ == '__main__':
     service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')
     test_consumer = ArrowheadSystem('Test_Consumer', '127.0.0.1', '6006')
     consumer = ServiceConsumer(service_registry=service_registry, consumer_system=test_consumer)
     a = consumer.system_name
-    print(a)
+    #print(a)
     default_query_form = consumer.service_query_form('default')
-    pprint(default_query_form)
-    pprint(consumer.service_query(default_query_form)['serviceQueryData'])
-    pprint(consumer.orchestrator)
-    pprint(consumer.authorization)
+    #pprint(default_query_form)
+    #pprint(consumer.service_query(default_query_form)['serviceQueryData'])
+    #pprint(consumer.orchestrator)
+    #pprint(consumer.authorization)
     consumer.service_request('default')
