@@ -2,7 +2,8 @@ import requests
 from arrowhead_system import ArrowheadSystem
 from dataclasses import asdict
 from pprint import pprint
-from utils import move_to_utils
+#from utils import move_to_utils
+import utils
 import json
 
 class ServiceConsumer():
@@ -11,27 +12,32 @@ class ServiceConsumer():
             address = 'localhost',
             port = '8080',
             authentication_info = '',
-            consumer_system = None,
+            system = None,
             requested_service = None,
             # Why do I want to encode the requested service here?
+            # Maybe so I could run .consume() without arguments?
             orchestration_flags = None,
             service_registry = None,
             config_file = ''):
-        if consumer_system:
-        # Use the given consumer system
-            self.system = consumer_system
+        if system:
+            # Use the given consumer system
+            self.system = system
         else:
-        # or create a new from the data given
+            # or create a new from the data given
             self.system = ArrowheadSystem(name, 
                     address, 
                     port, 
                     authentication_info)
-        if not requested_service:
-            self.req_service = []
-        else:
+        if requested_service:
+            # When I wrote this initially I thought it might be a good idea to store the requested services so I don't have to query the orchestrator every single time.
+            # I still like the idea but I'm not sure how I should implement it right now.
             self.req_service = requested_service
+        else:
+            self.req_service = []
 
-        if not orchestration_flags:
+        if orchestration_flags:
+            self.orchestration_flags = orchestration_flags
+        else:
             self.orchestration_flags = {
                     'onlyPreferred': False,
                     'overrideStore': True,
@@ -43,12 +49,10 @@ class ServiceConsumer():
                     'triggerInterCloud': False,
                     'pingProviders': False
                     }
-        else:
-            self.orchestration_flags = orchestration_flags
-        assert service_registry
+            assert service_registry
         self.service_registry = service_registry
 
-        self.orchestrator, self.authorization = self.find_core_systems()
+        self.orchestrator, self.authorization = utils.find_core_systems(self.service_registry)
 
     @property
     def system_name(self):
@@ -62,61 +66,14 @@ class ServiceConsumer():
     def port(self):
         return self.system.port
 
-    @move_to_utils
-    def service_query_form(self,
-            service_definition = 'default',
-            interfaces = None,
-            service_metadata = None,
-            ping_providers = False,
-            metadata_search = False):
-        """ Note: This function should be in utils """
-        if not interfaces:
-            interfaces = []
-        if not service_metadata:
-            service_metadata = {}
-
-        query_form = {
-            'service': {
-                'serviceDefinition': service_definition,
-                'interfaces': interfaces,
-                'serviceMetadata': service_metadata
-            },
-            'pingProviders': ping_providers,
-            'metadataSearch': metadata_search,
-            'version': None
-        }
-        return query_form
-
-    def find_core_systems(self, insecure=True):
-        if insecure:
-            # Only the insecure core systems are supported for now
-            orch_definition = 'InsecureOrchestrationService'
-            auth_definition = 'InsecureAuthorizationControl'
-        else:
-            # Even though the definitions are here, the secure systems are not supported
-            orch_definition = 'SecureOrchestrationService'
-            auth_definition = 'SecureAuthorizationService'
-        # Query the service registry to get the location of the core services
-        orch_form = self.service_query_form(service_definition=orch_definition)
-        auth_form = self.service_query_form(service_definition=auth_definition)
-        # keeping only the provider part (should be easier with system registry)
-        
-        orch_result = self.service_query(orch_form)['serviceQueryData'][0]['provider']
-        auth_result = self.service_query(auth_form)['serviceQueryData'][0]['provider']
-        orchestrator = ArrowheadSystem(systemName=orch_result['systemName'],
-                address=orch_result['address'],
-                port=orch_result['port'])
-        authorization_system = ArrowheadSystem(systemName=auth_result['systemName'],
-                address=auth_result['address'],
-                port=auth_result['port'])
-
-        return orchestrator, authorization_system
-
-    @move_to_utils
     def service_request_form(self, 
             requested_service = None,
             orchestration_flags = None):
         """ This function should be in utils """
+        """ 
+        This method creates a service request form in the form of a dictionary.
+        """
+
         orchestration_flags = self.orchestration_flags
 
         service_request_form = {
@@ -129,20 +86,13 @@ class ServiceConsumer():
                 }
         return service_request_form
 
-    def service_query(self, service_query_form=None):
-        if not self.service_registry:
-            print("No service registry")
-            assert self.service_registry
-        if not service_query_form:
-            print('Please choose a service to query')
-            assert service_query_form
-        sr_url = f'http://{self.service_registry.address}:{self.service_registry.port}/serviceregistry/query'
-        response = requests.put(sr_url, json=service_query_form)
-        #print(response.status_code)
-        assert response.ok
-        return response.json()
-
     def service_request(self, service_name = ''):
+        """
+        Query the orchestrator for a service
+
+        To be implemented:
+         - Checks to see what went wrong
+        """
         # Create service request form
         service_request_form = self.service_request_form(
                 requested_service = {'serviceDefinition': service_name,
@@ -161,16 +111,22 @@ class ServiceConsumer():
         return service_uri
 
     def consume(self, service_name='', service_method=''):
+        """
+            Consume method service_method of service service_name
+        """
         provider_uri = self.service_request(service_name)
+        # Currently, the line above means that every time the consumer tries to consume a service it queries the orchestrator to get the uri. It is good enough for now, but some sort of cache needs to be implemented to reduce SoS overhead.
+        # Like as long as HTTP 200 is returned nothing new needs to be done but if 404 is returned it should requery the orchestrator to renew the information.
+        # The cache could be implemented as a dictionary.
         return requests.get(f'{provider_uri}/{service_method}')
 
 if __name__ == '__main__':
     service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')
     test_consumer = ArrowheadSystem('Test_Consumer', '127.0.0.1', '6006')
-    consumer = ServiceConsumer(service_registry=service_registry, consumer_system=test_consumer)
+    consumer = ServiceConsumer(service_registry=service_registry, system=test_consumer)
     a = consumer.system_name
     #print(a)
-    default_query_form = consumer.service_query_form('default')
+    #default_query_form = consumer.service_query_form('default')
     #print(json.dumps(default_query_form))
     #pprint(consumer.service_query(default_query_form)['serviceQueryData'])
     #pprint(consumer.orchestrator)
