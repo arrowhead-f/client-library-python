@@ -2,6 +2,8 @@ import requests
 from arrowhead_system import ArrowheadSystem
 from dataclasses import asdict
 from pprint import pprint
+from utils import move_to_utils
+import json
 
 class ServiceConsumer():
     def __init__(self,
@@ -60,6 +62,7 @@ class ServiceConsumer():
     def port(self):
         return self.system.port
 
+    @move_to_utils
     def service_query_form(self,
             service_definition = 'default',
             interfaces = None,
@@ -84,15 +87,20 @@ class ServiceConsumer():
         }
         return query_form
 
-    def find_core_systems(self):
-        #  Create forms for the orchestrator and authorization system
-        #  This is a hack as I am querying the service registry for systems, should be
-        # changed to use the system registry once it is up
-        #  Only insecure is supported for now
-        orch_form = self.service_query_form(service_definition = 'InsecureOrchestrationService')
-        auth_form = self.service_query_form(service_definition = 'InsecureAuthorizationControl')
-        # Query the service registry for the orchestrator and authorization systems,
+    def find_core_systems(self, insecure=True):
+        if insecure:
+            # Only the insecure core systems are supported for now
+            orch_definition = 'InsecureOrchestrationService'
+            auth_definition = 'InsecureAuthorizationControl'
+        else:
+            # Even though the definitions are here, the secure systems are not supported
+            orch_definition = 'SecureOrchestrationService'
+            auth_definition = 'SecureAuthorizationService'
+        # Query the service registry to get the location of the core services
+        orch_form = self.service_query_form(service_definition=orch_definition)
+        auth_form = self.service_query_form(service_definition=auth_definition)
         # keeping only the provider part (should be easier with system registry)
+        
         orch_result = self.service_query(orch_form)['serviceQueryData'][0]['provider']
         auth_result = self.service_query(auth_form)['serviceQueryData'][0]['provider']
         orchestrator = ArrowheadSystem(systemName=orch_result['systemName'],
@@ -101,8 +109,10 @@ class ServiceConsumer():
         authorization_system = ArrowheadSystem(systemName=auth_result['systemName'],
                 address=auth_result['address'],
                 port=auth_result['port'])
+
         return orchestrator, authorization_system
 
+    @move_to_utils
     def service_request_form(self, 
             requested_service = None,
             orchestration_flags = None):
@@ -131,7 +141,7 @@ class ServiceConsumer():
         #print(response.status_code)
         assert response.ok
         return response.json()
-    
+
     def service_request(self, service_name = ''):
         # Create service request form
         service_request_form = self.service_request_form(
@@ -146,12 +156,13 @@ class ServiceConsumer():
         provider_system = response.json()['response'][0]['provider']
         provider_service_uri = response.json()['response'][0]['serviceURI']
         # Create uri for requested service
-        service_uri = f'http://{provider_system["address"]}:{provider_system["port"]}/{provider_service_uri}'
+        service_uri = f'http://{provider_system["address"]}:{provider_system["port"]}{provider_service_uri}'
         # Return uri for requested service
         return service_uri
 
-    def consume(self):
-        pass
+    def consume(self, service_name='', service_method=''):
+        provider_uri = self.service_request(service_name)
+        return requests.get(f'{provider_uri}/{service_method}')
 
 if __name__ == '__main__':
     service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')
@@ -160,8 +171,13 @@ if __name__ == '__main__':
     a = consumer.system_name
     #print(a)
     default_query_form = consumer.service_query_form('default')
-    #pprint(default_query_form)
+    #print(json.dumps(default_query_form))
     #pprint(consumer.service_query(default_query_form)['serviceQueryData'])
     #pprint(consumer.orchestrator)
     #pprint(consumer.authorization)
-    consumer.service_request('default')
+    #consumer_uri = consumer.service_request('default')
+    #print(f'{consumer_uri}/test')
+    #r = requests.get(f'{consumer_uri}/test')
+    #print(r.text)
+    service_consumption = consumer.consume('default', 'test')
+    print(service_consumption.text)

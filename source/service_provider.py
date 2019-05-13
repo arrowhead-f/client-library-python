@@ -91,6 +91,7 @@ class ServiceProvider:
     def publish(self):
         """ Publish service """
         r = requests.post('http://127.0.0.1:8442/serviceregistry/register', json=self.sr_entry)
+        pprint(r.json())
         assert r.ok
 
     def unpublish(self):
@@ -125,4 +126,4 @@ if __name__=='__main__':
     test_provider.add_route(function_uri='/test', func=hello, name='Jacob')
     #print(test_provider.service_routes)
 
-    test_provider.run(auth=True)
+    test_provider.run(auth=False)
