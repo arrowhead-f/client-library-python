@@ -69,13 +69,10 @@ class ServiceConsumer():
     def service_request_form(self, 
             requested_service = None,
             orchestration_flags = None):
-        """ This function should be in utils """
         """ 
         This method creates a service request form in the form of a dictionary.
         """
-
         orchestration_flags = self.orchestration_flags
-
         service_request_form = {
                 'requesterSystem': asdict(self.system),
                 'requestedService': requested_service,
@@ -91,7 +88,7 @@ class ServiceConsumer():
         Query the orchestrator for a service
 
         To be implemented:
-         - Checks to see what went wrong
+         - Checks to deal with errors and exceptions
         """
         # Create service request form
         service_request_form = self.service_request_form(
@@ -110,7 +107,7 @@ class ServiceConsumer():
         # Return uri for requested service
         return service_uri
 
-    def consume(self, service_name='', service_method=''):
+    def consume(self, service_name='', service_method='', request_method=requests.get, payload=None):
         """
             Consume method service_method of service service_name
         """
@@ -118,7 +115,8 @@ class ServiceConsumer():
         # Currently, the line above means that every time the consumer tries to consume a service it queries the orchestrator to get the uri. It is good enough for now, but some sort of cache needs to be implemented to reduce SoS overhead.
         # Like as long as HTTP 200 is returned nothing new needs to be done but if 404 is returned it should requery the orchestrator to renew the information.
         # The cache could be implemented as a dictionary.
-        return requests.get(f'{provider_uri}/{service_method}')
+        # Some sort of error handling needs to be implemented as well, right now it just forwards the error to the caller which is less than ideal.
+        return request_method(f'{provider_uri}/{service_method}')
 
 if __name__ == '__main__':
     service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')
@@ -135,5 +133,5 @@ if __name__ == '__main__':
     #print(f'{consumer_uri}/test')
     #r = requests.get(f'{consumer_uri}/test')
     #print(r.text)
-    service_consumption = consumer.consume('default', 'test')
+    service_consumption = consumer.consume('default', 'test', requests.post)
     print(service_consumption.text)

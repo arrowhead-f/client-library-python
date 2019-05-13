@@ -9,7 +9,6 @@ def move_to_utils(f):
         print(f"The object {f.__name__} should be moved to utils")
         return f(*args, **kwargs)
     return wrapper
-    
 
 def service_query_form(
         service_definition = 'default',
@@ -17,7 +16,7 @@ def service_query_form(
         service_metadata = None,
         ping_providers = False,
         metadata_search = False):
-    """ Note: This function should be in utils """
+    """ Creates a service request form to be sent to the service registry """
     if not interfaces:
         interfaces = []
     if not service_metadata:
@@ -36,6 +35,7 @@ def service_query_form(
     return query_form
 
 def service_query(service_registry=None, service_query_form=None):
+    """ Queries the given service registry with the given service request form """
     if not service_registry:
         print("No service registry")
         assert service_registry
@@ -49,6 +49,11 @@ def service_query(service_registry=None, service_query_form=None):
     return response.json()
 
 def find_core_systems(service_registry=None, insecure=True):
+    """ Function to find the core systems of the local cloud """
+    """ To implement:
+            - Find the rest of the core systems
+            - *Enable selection of core systems
+    """
     if insecure:
         # Only the insecure core systems are supported for now
         orch_definition = 'InsecureOrchestrationService'
