@@ -3,7 +3,7 @@ from .arrowhead_system import ArrowheadSystem
 from dataclasses import asdict
 from pprint import pprint
 #from utils import move_to_utils
-from .utils import *
+from . import utils
 import json
 
 class ServiceConsumer():
