@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, asdict
-from arrowhead_system import ArrowheadSystem
+from .arrowhead_system import ArrowheadSystem
 import requests
 from functools import wraps
 

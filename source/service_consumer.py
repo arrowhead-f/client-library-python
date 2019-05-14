@@ -1,9 +1,9 @@
 import requests
-from arrowhead_system import ArrowheadSystem
+from .arrowhead_system import ArrowheadSystem
 from dataclasses import asdict
 from pprint import pprint
 #from utils import move_to_utils
-import utils
+from .utils import *
 import json
 
 class ServiceConsumer():

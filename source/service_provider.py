@@ -1,9 +1,10 @@
 from flask import Flask, url_for
 import requests
 
-from arrowhead_system import ArrowheadSystem
+from .arrowhead_system import ArrowheadSystem
 
 from dataclasses import asdict
+from functools import wraps
 from pprint import pprint
 
 class ServiceProvider:
@@ -11,7 +12,7 @@ class ServiceProvider:
     def __init__(self, 
             name='default', 
             service_uri='',
-            metadata=dict(),
+            metadata=None,
             interfaces='',
             provider_system = None,
             consumer_system = None,
@@ -29,9 +30,12 @@ class ServiceProvider:
             #self.consumer_system = consumer_system
         self.name = name
         self.uri = service_uri
-        self.metadata = metadata
+        if metadata:
+            self.metadata = metadata
+        else:
+            self.metadata = {}
         self.service_routes = []
-        self.service = Flask(__name__)
+        self.service = Flask(self.name)
         self.sr_entry = self._sr_entry()
 
         if consumer_system:
@@ -39,9 +43,15 @@ class ServiceProvider:
         else:
             self.consumer_system = None
 
-    def add_route(self, function_uri="", func=None, **kwargs):
+    def add_route(self, method_uri="", func=None, rest_methods=None, **kwargs):
         """ Adds routes for functions """
-        @self.service.route(f'{self.uri}{function_uri}')
+        if not rest_methods:
+            methods = ['GET']
+        else:
+            methods = rest_methods
+        print(methods)
+        @self.service.route(f'{self.uri}{method_uri}', methods=methods)
+        @wraps(func)
         def func_wrapper():
             return func(**kwargs)
 
@@ -123,7 +133,7 @@ if __name__=='__main__':
     def hello(name):
         return f'hello {name}\n'
 
-    test_provider.add_route(function_uri='/test', func=hello, name='Jacob')
+    test_provider.add_route(method_uri='/test', func=hello, name='Jacob')
     #print(test_provider.service_routes)
 
     test_provider.run(auth=False)
