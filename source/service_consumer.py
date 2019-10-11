@@ -2,7 +2,6 @@ import requests
 from .arrowhead_system import ArrowheadSystem
 from dataclasses import asdict
 from pprint import pprint
-#from utils import move_to_utils
 from . import utils
 import json
 
@@ -116,7 +115,10 @@ class ServiceConsumer():
         # Like as long as HTTP 200 is returned nothing new needs to be done but if 404 is returned it should requery the orchestrator to renew the information.
         # The cache could be implemented as a dictionary.
         # Some sort of error handling needs to be implemented as well, right now it just forwards the error to the caller which is less than ideal.
-        return request_method(f'{provider_uri}/{service_method}')
+        if payload:
+            return request_method(f'{provider_uri}/{service_method}', data=payload)
+        else:
+            return request_method(f'{provider_uri}/{service_method}')
 
 if __name__ == '__main__':
     service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')

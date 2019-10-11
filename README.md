@@ -23,7 +23,7 @@ The **ArrowheadSystem** class contains four fields:
  - *systemName*
  - *address*
  - *port*
- - *authenticationInfo*.
+ - *authenticationInfo*.\\
 This class is used as a simple information container for the **ServiceProvider** and **ServiceConsumer** classes, with the class entire class corresponding to a field in the various core service request forms.
 
 #### Service Provider

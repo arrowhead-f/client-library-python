@@ -1,7 +1,8 @@
-from flask import Flask, url_for
+from flask import Flask, url_for, request
 import requests
 
 from .arrowhead_system import ArrowheadSystem
+from . import utils
 
 from dataclasses import asdict
 from functools import wraps
@@ -18,7 +19,8 @@ class ServiceProvider:
             consumer_system = None,
             provider_name = 'Default',
             address = '127.0.0.1',
-            port = '8080'):
+            port = '8080',
+            service_registry=None):
 
         if provider_system:
             self.provider_system = provider_system
@@ -42,6 +44,11 @@ class ServiceProvider:
             self.consumer_system = consumer_system
         else:
             self.consumer_system = None
+
+        assert service_registry
+        self.service_registry = service_registry
+
+        self.orchestrator, self.authorization = utils.find_core_systems(self.service_registry)
 
     def add_route(self, method_uri="", func=None, rest_methods=None, **kwargs):
         """ Adds routes for functions """
@@ -94,19 +101,19 @@ class ServiceProvider:
         """authenticate service"""
         print('Authentication entry')
         pprint(self._auth_entry())
-        r = requests.post('http://127.0.0.1:8444/authorization/mgmt/intracloud', json=self._auth_entry())
+        r = requests.post('http://{self.authorization.address}:{self.authorization.port}/authorization/mgmt/intracloud', json=self._auth_entry())
         pprint(r.json())
         assert r.ok
 
     def publish(self):
         """ Publish service """
-        r = requests.post('http://127.0.0.1:8442/serviceregistry/register', json=self.sr_entry)
+        r = requests.post(f'http://{self.service_registry.address}:{self.service_registry.port}/serviceregistry/register', json=self.sr_entry)
         pprint(r.json())
         assert r.ok
 
     def unpublish(self):
         """ Unpublish service """
-        r = requests.put('http://127.0.0.1:8442/serviceregistry/remove', json=self.sr_entry)
+        r = requests.put(f'http://{self.service_registry.address}:{self.service_registry.port}/serviceregistry/remove', json=self.sr_entry)
         assert r.ok
 
     def run(self, auth=False):
@@ -126,6 +133,7 @@ class ServiceProvider:
 
 if __name__=='__main__':
     """ A bunch of test code """
+    service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')
     test_system = ArrowheadSystem(systemName='Test', address='127.0.0.1', port='9345')
     test_consumer = ArrowheadSystem('Test_Consumer', '127.0.0.1', '6006')
     test_provider = ServiceProvider(service_uri='/TestProvider', provider_system=test_system, consumer_system=test_consumer)
