@@ -38,7 +38,7 @@ class ServiceProvider:
             self.metadata = {}
         self.service_routes = []
         self.service = Flask(self.name)
-        self.sr_entry = self._sr_entry()
+        self.sr_entry = self.make_sr_entry()
 
         if consumer_system:
             self.consumer_system = consumer_system
@@ -48,7 +48,7 @@ class ServiceProvider:
         assert service_registry
         self.service_registry = service_registry
 
-        self.orchestrator, self.authorization = utils.find_core_systems(self.service_registry)
+        self.orchestrator, self.authorization = None, None #utils.find_core_systems(self.service_registry)
 
     def add_route(self, method_uri="", func=None, rest_methods=None, **kwargs):
         """ Adds routes for functions """
@@ -81,19 +81,21 @@ class ServiceProvider:
 
         return auth_entry
 
-    def _sr_entry(self):
+    def make_sr_entry(self):
         """ Create sr_entry, only for internal use """
 
         sr_entry = {
-                'providedService': {
-                    'serviceDefinition': self.name,
-                    'interfaces': [],
-                    'serviceMetadata': self.metadata
-                    },
+                'serviceDefinition': self.name,
+                #'providedService': {
+                    #'serviceDefinition': self.name,
+                    #'interfaces': [],
+                    #'serviceMetadata': self.metadata
+                    #},
                 # Filter out authentication info
-                'provider': self.provider_system.no_auth,
+                'providerSystem': asdict(self.provider_system),
                 'serviceURI': self.uri,
-                'version': 0.0
+                'interfaces': ['HTTP-INSECURE-JSON'],
+                'secure': "NOT_SECURE"
                 }
         return sr_entry
 
@@ -113,7 +115,13 @@ class ServiceProvider:
 
     def unpublish(self):
         """ Unpublish service """
-        r = requests.put(f'http://{self.service_registry.address}:{self.service_registry.port}/serviceregistry/remove', json=self.sr_entry)
+        params = {
+                'service_definition': self.name,
+                'system_name': self.provider_system.systemName,
+                'address': self.provider_system.address,
+                'port': self.provider_system.port
+                }
+        r = requests.delete(f'http://{self.service_registry.address}:{self.service_registry.port}/serviceregistry/unregister', params=params)
         assert r.ok
 
     def run(self, auth=False):
@@ -133,7 +141,7 @@ class ServiceProvider:
 
 if __name__=='__main__':
     """ A bunch of test code """
-    service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8442')
+    service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8443')
     test_system = ArrowheadSystem(systemName='Test', address='127.0.0.1', port='9345')
     test_consumer = ArrowheadSystem('Test_Consumer', '127.0.0.1', '6006')
     test_provider = ServiceProvider(service_uri='/TestProvider', provider_system=test_system, consumer_system=test_consumer)
@@ -143,5 +151,9 @@ if __name__=='__main__':
 
     test_provider.add_route(method_uri='/test', func=hello, name='Jacob')
     #print(test_provider.service_routes)
-
+    test_provider.publish()
+    input()
+    test_provider.unpublish()
+    '''
     test_provider.run(auth=False)
+    '''
