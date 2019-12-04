@@ -4,9 +4,19 @@ import requests
 from .arrowhead_system import ArrowheadSystem
 from . import utils
 
+import wrapt
 from dataclasses import asdict
 from functools import wraps
 from pprint import pprint
+
+'''
+def add_method(method_uri=''):
+    @wrapt.decorator
+    def wrapper(wrapped, instance, args, kwargs):
+'''
+class ServiceMethod(method_uri='', call_method=None):
+    def __init__():
+        pass
 
 class ServiceProvider:
     """ Arrowhead service provider class """
@@ -20,7 +30,8 @@ class ServiceProvider:
             provider_name = 'Default',
             address = '127.0.0.1',
             port = '8080',
-            service_registry=None):
+            service_registry=None,
+            secure=False):
 
         if provider_system:
             self.provider_system = provider_system
@@ -29,7 +40,11 @@ class ServiceProvider:
                     systemName = provider_name,
                     address = address,
                     port = port)
-            #self.consumer_system = consumer_system
+        if consumer_system:
+            self.consumer_system = consumer_system
+        else:
+            self.consumer_system = None
+
         self.name = name
         self.uri = service_uri
         if metadata:
@@ -38,12 +53,11 @@ class ServiceProvider:
             self.metadata = {}
         self.service_routes = []
         self.service = Flask(self.name)
+        self.secure = secure
+        self.end_of_validity = None
+        self.version = None
         self.sr_entry = self.make_sr_entry()
-
-        if consumer_system:
-            self.consumer_system = consumer_system
-        else:
-            self.consumer_system = None
+        self.route_list = []
 
         assert service_registry
         self.service_registry = service_registry
@@ -62,7 +76,7 @@ class ServiceProvider:
         def func_wrapper():
             return func(**kwargs)
 
-    def _auth_entry(self):
+    def make_auth_entry(self):
         """ Creates authentication entry """
         try:
             assert self.consumer_system
@@ -86,24 +100,26 @@ class ServiceProvider:
 
         sr_entry = {
                 'serviceDefinition': self.name,
-                #'providedService': {
-                    #'serviceDefinition': self.name,
-                    #'interfaces': [],
-                    #'serviceMetadata': self.metadata
-                    #},
-                # Filter out authentication info
                 'providerSystem': asdict(self.provider_system),
                 'serviceURI': self.uri,
                 'interfaces': ['HTTP-INSECURE-JSON'],
-                'secure': "NOT_SECURE"
                 }
+        if not self.secure:
+            sr_entry['secure'] = 'NOT_SECURE'
+        if self.end_of_validity:
+            pass
+        if self.metadata:
+            pass
+        if self.version:
+            pass
+
         return sr_entry
 
     def authenticate(self):
         """authenticate service"""
         print('Authentication entry')
-        pprint(self._auth_entry())
-        r = requests.post('http://{self.authorization.address}:{self.authorization.port}/authorization/mgmt/intracloud', json=self._auth_entry())
+        pprint(self.make_auth_entry())
+        r = requests.post('http://{self.authorization.address}:{self.authorization.port}/authorization/mgmt/intracloud', json=self.make_auth_entry())
         pprint(r.json())
         assert r.ok
 
@@ -139,6 +155,7 @@ class ServiceProvider:
         """ Unpublish """
         self.unpublish()
 
+
 if __name__=='__main__':
     """ A bunch of test code """
     service_registry = ArrowheadSystem('Service registry', '127.0.0.1', '8443')
@@ -149,7 +166,6 @@ if __name__=='__main__':
     def hello(name):
         return f'hello {name}\n'
 
-    test_provider.add_route(method_uri='/test', func=hello, name='Jacob')
     #print(test_provider.service_routes)
     test_provider.publish()
     input()

@@ -71,13 +71,15 @@ class ServiceConsumer():
         """ 
         This method creates a service request form in the form of a dictionary.
         """
-        orchestration_flags = self.orchestration_flags
         service_request_form = {
                 'requesterSystem': asdict(self.system),
-                'requestedService': requested_service,
-                'orchestrationFlags': orchestration_flags,
-                'preferredProviders': [],
-                'requestedQoS': {},
+                'requestedService': {},
+                'orchestrationFlags': {},
+                'preferredProviders': {
+                    'providerCloud': {},
+                    'providerSystem': {}
+                    }
+                'requesterCloud': {},
                 'commands': {}
                 }
         return service_request_form
@@ -94,7 +96,7 @@ class ServiceConsumer():
                 requested_service = {'serviceDefinition': service_name,
                     'interfaces': [],
                     'serviceMetadata': {}})
-        # Create orchestrator url
+                # Create orchestrator url
         orch_url = f'http://{self.orchestrator.address}:{self.orchestrator.port}/orchestrator/orchestration'
         # Query the ochestration service
         response = requests.post(orch_url, json=service_request_form)
