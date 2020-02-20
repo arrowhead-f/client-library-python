@@ -1,4 +1,3 @@
-from pprint import pprint
 from dataclasses import dataclass
 from functools import partial
 import requests

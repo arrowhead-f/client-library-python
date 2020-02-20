@@ -104,7 +104,6 @@ class BaseProvider(ABC):
                 cert=(self.certfile, self.keyfile),
                 verify=False,
                 json=service_registration_form)
-        print(service_registration_response.text)
 
     def register_all_services(self):
         '''
