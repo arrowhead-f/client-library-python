@@ -13,7 +13,7 @@ time_provider = ProviderSystem('time_provider',
 
 @time_provider.add_service('time', '/time', 'HTTP-SECURE-JSON')
 def get_time():
-    return datetime.strptime('%H:%M:%S')
+    return datetime.datetime.now().strftime('%H:%M:%S')
 
 
 if __name__ == '__main__':
