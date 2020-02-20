@@ -2,6 +2,7 @@ import requests
 import configparser
 from source.provider import BaseProvider
 from source.consumer import BaseConsumer
+from source.logging import get_logger
 
 def parse_service_query_response(service_query_response, num_responses=1):
     service_query_data = service_query_response.json()['serviceQueryData']
@@ -54,7 +55,10 @@ class BaseArrowheadSystem():
         self.sr_port = sr_port
         self.keyfile = keyfile
         self.certfile = certfile
+        self.logger = get_logger(system_name, 'debug')
         self.orch_address, self.orch_port = self._get_orch_url()
+
+        self.logger.info(f'{self.__class__.__name__} initialized at {self.address}:{self.port}')
 
     @classmethod
     def from_properties(cls, properties_file):
@@ -122,8 +126,10 @@ class BaseArrowheadSystem():
                                 cert=(self.certfile, self.keyfile),
                                 verify=False)
         if response.status_code >= 200 and response.status_code < 300:
+            self.logger.info(f'Service registry found at {self.sr_address}:{self.sr_port}')
             return True
         else:
+            self.logger.error(f'Service registry not found at {self.sr_address}:{self.sr_port} <{r.status_code}>')
             raise RuntimeError(f'Service registry error response <{r.status_code}>')
 
     def _query_sr(self,
@@ -179,6 +185,10 @@ class BaseArrowheadSystem():
                                                'CERTIFICATE')
 
         orchestrator_data = parse_service_query_response(service_query_response, 1)
+
+        if not orchestrator_data:
+            self.logger.error('Orchestration service not found')
+            raise RuntimeError()
 
         orch_address = orchestrator_data['provider']['address']
         # If the orchestrator address is 'orchestrator', assume that the orchestrator is found
