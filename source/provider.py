@@ -7,9 +7,9 @@ from functools import wraps
 import functools
 from source.service import ProvidedService
 
-
 def provided_service(service_definition, service_uri, interfaces, secure='CERTIFICATE'):
     if secure.upper() != 'CERTIFICATE':
+        self.logger.error(f'Secure in definition of \'{service_definition}\' is not \'CERTIFICATE\'')
         raise ValueError('CERTIFICATE is currently the only supported security')
 
     def middle(func):
@@ -31,10 +31,14 @@ class BaseProvider(ABC):
     ''' Mixin class for service provision '''
     def __init__(self):
         self.app = Flask(__name__)
+        # Add logging handlers for flask (DOES NOT WORK CURRENTLY)
+        for handler in self.logger.handlers:
+            self.app.logger.addHandler(handler)
         self.services = {}
         self.setup_echo()
         self.server = pywsgi.WSGIServer((self.address, int(self.port)), self.app,
-                keyfile=self.keyfile, certfile=self.certfile)
+                keyfile=self.keyfile, certfile=self.certfile,
+                log=self.logger)
 
         self.setup_services()
 
@@ -63,6 +67,7 @@ class BaseProvider(ABC):
         :rtype: func
         '''
         if secure.upper() != 'CERTIFICATE':
+            self.logger.error(f'Secure in definition of \'{service_definition}\' is not \'CERTIFICATE\'')
             raise ValueError('CERTIFICATE is currently the only supported security')
 
         if methods == None:
@@ -105,6 +110,12 @@ class BaseProvider(ABC):
                 verify=False,
                 json=service_registration_form)
 
+        if service_registration_response.status_code != requests.codes.created:
+            self.logger.error(f'Registration of service \'{service.service_definition}\' failed: Service Registry status {service_registration_response}')
+
+        self.logger.info(f'Service \'{service.service_definition}\' registered in Service Registry at {service.service_uri}')
+
+        return True
     def register_all_services(self):
         '''
         Registers all services of the system.
@@ -147,12 +158,13 @@ class BaseProvider(ABC):
 
         self.register_all_services()
         try:
+            self.logger.info(f'Starting server')
             self.server.serve_forever()
         except KeyboardInterrupt:
-            print('Shutting down server')
+            self.logger.info(f'Shutting down server')
             self.unregister_all_services()
         finally:
-            print('Server shut down')
+            self.logger.info(f'Server shut down')
 
     def __enter__(self):
         '''Start server and register all services'''
