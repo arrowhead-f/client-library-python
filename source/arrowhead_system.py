@@ -1,4 +1,5 @@
 import requests
+import configparser
 from source.provider import BaseProvider
 from source.consumer import BaseConsumer
 
@@ -59,6 +60,17 @@ class BaseArrowheadSystem():
     def from_properties(cls, properties_file):
         ''' Creates a BaseArrowheadSystem from a descriptor file '''
 
+        # Parse configuration file
+        config = configparser.ConfigParser()
+        with open(properties_file, 'r') as properties:
+            config.read_file(properties)
+        config = dict(config._sections['SYSTEM'])
+
+        # Create class instance
+        system = cls(**config)
+
+        return system
+
     @property
     def sr_url(self):
         '''
@@ -114,7 +126,7 @@ class BaseArrowheadSystem():
         else:
             raise RuntimeError(f'Service registry error response <{r.status_code}>')
 
-    def query_sr(self,
+    def _query_sr(self,
                  service_definition_requirement,
                  interface_requirements,
                  security_requirements):
@@ -131,6 +143,7 @@ class BaseArrowheadSystem():
         :returns: service query response
         :rtype: dict
         '''
+
         service_query_form = {
             "serviceDefinitionRequirement": service_definition_requirement,
             "interfaceRequirements": [interface_requirements.upper()],
@@ -158,16 +171,18 @@ class BaseArrowheadSystem():
         :rtype: tuple
         '''
 
-        if not self._verify_sr():
-            return False
+        # Verify that sr is up and running
+        self._verify_sr()
 
-        service_query_response = self.query_sr('orchestration-service',
+        service_query_response = self._query_sr('orchestration-service',
                                                'HTTP-SECURE-JSON',
                                                'CERTIFICATE')
 
         orchestrator_data = parse_service_query_response(service_query_response, 1)
 
         orch_address = orchestrator_data['provider']['address']
+        # If the orchestrator address is 'orchestrator', assume that the orchestrator is found
+        # On the same address as the service registry
         if orch_address == 'orchestrator':
             orch_address = self.sr_address
         orch_port = orchestrator_data['provider']['port']

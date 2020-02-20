@@ -1,4 +1,5 @@
 from collections import namedtuple
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict
 
@@ -20,6 +21,19 @@ class ProviderSystem:
         port = csr_system['port']
         authentication_info = csr_system['authenticationInfo']
         return cls(system_name, address, port, authentication_info)
+
+"""
+@dataclass
+class ProvidedService(ABC):
+    service_definition: str
+    service_uri: str
+    interfaces: str
+    secure: str
+
+    @abstractmethod
+    def service_function(self):
+        pass
+"""
 
 @dataclass
 class ConsumedService:

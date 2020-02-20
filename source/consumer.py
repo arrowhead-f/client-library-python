@@ -32,6 +32,7 @@ class BaseConsumer():
                     }
 
             orchestration_form = {
+                    "commands": None,
                     "orchestrationFlags": {
                         "overrideStore": True if service_definition else False
                         },
@@ -46,8 +47,6 @@ class BaseConsumer():
                     verify=False,
                     json=orchestration_form)
 
-            pprint(orchestration_response.json())
-            exit()
             extracted_services = [ConsumedService.from_orch_response(orch_r)
                     for orch_r in orchestration_response.json()['response']]
 

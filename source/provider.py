@@ -1,3 +1,5 @@
+import inspect
+from abc import ABC, abstractmethod
 from flask import Flask
 from gevent import pywsgi
 import requests
@@ -7,16 +9,25 @@ from source.service import ProvidedService
 
 
 def provided_service(service_definition, service_uri, interfaces, secure='CERTIFICATE'):
+    if secure.upper() != 'CERTIFICATE':
+        raise ValueError('CERTIFICATE is currently the only supported security')
+
     def middle(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            print(self)
-            output = func(*args, **kwargs)
-            return output
+        def wrapper(self, *args, **kwargs):
+            self.services[service_definition] = ProvidedService(
+                    service_definition, service_uri, interfaces, secure, func)
+            self.app.add_url_rule(service_uri, service_definition, func)
+            print('hej')
+            exit()
+            return func(self, *args, **kwargs)
         return wrapper
+
+    middle.service_setup = True
+
     return middle
 
-class BaseProvider:
+class BaseProvider(ABC):
     ''' Mixin class for service provision '''
     def __init__(self):
         self.app = Flask(__name__)
@@ -25,12 +36,14 @@ class BaseProvider:
         self.server = pywsgi.WSGIServer((self.address, int(self.port)), self.app,
                 keyfile=self.keyfile, certfile=self.certfile)
 
+        self.setup_services()
+
     def setup_echo(self):
         @self.add_service('echo', '/echo', 'HTTP-SECURE-JSON')
         def echo():
             return 'Got it!'
 
-    def add_service(self, service_definition, service_uri, interfaces, secure='CERTIFICATE'):
+    def add_service(self, service_definition, service_uri, interfaces, methods=None, secure='CERTIFICATE'):
         '''
         Decorator that adds services to the Arrowhead system, usage example:
         @ArrowheadSystem.add_service(*dec_args)
@@ -52,14 +65,21 @@ class BaseProvider:
         if secure.upper() != 'CERTIFICATE':
             raise ValueError('CERTIFICATE is currently the only supported security')
 
+        if methods == None:
+            methods = ['Get']
+
         def decorator(f):
             self.services[service_definition] = ProvidedService(
                     service_definition, service_uri, interfaces, secure, f)
-            self.app.add_url_rule(service_uri, service_definition, f)
+            self.app.add_url_rule(service_uri, service_definition, f, methods=methods)
 
             return f
 
         return decorator
+
+    @abstractmethod
+    def setup_services(self):
+        pass
 
     def register_service(self, service):
         '''
