@@ -6,7 +6,6 @@ To be written
 
 ### TO DO
  - Update this library to support Arrowhead 4.1.3
- - Remove old source files
  - Add logging support
 
 ## About This Library
