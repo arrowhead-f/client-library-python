@@ -5,7 +5,6 @@ This is a library for the creation of client service providers and consumer for 
 To be written
 
 ### TO DO
- - Update this library to support Arrowhead 4.1.3
  - Add logging support
 
 ## About This Library
