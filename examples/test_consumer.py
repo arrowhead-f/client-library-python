@@ -14,4 +14,3 @@ if __name__ == '__main__':
     pprint(consumer_test.rule_dictionary)
     response = consumer_test.consume('read_echo')
     print(response.text)
-

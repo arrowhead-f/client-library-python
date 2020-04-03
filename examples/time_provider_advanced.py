@@ -1,6 +1,6 @@
 import datetime
-from source.arrowhead_system import ProviderSystem
-from source.provider import provided_service
+from arrowhead_client.arrowhead_system import ProviderSystem
+from arrowhead_client.provider import provided_service
 from flask import request
 #from source.service_provider import ServiceProvider
 
@@ -18,25 +18,14 @@ class TimeProvider(ProviderSystem):
         def change_format():
             data = request.data
 
-            print(data)
-
             self.format = data.decode()
 
-            return True
+            return data
 
 
 if __name__ == '__main__':
-    '''
-    time_provider = TimeProvider('time_provider',
-            'localhost',
-            '1337',
-            '',
-            '127.0.0.1',
-            '8443',
-            'certificates/time_provider.key',
-            'certificates/time_provider.crt')
-    '''
+    from pprint import pprint
+
     time_provider = TimeProvider.from_properties('examples/time_provider.properties')
     #time_provider.setup_services()
     time_provider.run_forever()
-    print(time_provider.services)

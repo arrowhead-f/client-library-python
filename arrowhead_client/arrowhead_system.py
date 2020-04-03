@@ -2,7 +2,7 @@ import requests
 import configparser
 from .provider import BaseProvider
 from .consumer import BaseConsumer
-from .logging import get_logger
+from .logs import get_logger
 
 def parse_service_query_response(service_query_response, num_responses=1):
     service_query_data = service_query_response.json()['serviceQueryData']
@@ -167,7 +167,6 @@ class BaseArrowheadSystem():
                                                json=service_query_form)
 
         return service_query_response
-
 
     def _get_orch_url(self):
         '''

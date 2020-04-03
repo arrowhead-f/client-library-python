@@ -52,7 +52,8 @@ class BaseConsumer():
                 "requesterSystem": self.system_json
                 }
 
-        orchestration_response = requests.post(f'https://{self.orch_url}/orchestration',
+        orchestration_response = requests.post(
+                f'https://{self.orch_url}/orchestration',
                 cert=(self.certfile, self.keyfile),
                 verify=False,
                 json=orchestration_form)
@@ -75,7 +76,7 @@ class BaseConsumer():
         if not service:
             self.logger.error(f'Rule \'{rule}\' does not have a corresponding service')
             raise RuntimeError(f'Service does not exist')
-        
+
         if method.upper() == 'GET':
             response = requests.get(service.url,
                     cert=(self.certfile, self.keyfile),
