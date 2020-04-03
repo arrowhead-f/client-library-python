@@ -2,8 +2,8 @@
 This is a library for the creation of client service providers and consumer for the [Arrowhead Framework](www.arrowhead.eu), a service-oriented framework for industrial automation.
 
 ## About
-The Arrowhead Client Python Library is a library to make it easy to create your own [Arrowhead Framework](http://www.url.com) systems and services in Python.
-This library provides classes that interface with the [Arrowhead Core Systems](http://www.url.com), and uses [flask](http://www.url.com) to provide services.
+The Arrowhead Client Python Library is a library to make it easy to create your own Arrowhead Framework systems and services in Python.
+This library provides classes that interface with the [Arrowhead Core Systems](https://github.com/arrowhead-f/core-java-spring), and uses Flask to provide services.
 
 ### Development status
 This library is currently in **alpha**, the basic pieces are in place but the specific interfaces are not yet finalized.
@@ -11,7 +11,7 @@ Many things will change between this version and the first release.
 
 ### External Depencies
 To run an Arrowhead system you need to have the Arrowhead core systems up and running, and the correct certificates need to be provided.
-A guide on how to create your own certificates can be found on the [Arrowhead github](http://www.url.com).
+A guide on how to create your own certificates can be found on the [Arrowhead github](https://github.com/arrowhead-f/core-java-spring/blob/master/documentation/certificates/create_client_certificate.pdf).
 
 ### Requirements
  - Python 3.7
