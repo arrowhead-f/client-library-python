@@ -40,7 +40,7 @@ class BaseProvider(ABC):
                 keyfile=self.keyfile, certfile=self.certfile,
                 log=self.logger)
 
-        self.setup_services()
+        #self.setup_services()
 
     def setup_echo(self):
         @self.add_service('echo', '/echo', 'HTTP-SECURE-JSON')
@@ -82,9 +82,11 @@ class BaseProvider(ABC):
 
         return decorator
 
+    '''
     @abstractmethod
     def setup_services(self):
         pass
+    '''
 
     def register_service(self, service):
         '''
