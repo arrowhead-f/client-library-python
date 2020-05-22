@@ -1,7 +1,7 @@
 from functools import partial
 from typing import Optional, Callable
 from flask import Flask, request
-from gevent import pywsgi
+from gevent import pywsgi # type: ignore
 from arrowhead_client.core_service_forms import ServiceRegistrationForm
 from arrowhead_client.service import ProvidedHttpService
 from arrowhead_client.core_services import core_service
@@ -31,7 +31,7 @@ class ProviderSystem(ConsumerSystem):
                              service_definition: str = '',
                              service_uri: str = '',
                              interface: str = '',
-                             method: str = '',
+                             http_method: str = '',
                              address: str = '',
                              port: str = '',
                              provided_service: ProvidedHttpService = None,
@@ -43,21 +43,20 @@ class ProviderSystem(ConsumerSystem):
                     service_definition,
                     service_uri,
                     interface,
-                    method,
                     address,
                     port,
+                    http_method,
                     provides)
 
-        service_definition = provided_service.service_definition
-        if service_definition not in self.provided_services:
+        if provided_service.service_definition not in self.provided_services:
             # Register service with Flask app
-            self.provided_services[service_definition] = provided_service
-            if provided_service.method != 'GET':
+            self.provided_services[provided_service.service_definition] = provided_service
+            if provided_service.http_method != 'GET' and callable(provided_service.provides):
                 # If HTTP method is POST, add request object to view_func
                 provided_service.provides = partial(provided_service.provides, request)
             self.app.add_url_rule(rule=f'/{provided_service.service_uri}',
                                   endpoint=provided_service.service_definition,
-                                  methods=[provided_service.method],
+                                  methods=[provided_service.http_method],
                                   view_func=provided_service.provides)
         else:
             # TODO: Add log message when service is trying to be overwritten
@@ -93,14 +92,15 @@ class ProviderSystem(ConsumerSystem):
                 service_uri=service.service_uri,
                 secure='CERTIFICATE',
                 # TODO: secure should _NOT_ be hardcoded
-                interfaces=service.interface,
+                interfaces=service.interface.dto,
                 provider_system=self.dto
         )
 
-        service_registration_response = self._consumed_services['register'].consume(
+        service_registration_response = self.consume_service(
+                'register',
                 json=service_registration_form.dto,
-                cert=self.cert
         )
+        #TODO: Error handling
 
         # TODO: Fix the logging
         """

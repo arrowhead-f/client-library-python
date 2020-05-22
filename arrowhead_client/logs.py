@@ -18,7 +18,10 @@ def get_file_handler(filename):
 
 
 def get_logger(logger_name, level):
-    log_file_path = Path(f'logs/{logger_name}.log')
+    log_dir = Path.home() / '.arrowhead_system_logs'
+    if not log_dir.is_dir():
+        Path.mkdir(log_dir)
+    log_file_path = Path(log_dir / f'{logger_name}.log')
 
     if not log_file_path.exists():
         log_file_path.touch()

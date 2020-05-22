@@ -1,9 +1,8 @@
 from __future__ import annotations
 import configparser
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
-from .. import config
 from arrowhead_client.core_service_forms import OrchestrationForm
 from arrowhead_client.core_services import core_service
 from arrowhead_client.logs import get_logger
@@ -22,7 +21,7 @@ class ConsumerSystem(ArrowheadSystem):
         self.certfile = certfile
         self.logger = get_logger(self.system_name, 'debug')
         self.logger.info(f'{self.__class__.__name__} initialized at {self.address}:{self.port}')
-        self._consumed_services = {}
+        self._consumed_services: Dict[str, ConsumedHttpService] = {}
         self._consumer_core_system_setup()
 
     @classmethod
@@ -33,10 +32,10 @@ class ConsumerSystem(ArrowheadSystem):
         config = configparser.ConfigParser()
         with open(properties_file, 'r') as properties:
             config.read_file(properties)
-        config = dict(config._sections['SYSTEM'])
+        config_dict = {k: v for k, v in config.items('SYSTEM')}
 
         # Create class instance
-        system = cls(**config)
+        system = cls(**config_dict)
 
         return system
 
@@ -47,20 +46,22 @@ class ConsumerSystem(ArrowheadSystem):
     def add_consumed_service(self, service_definition: str, method_name: str) -> None:
         """ Add orchestration rule for service definition """
 
-        orchestration_form = OrchestrationForm(self, service_definition)
+        orchestration_form = OrchestrationForm(self.dto, service_definition)
 
         orchestrated_services = self.consume_service('orchestration-service', json=orchestration_form.dto)
 
         # TODO: Handle response with more than 1 service
         self._register_consumed_service(orchestrated_services, method_name)
 
-    def consume_service(self, service: str, **kwargs):
+    def consume_service(self, service: str, **kwargs) -> object:
         """ Consume registered service """
         # TODO: Add error handling for the case where the service is not
         # registered in _consumed_services
         return self._consumed_services[service].consume(
                 **kwargs,
-                cert=self.cert)
+                cert=self.cert) # type: ignore
+        #TODO: type ignore above should be removed when mypy issue
+        # https://github.com/python/mypy/issues/6799 is fixed
 
     def _consumer_core_system_setup(self) -> None:
         """ Sets up the mandatory core systems """
@@ -73,6 +74,6 @@ class ConsumerSystem(ArrowheadSystem):
 
         if method_name:  # Update http method if one is given
             http_method = get_http_method(method_name)
-            service.method = http_method
+            service.http_method = http_method
 
         self._consumed_services[service.service_definition] = service

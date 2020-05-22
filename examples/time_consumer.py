@@ -18,6 +18,7 @@ if __name__ == '__main__':
     print(hej_response)
     print('Done')
     '''
+    
     # Consume service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)

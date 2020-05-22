@@ -26,19 +26,19 @@ To run an Arrowhead system you need to have the Arrowhead core systems up and ru
 A guide on how to create your own certificates can be found on the [Arrowhead github](https://github.com/arrowhead-f/core-java-spring/blob/master/documentation/certificates/create_client_certificate.pdf).
 
 ### Requirements
- - Python 3.7
+ - Python 3.7 or higher
  - Requests
  - Flask
+ - Gevent
 
 ## How To Use
-Currently, you need to create separate systems for providers and consumers, a system cannot easily do both.
-It is possible to do both, but it is not clean.
+Install the library with `pip install arrowhead-client`.
 
 ### Providing Services
-To provide services, use the `ProviderSystem` from the `arrowhead_system.system.provider` module.
+To provide services, import the `ProviderSystem`.
 Services can be added to the provider  with the `provided_services` decorator.
-The `provided_services` decorator will create a service, register the service with the provider. 
-Then when the provider is started, the provider will automatically register the service with the service registry.
+The `provided_services` decorator will create a service, and register the service with the provider.
+Then when the provider is started, using the `run_forever` method, the provider will automatically register the service with the service registry.
 
 #### Code Example
 ```python
@@ -65,8 +65,13 @@ if __name__ == '__main__':
 ```
 
 ### Consuming Services
-To consume services, use the `ConsumerSystem` from the `arrowhead_client.system.consumer` module to create a consumer system.
-The `add_consumed_services` method is used to query the orchestrator and to set up the consumer to consume the service.
+To consume services, use the `ConsumerSystem`.
+To find a consumed service, you first register a service definition using the `add_consumed_services` method.
+When the `ConsumerSystem` is started initialized, it queries the orchestrator and will register the first orchestrated service.
+That service is then consumed using the `consume_service` method.
+
+The orchestration query _will fail_ if the orchestrator does not return a service, and crash as a consequence.
+The plan is to make this robust later.
 
 #### Code Examples
 ```python
