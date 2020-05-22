@@ -1,19 +1,24 @@
-from arrowhead_client.arrowhead_system import ConsumerSystem
+from arrowhead_client.system.consumer import ConsumerSystem
 
-time_consumer = ConsumerSystem('consumer_test',
-                                  'localhost',
-                                  '1338',
-                                  '',
-                                  '127.0.0.1',
-                                  '8443',
-                                  'certificates/consumer_test.key',
-                                  'certificates/consumer_test.crt')
+time_consumer = ConsumerSystem(
+        system_name='consumer_test',
+        address='localhost',
+        port='1338',
+        authentication_info='',
+        keyfile='certificates/consumer_test.key',
+        certfile='certificates/consumer_test.crt')
 
-# Add orchestration rules
-time_consumer.add_orchestration_rule('get_time', 'GET', 'time')
-time_consumer.add_orchestration_rule('change_format', 'POST', 'format')
+time_consumer.add_consumed_service('echo', 'GET')
+time_consumer.add_consumed_service('hej', 'POST')
 
 if __name__ == '__main__':
+    echo_response = time_consumer.consume_service('echo')
+    hej_response = time_consumer.consume_service('hej', json={'test': 5})
+    print(echo_response)
+    print(hej_response)
+    print('Done')
+    '''
+    
     # Consume service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)
@@ -23,3 +28,4 @@ if __name__ == '__main__':
     # Consume service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)
+    '''

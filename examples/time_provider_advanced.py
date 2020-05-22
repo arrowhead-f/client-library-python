@@ -1,6 +1,5 @@
 import datetime
-from arrowhead_client.arrowhead_system import ProviderSystem
-from arrowhead_client.provider import provided_service
+from arrowhead_client.system.arrowhead_system import ProviderSystem
 from flask import request
 #from source.service_provider import ServiceProvider
 
@@ -29,11 +28,11 @@ if __name__ == '__main__':
     time_provider = TimeProvider.from_properties('examples/time_provider.properties')
 
     # Register services
-    @time_provider.add_service('time', '/time', 'HTTP-SECURE-JSON')
+    @time_provider.add_provided_service('time', '/time', 'HTTP-SECURE-JSON')
     def get_time():
         return datetime.datetime.now().strftime(time_provider.format)
 
-    @time_provider.add_service('format', '/time/format', 'HTTP-SECURE-JSON', ['POST'])
+    @time_provider.add_provided_service('format', '/time/format', 'HTTP-SECURE-JSON', ['POST'])
     def change_format():
         data = request.data
 
