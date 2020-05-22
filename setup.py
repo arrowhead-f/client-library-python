@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
         name='arrowhead-client',
-        version='0.1.0a1',
+        version='0.1.1a1',
         author='Jacob Nilsson',
         author_email='jacob.nilsson@ltu.se',
         description='Arrowhead system and service client library',
