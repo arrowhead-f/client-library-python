@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-from arrowhead_client.arrowhead_system import ExternalSystem
+from arrowhead_client.system.arrowhead_system import ExternalSystem
 import arrowhead_client.core_service_forms as forms
 
 class TestForms(unittest.TestCase):
