@@ -15,6 +15,7 @@ from arrowhead_client.utils import get_http_method
 class ConsumerSystem(ArrowheadSystem):
     """ Class to create Arrowhead consumer systems """
 
+    #TODO: Add all arguments instead of using *args
     def __init__(self, *args, keyfile: str = '', certfile: str = '', **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.keyfile = keyfile
