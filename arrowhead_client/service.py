@@ -52,6 +52,7 @@ class ConsumedHttpService(BaseService):
 
     def consume(self, *args, cert, **kwargs) -> object:
         """ Call the service """
+        #TODO: This method should probably always return a dictionary of some sort
 
         if callable(self.http_method):
             # TODO: Add error handling

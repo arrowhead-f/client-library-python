@@ -16,8 +16,14 @@ class ConsumerSystem(ArrowheadSystem):
     """ Class to create Arrowhead consumer systems """
 
     #TODO: Add all arguments instead of using *args
-    def __init__(self, *args, keyfile: str = '', certfile: str = '', **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self,
+                 system_name: str,
+                 address: str,
+                 port: Union[int, int],
+                 authentication_info: str,
+                 keyfile: str = '',
+                 certfile: str = '') -> None:
+        super().__init__(system_name, address, port, authentication_info)
         self.keyfile = keyfile
         self.certfile = certfile
         self.logger = get_logger(self.system_name, 'debug')

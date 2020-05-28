@@ -47,6 +47,7 @@ def handle_service_query_response(service_query_response: Mapping) -> List[Servi
 def handle_service_register_response(service_register_response: Mapping) -> NotImplemented:
     """ Handles service register responses """
     # TODO: Implement this
+    return NotImplemented
 
 
 def handle_orchestration_response(service_orchestration_response: Mapping) \

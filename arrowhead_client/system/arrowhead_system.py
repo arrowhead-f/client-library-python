@@ -1,3 +1,4 @@
+from typing import Union
 from dataclasses import dataclass
 
 
@@ -7,7 +8,7 @@ class ArrowheadSystem:
 
     system_name: str
     address: str
-    port: str
+    port: Union[str, int]
     authentication_info: str
 
     @property
