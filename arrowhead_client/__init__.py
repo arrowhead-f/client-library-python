@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+import requests
+backend = requests
 
 from . import configuration
 from .system import ArrowheadSystem
@@ -11,7 +12,6 @@ config = configuration.set_config()
 
 #TODO: This line should be removed and the certificates should be added
 # to the list of trusted certificates.
-import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import requests
+#import backend
 from typing import Optional
+from .. import backend
 from ..service import ConsumedHttpService
 from ..core_service_responses import handle_service_query_response
 from ..configuration import default_config as config
@@ -17,14 +18,14 @@ services = {
             interface='HTTP-SECURE-JSON',
             address=_serviceregistry['address'],
             port=_serviceregistry['port'],
-            http_method = requests.post),
+            http_method = backend.post),
     'query': ConsumedHttpService(
             service_definition='query',
             service_uri='serviceregistry/query',
             interface='HTTP-SECURE-JSON',
             address=_serviceregistry['address'],
             port=_serviceregistry['port'],
-            http_method=requests.post,
+            http_method=backend.post,
             post_processing=handle_service_query_response),
     'unregister': ConsumedHttpService(
             service_definition='unregister',
@@ -32,5 +33,5 @@ services = {
             interface='HTTP-SECURE-TEXT',
             address=_serviceregistry['address'],
             port=_serviceregistry['port'],
-            http_method=requests.delete)
+            http_method=backend.delete)
 }
