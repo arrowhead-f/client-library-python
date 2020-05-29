@@ -1,19 +1,5 @@
-import unittest
-import requests
-from arrowhead_client.service import ConsumedHttpService
+from arrowhead_client.service import Service as ConsumedHttpService
 
-class TestConsumedHttpService(unittest.TestCase):
+def test_can_instantiate():
+    test = ConsumedHttpService('test_service', 'test', 'HTTP-SECURE-JSON')
 
-    """Test case docstring."""
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_can_instantiate(self):
-        test = ConsumedHttpService('test_service', 'test', 'HTTP-SECURE-JSON', '127.0.0.1', '2345', requests.get)
-
-if __name__ == "__main__":
-    unittest.main()

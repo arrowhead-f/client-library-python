@@ -1,7 +1,7 @@
 from typing import Dict
-from arrowhead_client.system.provider import ProviderSystem
+import arrowhead_client.api as ar
 
-time_provider = ProviderSystem('time_provider',
+time_provider = ar.ArrowheadSystem('time_provider',
                                'localhost',
                                1337,
                                '',
@@ -9,7 +9,7 @@ time_provider = ProviderSystem('time_provider',
                                certfile='certificates/time_provider.crt')
 
 
-def echo() -> Dict[str, str]:
+def echo(request) -> Dict[str, str]:
     return {'msg': 'Hello Arrowhead'}
 
 
@@ -19,7 +19,7 @@ def post(request) -> Dict[str, str]:
 
 
 @time_provider.provided_service('decorator', 'decorator', 'HTTP-SECURE-JSON', 'GET')
-def decorator() -> Dict[str, str]:
+def decorator(request) -> Dict[str, str]:
     return {'Decorator': 'Success'}
 
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
             service_uri='echo',
             interface='HTTP-SECURE-JSON',
             http_method='GET',
-            provides=echo
+            view_func=echo
     )
 
     time_provider.add_provided_service(
@@ -37,15 +37,16 @@ if __name__ == '__main__':
             service_uri='hej',
             interface='HTTP-SECURE-JSON',
             http_method='POST',
-            provides=post
+            view_func=post
     )
 
     time_provider.add_provided_service(
             'lambda',
             'lambda',
             'HTTP-SECURE-JSON',
-            'GET',
-            provides=lambda: {'lambda': True}
+            http_method='GET',
+            view_func=lambda: {'lambda': True}
     )
 
+    print(time_provider.certfile)
     time_provider.run_forever()

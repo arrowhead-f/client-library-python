@@ -1,7 +1,7 @@
-import arrowhead_client as ar
+from arrowhead_client.system import ArrowheadSystem
 
 def test_arrowhead_system():
-    test_consumer = ar.ArrowheadSystem(
+    test_consumer = ArrowheadSystem(
             'test_consumer',
             '127.0.0.1',
             0,
@@ -16,5 +16,5 @@ def test_arrowhead_system():
     }
 
     assert test_consumer.dto.keys() == valid_keys
-    assert test_consumer.url == '127.0.0.1:0'
+    assert test_consumer.authority == '127.0.0.1:0'
 

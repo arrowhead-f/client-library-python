@@ -2,18 +2,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from typing import Union, List, Callable
-from . import backend
-
-VALID_HTTP_METHODS = ('get', 'post', 'put', 'delete')
-
-
-def get_http_method(method_name: str) -> Callable:
-    if method_name.lower() in VALID_HTTP_METHODS:
-        http_method: Callable = getattr(backend, method_name.lower())
-    else:
-        raise ValueError(f"'{method_name}' not a valid HTTP method, choose between {VALID_HTTP_METHODS}")
-
-    return http_method
 
 
 def handle_requirements(requirement_list: Union[List[str], str]) -> List[str]:
