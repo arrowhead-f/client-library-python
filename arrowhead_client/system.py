@@ -7,13 +7,14 @@ class ArrowheadSystem:
 
     system_name: str
     address: str
-    port: str
+    port: int
     authentication_info: str
 
     @property
-    def url(self):
+    def authority(self):
         return f'{self.address}:{self.port}'
 
+    #TODO: from_dto() constructor
     @property
     def dto(self):
         return_dto = {
@@ -22,7 +23,3 @@ class ArrowheadSystem:
             'port': self.port,
             'authenticationInfo': self.authentication_info}
         return return_dto
-
-
-if __name__ == '__main__':
-    pass

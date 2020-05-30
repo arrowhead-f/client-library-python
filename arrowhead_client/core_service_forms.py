@@ -3,10 +3,9 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Union, Any, Sequence, Mapping
+from typing import List, Optional, Dict, Union, Sequence, Mapping
 
 from . import utils
-from .utils import ServiceInterface
 
 
 class BaseServiceForm(ABC):

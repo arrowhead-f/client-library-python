@@ -5,47 +5,8 @@ def test_registration_response():
     csr.handle_service_register_response({'dummy': 'data'})
 
 
-def test_single_orchestration_response():
-    orchestrator_response = {
-        "response": [{
-            "provider": {
-                "id": 0,
-                "systemName": "test_provider",
-                "address": "127.0.0.1",
-                "port": 3456,
-                "authenticationInfo": "",
-                "createdAt": "string",
-                "updatedAt": "string"},
-            "service": {
-                "id": 0,
-                "serviceDefinition": "test",
-                "createdAt": "string",
-                "updatedAt": "string"},
-            "serviceUri": "test/service",
-            "secure": "CERTIFICATE",
-            "metadata": {},
-            "interfaces": [{
-                "id": 0,
-                "createdAt": "string",
-                "interfaceName": "HTTP-SECURE-JSON",
-                "updatedAt": "string"}
-            ],
-            "version": 0,
-            "authorizationTokens": {},
-            "warnings": []
-        }]
-    }
 
-    returned_service = csr.handle_orchestration_response(orchestrator_response)
-
-    assert 'test' == returned_service.service_definition
-    assert 'test/service' == returned_service.service_uri
-    assert 'HTTP-SECURE-JSON' == returned_service.interface
-    assert '127.0.0.1' == returned_service.address
-    assert 3456 == returned_service.port
-
-
-def test_multiple_orchestration_response():
+def test_orchestration_response():
     orchestrator_response = {
         "response": [{
             "provider": {
@@ -102,13 +63,18 @@ def test_multiple_orchestration_response():
         ]
     }
 
-    returned_service = csr.handle_orchestration_response(orchestrator_response)
 
-    assert 'test' == returned_service.service_definition
-    assert 'test/service' == returned_service.service_uri
-    assert 'HTTP-SECURE-JSON' == returned_service.interface
-    assert '127.0.0.1' == returned_service.address
-    assert 3456 == returned_service.port
+    handled_responses = csr.handle_orchestration_response(orchestrator_response)
+    assert len(handled_responses) == 2
+
+    service, system = handled_responses[0]
+    assert 'test' == service.service_definition
+    assert 'test/service' == service.service_uri
+    assert 'HTTP-SECURE-JSON' == service.interface
+    assert 'test_provider' == system.system_name
+    assert '127.0.0.1' == system.address
+    assert 3456 == system.port
+    assert '' == system.authentication_info
 
 
 def test_empty_orchestration_response():

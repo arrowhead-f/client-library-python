@@ -2,18 +2,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from typing import Union, List, Callable
-import requests
-
-VALID_HTTP_METHODS = ('GET', 'POST', 'PUT', 'DELETE')
-
-
-def get_http_method(method_name: str) -> Callable:
-    if method_name in VALID_HTTP_METHODS:
-        http_method: Callable = getattr(requests, method_name.lower())
-    else:
-        raise ValueError(f"'{method_name}' not a valid HTTP method, choose between {VALID_HTTP_METHODS}")
-
-    return http_method
 
 
 def handle_requirements(requirement_list: Union[List[str], str]) -> List[str]:
@@ -66,6 +54,17 @@ class ServiceInterface:
     def dto(self) -> str:
         return '-'.join(vars(self).values())
 
+    def __eq__(self, other: Union[ServiceInterface, str]) -> bool:
+        if isinstance(other, str):
+            other_si = ServiceInterface.from_str(other)
+        elif isinstance(other, ServiceInterface):
+            other_si = other
+        else:
+            raise ValueError('Other must be of type ServiceInterface or str')
+
+        return self.protocol == other_si.protocol and \
+               self.secure == other_si.secure and \
+               self.payload == other_si.payload
 
 if __name__ == "__main__":
     pass

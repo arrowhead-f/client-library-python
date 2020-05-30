@@ -1,5 +1,5 @@
 import unittest
-from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.system import ArrowheadSystem as ArrowheadSystem
 import arrowhead_client.core_service_forms as forms
 
 requester_system = ArrowheadSystem('test_system', 'localhost', 0, '')
