@@ -2,15 +2,14 @@ import re
 from typing import Union, List
 
 
-def handle_requirements(requirement_list: Union[List[str], str]) -> List[str]:
+def uppercase_strings_in_list(requirement_list: Union[List[str], str]) -> List[str]:
     """
         Uppercases single string and puts it in a list,
         or uppercases strings in a list
     """
-    # TODO: This function has a terrible name, then name should be more specific than it is
     if isinstance(requirement_list, str):
         return [requirement_list.upper()]
-    else:
+    elif isinstance(requirement_list, list):
         return [requirement.upper() for requirement in requirement_list]
 
 
@@ -36,7 +35,3 @@ def to_snake_case(variable_name: str) -> str:
     return initial_underscore + \
            '_'.join([camel.lower() for camel in split_camel]) + \
            trailing_underscore
-
-
-if __name__ == "__main__":
-    pass

@@ -1,9 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Union
-from collections import namedtuple
-
-Cert = namedtuple('Cert', ['certfile', 'keyfile'])
 
 
 @dataclass()
