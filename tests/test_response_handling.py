@@ -80,4 +80,6 @@ def test_orchestration_response():
 def test_empty_orchestration_response():
     orchestration_response = {"response": []}
 
-    returned_service = csr.handle_orchestration_response(orchestration_response)
+    handled_responses = csr.handle_orchestration_response(orchestration_response)
+
+    assert len(handled_responses) == 0
