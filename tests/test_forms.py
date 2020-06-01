@@ -1,5 +1,5 @@
 import unittest
-from arrowhead_client.system import ArrowheadSystem as ArrowheadSystem
+from arrowhead_client.system import ArrowheadSystem
 import arrowhead_client.core_service_forms as forms
 
 requester_system = ArrowheadSystem('test_system', 'localhost', 0, '')
@@ -52,8 +52,6 @@ def test_orchestration_form():
         'requestedService',
         'preferredProviders',
         'orchestrationFlags',
-        'requesterCloud',
-        'commands',
     }
 
     assert set(orchestration_form.dto.keys()) == valid_keys

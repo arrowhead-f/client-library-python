@@ -1,9 +1,38 @@
-from typing import Callable, Union, Optional, Dict
-from collections import namedtuple
-from .utils import ServiceInterface
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Union
 
-Cert = namedtuple('Cert', ['certfile', 'keyfile'])
 
+@dataclass()
+class ServiceInterface:
+    protocol: str
+    secure: str
+    payload: str
+
+    def __post_init__(self):
+        self.protocol = self.protocol.upper()
+        self.secure = self.secure.upper()
+        self.payload = self.payload.upper()
+
+    @classmethod
+    def from_str(cls, interface_str: str) -> ServiceInterface:
+        return cls(*interface_str.split('-'))
+
+    @property
+    def dto(self) -> str:
+        return '-'.join(vars(self).values())
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            other = ServiceInterface.from_str(other)
+        elif isinstance(other, ServiceInterface):
+            other = other
+        else:
+            raise ValueError('Other must be of type ServiceInterface or str')
+
+        return self.protocol == other.protocol and \
+               self.secure == other.secure and \
+               self.payload == other.payload
 
 class Service():
     """ Base class for services """
@@ -22,4 +51,5 @@ class Service():
     def __repr__(self) -> str:
         variable_string = ', '.join([f'{str(key)}={str(value)}' for key, value in vars(self).items()])
         return f'{self.__class__.__name__}({variable_string})'
+
 

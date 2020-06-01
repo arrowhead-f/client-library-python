@@ -1,6 +1,5 @@
-from functools import partial
 from arrowhead_client.configuration import config
-from arrowhead_client.application import ArrowheadApplication as ArApp
+from arrowhead_client.application import ArrowheadApplication
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.consumer import Consumer
 from arrowhead_client.provider import Provider
@@ -8,7 +7,7 @@ from arrowhead_client.logs import get_logger
 
 
 
-class ArrowheadApplication(ArApp):
+class ArrowheadHttpApplication(ArrowheadApplication):
     def __init__(self,
                  system_name: str,
                  address: str,
@@ -27,4 +26,3 @@ class ArrowheadApplication(ArApp):
         )
         self._logger.info(f'{self.__class__.__name__} initialized at {self.system.address}:{self.system.port}')
         #TODO: This line is a hack and needs to be fixed
-        self.add_consumed_service = partial(self.consumer.add_consumed_service, consumer_system_dto=self.system.dto)

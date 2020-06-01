@@ -1,14 +1,13 @@
 from __future__ import annotations
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 from gevent import pywsgi # type: ignore
 from arrowhead_client.consumer import Consumer
-from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.provider import Provider
 from arrowhead_client.service import Service
 from arrowhead_client.core_services import core_service
 from arrowhead_client.system import ArrowheadSystem
-import arrowhead_client.core_service_forms as forms
-
+from arrowhead_client import core_service_forms as forms
+from arrowhead_client import core_service_responses as responses
 
 
 class ArrowheadApplication():
@@ -35,9 +34,13 @@ class ArrowheadApplication():
         self._core_system_setup()
         self.add_provided_service = self.provider.add_provided_service
 
+    @property
+    def cert(self) -> Tuple[str, str]:
+        return self.certfile, self.keyfile
+
     '''
     @classmethod
-    def from_cfg(cls, properties_file: str) -> ArrowheadApplication:
+    def from_cfg(cls, properties_file: str) -> ArrowheadHttpApplication:
         """ Creates a BaseArrowheadSystem from a descriptor file """
 
         # Parse configuration file
@@ -65,12 +68,56 @@ class ArrowheadApplication():
                 int(self.config['orchestrator']['port']),
                 '')
 
-        self.consumer._register_consumed_service(core_service('register'), service_registry, 'POST')
-        self.consumer._register_consumed_service(core_service('unregister'), service_registry, 'DELETE')
-        self.consumer._register_consumed_service(core_service('orchestration-service'), orchestrator, 'POST')
+        self._store_consumed_service(core_service('register'), service_registry, 'POST')
+        self._store_consumed_service(core_service('unregister'), service_registry, 'DELETE')
+        self._store_consumed_service(core_service('orchestration-service'), orchestrator, 'POST')
 
     def consume_service(self, service_definition: str, **kwargs):
         return self.consumer.consume_service(service_definition, **kwargs)
+
+    def add_consumed_service(self,
+                             service_definition: str,
+                             http_method: str) -> None:
+        """ Add orchestration rule for service definition """
+
+        orchestration_form = forms.OrchestrationForm(self.system.dto, service_definition)
+
+        orchestration_response = self.consume_service('orchestration-service',
+                                                      json=orchestration_form.dto,
+                                                      cert=self.cert,
+                                                      )
+        #TODO: Handle orchestrator error codes
+
+        orchestration_payload = orchestration_response.json() # This might change with backend
+
+        (orchestrated_service, system), *_ = responses.handle_orchestration_response(orchestration_payload)
+
+        #TODO: Handle response with more than 1 service
+        # Perhaps a list of consumed services for each service definition should be stored
+        self._store_consumed_service(orchestrated_service, system, http_method)
+
+    def _store_consumed_service(self,
+                                service: Service,
+                                system: ArrowheadSystem,
+                                http_method: str) -> None:
+        """ Register consumed services with the consumer """
+
+        self.consumer._consumed_services[service.service_definition] = (service, system, http_method)
+
+    def provided_service(self,
+                         service_definition: str,
+                         service_uri: str,
+                         interface: str,
+                         method: str):
+        def wrapped_func(func):
+            self.provider.add_provided_service(
+                    service_definition,
+                    service_uri,
+                    interface,
+                    http_method=method,
+                    view_func=func)
+            return func
+        return wrapped_func
 
     def _register_service(self, service: Service):
         """ Registers the given service with service registry """
@@ -88,26 +135,12 @@ class ArrowheadApplication():
                 'register',
                 json=service_registration_form.dto,
         )
+
+        print(service_registration_response.status_code)
         # TODO: Error handling
 
         # TODO: Do logging
 
-        return True
-
-    def provided_service(self,
-                         service_definition: str,
-                         service_uri: str,
-                         interface: str,
-                         method: str):
-        def wrapped_func(func):
-            self.provider.add_provided_service(
-                    service_definition,
-                    service_uri,
-                    interface,
-                    http_method=method,
-                    view_func=func)
-            return func
-        return wrapped_func
 
     def _register_all_services(self) -> None:
         """ Registers all services of the system. """
@@ -132,6 +165,8 @@ class ArrowheadApplication():
                 'unregister',
                 params=unregistration_payload
         )
+
+        print(service_unregistration_response.status_code)
 
 
     def _unregister_all_services(self) -> None:
