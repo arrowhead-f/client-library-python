@@ -1,4 +1,4 @@
-from arrowhead_client import core_service_responses as csr
+from arrowhead_client.application import core_service_responses as csr
 
 
 def test_registration_response():

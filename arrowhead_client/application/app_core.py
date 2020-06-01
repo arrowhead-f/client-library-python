@@ -4,10 +4,9 @@ from gevent import pywsgi # type: ignore
 from arrowhead_client.consumer import Consumer
 from arrowhead_client.provider import Provider
 from arrowhead_client.service import Service
-from arrowhead_client.core_services import core_service
+from arrowhead_client.application.core_services import core_service
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client import core_service_forms as forms
-from arrowhead_client import core_service_responses as responses
+from arrowhead_client.application import core_service_forms as forms, core_service_responses as responses
 
 
 class ArrowheadApplication():
@@ -55,23 +54,6 @@ class ArrowheadApplication():
         return system
     '''
 
-    def _core_system_setup(self) -> None:
-        service_registry = ArrowheadSystem(
-                'service_registry',
-                str(self.config['service_registry']['address']),
-                int(self.config['service_registry']['port']),
-                ''
-        )
-        orchestrator = ArrowheadSystem(
-                'orchestrator',
-                str(self.config['orchestrator']['address']),
-                int(self.config['orchestrator']['port']),
-                '')
-
-        self._store_consumed_service(core_service('register'), service_registry, 'POST')
-        self._store_consumed_service(core_service('unregister'), service_registry, 'DELETE')
-        self._store_consumed_service(core_service('orchestration-service'), orchestrator, 'POST')
-
     def consume_service(self, service_definition: str, **kwargs):
         return self.consumer.consume_service(service_definition, **kwargs)
 
@@ -96,14 +78,6 @@ class ArrowheadApplication():
         # Perhaps a list of consumed services for each service definition should be stored
         self._store_consumed_service(orchestrated_service, system, http_method)
 
-    def _store_consumed_service(self,
-                                service: Service,
-                                system: ArrowheadSystem,
-                                http_method: str) -> None:
-        """ Register consumed services with the consumer """
-
-        self.consumer._consumed_services[service.service_definition] = (service, system, http_method)
-
     def provided_service(self,
                          service_definition: str,
                          service_uri: str,
@@ -119,9 +93,54 @@ class ArrowheadApplication():
             return func
         return wrapped_func
 
+    def run_forever(self) -> None:
+        """ Start the server, publish all service, and run until interrupted. Then, unregister all services"""
+
+        import warnings
+        warnings.simplefilter('ignore')
+
+        self._register_all_services()
+        try:
+            self._logger.info(f'Starting server')
+            print('Started Arrowhead ArrowheadSystem')
+            self.server.serve_forever()
+        except KeyboardInterrupt:
+            self._logger.info(f'Shutting down server')
+            print('Shutting down Arrowhead system')
+            self._unregister_all_services()
+        finally:
+            self._logger.info(f'Server shut down')
+
+    def _core_system_setup(self) -> None:
+        service_registry = ArrowheadSystem(
+                'service_registry',
+                str(self.config['service_registry']['address']),
+                int(self.config['service_registry']['port']),
+                ''
+        )
+        orchestrator = ArrowheadSystem(
+                'orchestrator',
+                str(self.config['orchestrator']['address']),
+                int(self.config['orchestrator']['port']),
+                '')
+
+        self._store_consumed_service(core_service('register'), service_registry, 'POST')
+        self._store_consumed_service(core_service('unregister'), service_registry, 'DELETE')
+        self._store_consumed_service(core_service('orchestration-service'), orchestrator, 'POST')
+
+    def _store_consumed_service(self,
+                                service: Service,
+                                system: ArrowheadSystem,
+                                http_method: str) -> None:
+        """ Register consumed services with the consumer """
+
+        self.consumer._consumed_services[service.service_definition] = (service, system, http_method)
+
+
     def _register_service(self, service: Service):
         """ Registers the given service with service registry """
 
+        # TODO: Should accept a system and a service
         service_registration_form = forms.ServiceRegistrationForm(
                 service_definition=service.service_definition,
                 service_uri=service.service_uri,
@@ -154,6 +173,7 @@ class ArrowheadApplication():
         if service_definition not in self.provider.provided_services.keys():
             raise ValueError(f'{service_definition} not provided by {self}')
 
+        # TODO: Should be a "form"?
         unregistration_payload = {
             'service_definition': service_definition,
             'system_name': self.system.system_name,
@@ -176,23 +196,6 @@ class ArrowheadApplication():
             self._unregister_service(service_definition)
 
 
-    def run_forever(self) -> None:
-        """ Start the server, publish all service, and run until interrupted. Then, unregister all services"""
-
-        import warnings
-        warnings.simplefilter('ignore')
-
-        self._register_all_services()
-        try:
-            self._logger.info(f'Starting server')
-            print('Started Arrowhead System')
-            self.server.serve_forever()
-        except KeyboardInterrupt:
-            self._logger.info(f'Shutting down server')
-            print('Shutting down Arrowhead system')
-            self._unregister_all_services()
-        finally:
-            self._logger.info(f'Server shut down')
 
 
     """
@@ -212,7 +215,7 @@ class ArrowheadApplication():
             print(f'Exception was raised:')
             print(exc_value)
 
-        print('\nSystem was stopped, unregistering services')
+        print('\nArrowheadSystem was stopped, unregistering services')
         self.unregister_all_services()
         print('Stopping server')
         self.server.stop()

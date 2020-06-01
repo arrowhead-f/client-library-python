@@ -1,7 +1,7 @@
 from copy import deepcopy
 from .orchestrator import services as orch_services
 from .service_registry import services as sr_services
-from ..service import Service
+from arrowhead_client.service import Service
 
 all_core_services = {**sr_services, **orch_services}
 

@@ -1,6 +1,5 @@
-import unittest
 from arrowhead_client.system import ArrowheadSystem
-import arrowhead_client.core_service_forms as forms
+import arrowhead_client.application.core_service_forms as forms
 
 requester_system = ArrowheadSystem('test_system', 'localhost', 0, '')
 provider_system = ArrowheadSystem('test_system', 'localhost', 0, '')

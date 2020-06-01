@@ -11,6 +11,11 @@ def uppercase_strings_in_list(requirement_list: Union[List[str], str]) -> List[s
         return [requirement_list.upper()]
     elif isinstance(requirement_list, list):
         return [requirement.upper() for requirement in requirement_list]
+    else:
+        raise TypeError(
+                "'requirement_list' is type {type(requirement_list)},"
+                "should be type str or list(str)"
+        )
 
 
 def to_camel_case(variable_name: str) -> str:

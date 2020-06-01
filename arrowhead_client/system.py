@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ArrowheadSystem:
-    """ Basic Arrowhead System class """
+    """ Basic Arrowhead ArrowheadSystem class """
 
     system_name: str
     address: str

@@ -17,7 +17,7 @@ class ArrowheadHttpApplication(ArrowheadApplication):
                  certfile: str = ''):
         super().__init__(
                 ArrowheadSystem(system_name, address, port, authentication_info),
-                Consumer(keyfile, certfile),
+                Consumer(),
                 Provider(),
                 get_logger(system_name, 'debug'),
                 config,

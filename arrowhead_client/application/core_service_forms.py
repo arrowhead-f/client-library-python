@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Union, Sequence, Mapping
 
-from . import utils
+from arrowhead_client import utils
 
 
 class BaseServiceForm(ABC):

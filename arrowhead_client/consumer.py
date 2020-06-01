@@ -4,17 +4,15 @@ from typing import Tuple, Dict, Union
 
 import requests as backend
 from arrowhead_client.service import Service
-from arrowhead_client.system import ArrowheadSystem as System
+from arrowhead_client.system import ArrowheadSystem
 
 @dataclass
 class Consumer():
     """ Class to create Arrowhead consumer systems """
 
     #TODO: Add all arguments instead of using *args
-    def __init__(self, keyfile, certfile) -> None:
-        self.keyfile = keyfile
-        self.certfile = certfile
-        self._consumed_services: Dict[str, Tuple[Service, System, str]] = {}
+    def __init__(self) -> None:
+        self._consumed_services: Dict[str, Tuple[Service, ArrowheadSystem, str]] = {}
 
     def consume_service(self, service_definition: str, **kwargs) -> backend.Response:
         """ Consume registered service """
