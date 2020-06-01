@@ -1,12 +1,12 @@
 from copy import deepcopy
 from .orchestrator import services as orch_services
 from .service_registry import services as sr_services
-from ..service import ConsumedHttpService
+from ..service import Service
 
 all_core_services = {**sr_services, **orch_services}
 
 
-def core_service(requested_service: str) -> ConsumedHttpService:
+def core_service(requested_service: str) -> Service:
     core_service_instance = deepcopy(all_core_services.get(requested_service, None))
 
     if not core_service_instance:

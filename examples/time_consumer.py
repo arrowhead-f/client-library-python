@@ -1,15 +1,15 @@
-from arrowhead_client.system.consumer import ConsumerSystem
+from arrowhead_client.api import ArrowheadHttpApplication
 
-time_consumer = ConsumerSystem(
+time_consumer = ArrowheadHttpApplication(
         system_name='consumer_test',
         address='localhost',
-        port='1338',
+        port=1338,
         authentication_info='',
         keyfile='certificates/consumer_test.key',
         certfile='certificates/consumer_test.crt')
 
-time_consumer.add_consumed_service('echo', 'GET')
-time_consumer.add_consumed_service('hej', 'POST')
+time_consumer.add_consumed_service('echo', http_method='GET')
+time_consumer.add_consumed_service('hej', http_method='POST')
 
 if __name__ == '__main__':
     echo_response = time_consumer.consume_service('echo')

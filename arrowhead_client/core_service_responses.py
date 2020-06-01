@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-
-from typing import Mapping, Dict, Sequence, List, Optional
+from typing import Mapping, Dict, Tuple, List
 from collections import namedtuple
-from .service import ConsumedHttpService
+from arrowhead_client.system import ArrowheadSystem as System
+from arrowhead_client.service import Service as ConsumedHttpService
 
 ServiceAndSystem = namedtuple('ServiceAndSystem', ['service', 'system'])
 
@@ -47,30 +46,39 @@ def handle_service_query_response(service_query_response: Mapping) -> List[Servi
 def handle_service_register_response(service_register_response: Mapping) -> NotImplemented:
     """ Handles service register responses """
     # TODO: Implement this
+    return NotImplemented
 
 
 def handle_orchestration_response(service_orchestration_response: Mapping) \
-        -> Optional[ConsumedHttpService]:
+        -> List[Tuple[ConsumedHttpService, System]]:
     """ Turns orchestration response into list of services """
-    service_list_dto = service_orchestration_response['response']
+    orchestration_response_list = service_orchestration_response['response']
 
-    service_dto = service_list_dto[0]
-    provider_dto = service_dto['provider']
+    extracted_data = []
+    for orchestration_response in orchestration_response_list:
+        service_dto = orchestration_response
+        provider_dto = service_dto['provider']
 
-    service_definition = service_dto['service']['serviceDefinition']
-    service_uri = service_dto['serviceUri']
-    interface = service_dto['interfaces'][0]['interfaceName']
-    address = provider_dto['address']
-    port = provider_dto['port']
+        service_definition = service_dto['service']['serviceDefinition']
+        service_uri = service_dto['serviceUri']
+        interface = service_dto['interfaces'][0]['interfaceName']
+        system_name = provider_dto['systemName']
+        address = provider_dto['address']
+        port = provider_dto['port']
 
-    service = ConsumedHttpService(
-            service_definition,
-            service_uri,
-            interface,
-            address,
-            port,
-            None,
-    )
-    # TODO: Return list of services instead of just the first one
+        service = ConsumedHttpService(
+                service_definition,
+                service_uri,
+                interface,
+        )
 
-    return service
+        system = System(
+                system_name,
+                address,
+                port,
+                ''
+        )
+
+        extracted_data.append((service, system))
+
+    return extracted_data
