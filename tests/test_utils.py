@@ -1,3 +1,4 @@
+import arrowhead_client.service
 from arrowhead_client import utils
 
 def test_to_snake_case():
@@ -40,13 +41,3 @@ def test_to_camel_case():
         test = utils.to_camel_case(camel_case_test)
         assert test == camel_case_true
 
-def test_interface():
-    test_interface = utils.ServiceInterface(
-            'HTTP',
-            'SECURE',
-            'JSON',
-    )
-
-    assert test_interface == 'HTTP-SECURE-JSON'
-    assert test_interface == utils.ServiceInterface.from_str('HTTP-SECURE-JSON')
-    assert test_interface.dto == 'HTTP-SECURE-JSON'

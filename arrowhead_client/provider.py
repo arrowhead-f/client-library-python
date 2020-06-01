@@ -21,7 +21,7 @@ class Provider():
         """ Add service to provider system"""
         #TODO: This method does two thing at once. It adds a service from parameters,
         # and it adds an already created service. These functionalities should be
-        # separated
+        # separated. Or maybe not?
 
         if not provided_service:
             provided_service = Service(

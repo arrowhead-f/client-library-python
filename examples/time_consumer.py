@@ -1,6 +1,6 @@
-from arrowhead_client.api import ArrowheadApplication
+from arrowhead_client.api import ArrowheadHttpApplication
 
-time_consumer = ArrowheadApplication(
+time_consumer = ArrowheadHttpApplication(
         system_name='consumer_test',
         address='localhost',
         port=1338,

@@ -1,7 +1,5 @@
-from __future__ import annotations
 import re
-from dataclasses import dataclass
-from typing import Union, List, Callable
+from typing import Union, List
 
 
 def handle_requirements(requirement_list: Union[List[str], str]) -> List[str]:
@@ -39,32 +37,6 @@ def to_snake_case(variable_name: str) -> str:
            '_'.join([camel.lower() for camel in split_camel]) + \
            trailing_underscore
 
-
-@dataclass
-class ServiceInterface:
-    protocol: str
-    secure: str
-    payload: str
-
-    @classmethod
-    def from_str(cls, interface_str: str) -> ServiceInterface:
-        return cls(*interface_str.split('-'))
-
-    @property
-    def dto(self) -> str:
-        return '-'.join(vars(self).values())
-
-    def __eq__(self, other: Union[ServiceInterface, str]) -> bool:
-        if isinstance(other, str):
-            other_si = ServiceInterface.from_str(other)
-        elif isinstance(other, ServiceInterface):
-            other_si = other
-        else:
-            raise ValueError('Other must be of type ServiceInterface or str')
-
-        return self.protocol == other_si.protocol and \
-               self.secure == other_si.secure and \
-               self.payload == other_si.payload
 
 if __name__ == "__main__":
     pass
