@@ -42,8 +42,8 @@ class ServiceQueryForm(CoreSystemServiceForm):
     ping_providers: bool = True
 
     def __post_init__(self):
-        self.interface_requirements = utils.handle_requirements(self.interface_requirements)
-        self.security_requirements = utils.handle_requirements(self.security_requirements)
+        self.interface_requirements = utils.uppercase_strings_in_list(self.interface_requirements)
+        self.security_requirements = utils.uppercase_strings_in_list(self.security_requirements)
 
 
 @dataclass
