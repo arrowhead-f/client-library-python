@@ -1,1 +1,0 @@
-from .app_core import ArrowheadApplication

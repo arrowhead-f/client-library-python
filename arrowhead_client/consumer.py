@@ -1,16 +1,14 @@
 from __future__ import annotations
-from dataclasses import dataclass
 from typing import Tuple, Dict, Union
 
 import requests as backend
 from arrowhead_client.service import Service
 from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.abc import BaseConsumer
 
-@dataclass
-class Consumer():
-    """ Class to create Arrowhead consumer systems """
+class Consumer(BaseConsumer):
+    """ Interface for consumer code """
 
-    #TODO: Add all arguments instead of using *args
     def __init__(self) -> None:
         self._consumed_services: Dict[str, Tuple[Service, ArrowheadSystem, str]] = {}
 
@@ -21,12 +19,11 @@ class Consumer():
 
         uri, http_method = self._service_uri(service_definition)
 
+        print(kwargs)
+
         service_response = backend.request(http_method, uri, verify=False, **kwargs)
 
         return service_response
-
-        #TODO: type ignore above should be removed when mypy issue
-        # https://github.com/python/mypy/issues/6799 is fixed
 
     def _service_uri(self, service_definition: str) -> Tuple[str, str]:
         service, system, http_method = self._consumed_services[service_definition]

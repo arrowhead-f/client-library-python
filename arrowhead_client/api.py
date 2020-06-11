@@ -1,13 +1,32 @@
+"""
+Arrowhead Client API module
+===========================
+
+This module contains the visible api of the :code:`arrowhead_client` module.
+"""
 from arrowhead_client.configuration import config
-from arrowhead_client.application import ArrowheadApplication
+from arrowhead_client.client import ArrowheadClient
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.consumer import Consumer
 from arrowhead_client.provider import Provider
+from arrowhead_client.service import Service
 from arrowhead_client.logs import get_logger
 
 
 
-class ArrowheadHttpApplication(ArrowheadApplication):
+class ArrowheadHttpClient(ArrowheadClient):
+    """
+    Arrowhead client using HTTP.
+
+    Args:
+        system_name: A string to assign the system name
+        address: A string to assign the system address
+        port: An int to assign the system port
+        authentication_info: A string to assign the system authentication info
+        keyfile: A string to assign the PEM keyfile
+        certfile: A string to assign the PEM certfile
+    """
+
     def __init__(self,
                  system_name: str,
                  address: str,

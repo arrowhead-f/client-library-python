@@ -1,18 +1,36 @@
 from __future__ import annotations
+
+import configparser
 from typing import Any, Dict, Tuple
 from gevent import pywsgi # type: ignore
-from arrowhead_client.consumer import Consumer
+from arrowhead_client.system import ArrowheadSystem
+#from arrowhead_client.consumer import Consumer
+from arrowhead_client.abc import BaseConsumer
 from arrowhead_client.provider import Provider
 from arrowhead_client.service import Service
-from arrowhead_client.application.core_services import core_service
-from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.application import core_service_forms as forms, core_service_responses as responses
+from arrowhead_client.client.core_services import core_service
+from arrowhead_client.client import core_service_forms as forms, core_service_responses as responses
 
 
-class ArrowheadApplication():
+class ArrowheadClient():
+    """
+    Application class for Arrowhead Systems.
+
+    This class serves as a bridge that connects systems, consumers, and providers to the user.
+
+    Args:
+        system: ArrowheadSystem
+        consumer: Consumer
+        provider: Provider
+        logger: Logger, will default to the logger found in logs.get_logger()
+        config: JSON config file containing the addresses and ports of the core systems
+        server: WSGI server
+        keyfile: PEM keyfile
+        certfile: PEM certfile
+    """
     def __init__(self,
                  system: ArrowheadSystem,
-                 consumer: Consumer,
+                 consumer: BaseConsumer,
                  provider: Provider,
                  logger: Any,
                  config: Dict,
@@ -33,34 +51,45 @@ class ArrowheadApplication():
         self._core_system_setup()
         self.add_provided_service = self.provider.add_provided_service
 
-    @property
-    def cert(self) -> Tuple[str, str]:
-        return self.certfile, self.keyfile
 
-    '''
     @classmethod
-    def from_cfg(cls, properties_file: str) -> ArrowheadHttpApplication:
+    def from_cfg(cls, properties_file: str) -> ArrowheadClient:
         """ Creates a BaseArrowheadSystem from a descriptor file """
+        raise NotImplementedError
 
         # Parse configuration file
         config = configparser.ConfigParser()
         with open(properties_file, 'r') as properties:
             config.read_file(properties)
-        config_dict = {k: v for k, v in config.items('SYSTEM')}
+        config_dict = {k: v for k, v in config.items('APPLICATION')}
+
+        # TODO: Extract information and create class instance
 
         # Create class instance
-        system = cls(**config_dict)
+        arrowhead_application = cls(**config_dict)
 
-        return system
-    '''
+        return arrowhead_application
 
     def consume_service(self, service_definition: str, **kwargs):
+        """
+        Consumes the given service definition
+
+        Args:
+            service_definition: The service definition of a consumable service
+            **kwargs: Collection of keyword arguments passed to the consumer.
+        """
         return self.consumer.consume_service(service_definition, **kwargs)
 
     def add_consumed_service(self,
                              service_definition: str,
                              http_method: str) -> None:
-        """ Add orchestration rule for service definition """
+        """
+        Add orchestration rule for service definition
+
+        Args:
+            service_definition: Service definition that is looked up from the orchestrator.
+            http_method: The HTTP method given in uppercase that is used to consume the service.
+        """
 
         orchestration_form = forms.OrchestrationForm(self.system.dto, service_definition)
 
@@ -78,18 +107,35 @@ class ArrowheadApplication():
         # Perhaps a list of consumed services for each service definition should be stored
         self._store_consumed_service(orchestrated_service, system, http_method)
 
-    def provided_service(self,
-                         service_definition: str,
-                         service_uri: str,
-                         interface: str,
-                         method: str):
+    def provided_service(
+            self,
+            service_definition: str,
+            service_uri: str,
+            interface: str,
+            method: str,
+            *func_args,
+            **func_kwargs,):
+        """
+        Decorator to add a provided service to the provider.
+
+        Args:
+            service_definition: Service definition to be stored in the service registry
+            service_uri: The path to the service
+            interface: Arrowhead interface string(s)
+            method: HTTP method required to access the service
+        """
+        service = Service(
+                service_definition,
+                service_uri,
+                interface,
+        )
         def wrapped_func(func):
             self.provider.add_provided_service(
-                    service_definition,
-                    service_uri,
-                    interface,
+                    service,
                     http_method=method,
-                    view_func=func)
+                    view_func=func,
+                    *func_args,
+                    **func_kwargs)
             return func
         return wrapped_func
 
@@ -111,7 +157,19 @@ class ArrowheadApplication():
         finally:
             self._logger.info(f'Server shut down')
 
+    @property
+    def cert(self) -> Tuple[str, str]:
+        """
+        Tuple of the keyfile and certfile
+        """
+        return self.certfile, self.keyfile
+
     def _core_system_setup(self) -> None:
+        """
+        Method that sets up the core services.
+
+        It is run when the client is created and should not be run manually.
+        """
         service_registry = ArrowheadSystem(
                 'service_registry',
                 str(self.config['service_registry']['address']),
@@ -128,17 +186,30 @@ class ArrowheadApplication():
         self._store_consumed_service(core_service('unregister'), service_registry, 'DELETE')
         self._store_consumed_service(core_service('orchestration-service'), orchestrator, 'POST')
 
-    def _store_consumed_service(self,
-                                service: Service,
-                                system: ArrowheadSystem,
-                                http_method: str) -> None:
-        """ Register consumed services with the consumer """
+    def _store_consumed_service(
+            self,
+            service: Service,
+            system: ArrowheadSystem,
+            http_method: str) -> None:
+        """
+        Register consumed services with the consumer
+
+        Args:
+            service: Service to be stored
+            system: System containing the service
+            http_method: HTTP method used to consume the service
+        """
 
         self.consumer._consumed_services[service.service_definition] = (service, system, http_method)
 
 
     def _register_service(self, service: Service):
-        """ Registers the given service with service registry """
+        """
+        Registers the given service with service registry
+
+        Args:
+            service: Service to register with the Service registry.
+        """
 
         # TODO: Should accept a system and a service
         service_registration_form = forms.ServiceRegistrationForm(
@@ -153,6 +224,7 @@ class ArrowheadApplication():
         service_registration_response = self.consume_service(
                 'register',
                 json=service_registration_form.dto,
+                cert=self.cert
         )
 
         print(service_registration_response.status_code)
@@ -162,13 +234,20 @@ class ArrowheadApplication():
 
 
     def _register_all_services(self) -> None:
-        """ Registers all services of the system. """
+        """
+        Registers all provided services of the system with the system registry.
+        """
         for service, _ in self.provider.provided_services.values():
             self._register_service(service)
 
 
     def _unregister_service(self, service_definition: str) -> None:
-        """ Unregisters the given service with the service registry. """
+        """
+        Unregisters the given service with service registry
+
+        Args:
+            service: Service to unregister with the Service registry.
+        """
 
         if service_definition not in self.provider.provided_services.keys():
             raise ValueError(f'{service_definition} not provided by {self}')
@@ -183,14 +262,17 @@ class ArrowheadApplication():
 
         service_unregistration_response = self.consume_service(
                 'unregister',
-                params=unregistration_payload
+                params=unregistration_payload,
+                cert=self.cert
         )
 
         print(service_unregistration_response.status_code)
 
 
     def _unregister_all_services(self) -> None:
-        """ Unregisters all services of the system """
+        """
+        Unregisters all provided services of the system with the system registry.
+        """
 
         for service_definition in self.provider.provided_services:
             self._unregister_service(service_definition)
