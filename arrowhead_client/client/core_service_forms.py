@@ -1,11 +1,12 @@
-#!/usr/bin/env python
 """ Core Service Forms Module """
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Union, Sequence, Mapping
+from typing import Optional, Dict, Union, Sequence, Mapping
 
 from arrowhead_client import utils
+from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.service import Service
 
 
 class BaseServiceForm(ABC):
@@ -49,17 +50,22 @@ class ServiceQueryForm(CoreSystemServiceForm):
 @dataclass
 class ServiceRegistrationForm(CoreSystemServiceForm):
     """ Service Registration Form """
-    service_definition: str
-    service_uri: str
-    secure: str
-    interfaces: Union[Sequence[str], str]
-    provider_system: BaseServiceForm
-    metadata: Optional[Mapping[str, str]] = None
-    end_of_validity: Optional[str] = None
-    version: Optional[int] = None
-
-    def __post_init__(self):
-        self.interfaces = [self.interfaces]
+    def __init__(
+            self,
+            provided_service: Service,
+            provider_system: ArrowheadSystem,
+            secure: str,
+            metadata: Optional[Mapping[str, str]] = None,
+            end_of_validity: Optional[str] = None,
+            version: Optional[int] = None, ):
+        self.service_definition = provided_service.service_definition
+        self.service_uri = provided_service.service_uri
+        self.interfaces = [provided_service.interface.dto]
+        self.provider_system = provider_system.dto
+        self.secure = secure
+        self.metadata = metadata
+        self.version = version
+        self.end_of_validity = end_of_validity
 
 class OrchestrationForm(CoreSystemServiceForm):
     """ Orchestration Form """
@@ -74,9 +80,7 @@ class OrchestrationForm(CoreSystemServiceForm):
                  max_version_requirement: Optional[int] = None,
                  min_version_requirement: Optional[int] = None,
                  ping_providers: bool = True,
-                 orchestration_flags: Optional[Mapping[str, bool]] = None,
-                 commands: Optional[Mapping[str, str]] = None,
-                 requester_cloud: Optional[Mapping[str, Union[str, bool, Sequence[int]]]] = None) -> None:
+                 orchestration_flags: Optional[Mapping[str, bool]] = None, ) -> None:
         self.requester_system = requester_system
         self.requested_service = ServiceQueryForm(
                 service_definition_requirement,
@@ -87,14 +91,9 @@ class OrchestrationForm(CoreSystemServiceForm):
                 max_version_requirement,
                 min_version_requirement,
                 ping_providers).dto
-        self.commands = commands
-        self.requester_cloud = requester_cloud
-
+        # TODO: Implement preferred_providers
+        self.preferred_providers = None
         if orchestration_flags:
             self.orchestration_flags = orchestration_flags
         else:
             self.orchestration_flags = {'overrideStore': True}
-
-
-if __name__ == "__main__":
-    pass

@@ -1,5 +1,4 @@
-from __future__ import annotations
-from typing import Tuple, Dict, Union
+from typing import Dict, Union
 
 import requests as backend
 from arrowhead_client.abc import BaseConsumer
@@ -16,7 +15,10 @@ class HttpConsumer(BaseConsumer):
 
         return service_response
 
-    def _extract_payload(self, service_response, payload_type: str) -> Union[Dict, str]:
+    def extract_payload(
+            self,
+            service_response: backend.Response,
+            payload_type: str) -> Union[Dict, str]:
         if payload_type.upper() == 'JSON':
             return service_response.json()
 

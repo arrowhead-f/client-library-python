@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import configparser
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Callable
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
 from arrowhead_client.service import Service
 from arrowhead_client.client.core_services import core_service
 from arrowhead_client.client import core_service_forms as forms, core_service_responses as responses
+
+StoredConsumedService = Dict[str, Tuple[Service, ArrowheadSystem, str]]
+StoredProvidedService = Dict[str, Tuple[Service, Callable]]
 
 
 class ArrowheadClient():
@@ -25,15 +27,15 @@ class ArrowheadClient():
         keyfile: PEM keyfile
         certfile: PEM certfile
     """
+
     def __init__(self,
                  system: ArrowheadSystem,
                  consumer: BaseConsumer,
                  provider: BaseProvider,
                  logger: Any,
                  config: Dict,
-                 server: Any = None,  # type: ignore
                  keyfile: str = '',
-                 certfile: str  = '', ):
+                 certfile: str = '', ):
         self.system = system
         self.consumer = consumer
         self.provider = provider
@@ -41,30 +43,12 @@ class ArrowheadClient():
         self.keyfile = keyfile
         self.certfile = certfile
         self.config = config
-        self._consumed_services = {}
-        self._provided_services = {}
-        #TODO: Remove this hardcodedness
+        self._consumed_services: StoredConsumedService = {}
+        self._provided_services: StoredProvidedService = {}
+
+        # Setup methods
         self._core_system_setup()
         self.add_provided_service = self.provider.add_provided_service
-
-
-    @classmethod
-    def from_cfg(cls, properties_file: str) -> ArrowheadClient:
-        """ Creates a BaseArrowheadSystem from a descriptor file """
-        raise NotImplementedError
-
-        # Parse configuration file
-        config = configparser.ConfigParser()
-        with open(properties_file, 'r') as properties:
-            config.read_file(properties)
-        config_dict = {k: v for k, v in config.items('APPLICATION')}
-
-        # TODO: Extract information and create class instance
-
-        # Create class instance
-        arrowhead_application = cls(**config_dict)
-
-        return arrowhead_application
 
     def consume_service(self, service_definition: str, **kwargs):
         """
@@ -82,7 +66,8 @@ class ArrowheadClient():
 
     def add_consumed_service(self,
                              service_definition: str,
-                             method: str) -> None:
+                             method: str,
+                             **kwargs, ) -> None:
         """
         Add orchestration rule for service definition
 
@@ -91,19 +76,28 @@ class ArrowheadClient():
             method: The HTTP method given in uppercase that is used to consume the service.
         """
 
-        orchestration_form = forms.OrchestrationForm(self.system.dto, service_definition)
+        orchestration_form = forms.OrchestrationForm(
+                self.system.dto,
+                service_definition,
+                **kwargs
+        )
 
-        orchestration_response = self.consume_service('orchestration-service',
-                                                      json=orchestration_form.dto,
-                                                      cert=self.cert,
-                                                      )
-        #TODO: Handle orchestrator error codes
+        orchestration_response = self.consume_service(
+                'orchestration-service',
+                json=orchestration_form.dto,
+                cert=self.cert,
+        )
 
-        orchestration_payload = orchestration_response.json() # This might change with backend
+        # TODO: Handle orchestrator error codes
+
+        orchestration_payload = self.consumer.extract_payload(
+                orchestration_response,
+                'json'
+        )
 
         (orchestrated_service, system), *_ = responses.handle_orchestration_response(orchestration_payload)
 
-        #TODO: Handle response with more than 1 service
+        # TODO: Handle response with more than 1 service
         # Perhaps a list of consumed services for each service definition should be stored
         self._store_consumed_service(orchestrated_service, system, method)
 
@@ -114,7 +108,7 @@ class ArrowheadClient():
             interface: str,
             method: str,
             *func_args,
-            **func_kwargs,):
+            **func_kwargs, ):
         """
         Decorator to add a provided service to the provider.
 
@@ -130,7 +124,6 @@ class ArrowheadClient():
                 interface,
         )
 
-
         def wrapped_func(func):
             self._provided_services[service_definition] = (provided_service, func)
             self.provider.add_provided_service(
@@ -141,6 +134,7 @@ class ArrowheadClient():
                     *func_args,
                     **func_kwargs)
             return func
+
         return wrapped_func
 
     def run_forever(self) -> None:
@@ -151,15 +145,15 @@ class ArrowheadClient():
 
         self._register_all_services()
         try:
-            self._logger.info(f'Starting server')
+            self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
             self.provider.run_forever()
         except KeyboardInterrupt:
-            self._logger.info(f'Shutting down server')
+            self._logger.info('Shutting down server')
             print('Shutting down Arrowhead system')
             self._unregister_all_services()
         finally:
-            self._logger.info(f'Server shut down')
+            self._logger.info('Server shut down')
 
     @property
     def cert(self) -> Tuple[str, str]:
@@ -174,21 +168,19 @@ class ArrowheadClient():
 
         It is run when the client is created and should not be run manually.
         """
-        service_registry = ArrowheadSystem(
-                'service_registry',
-                str(self.config['service_registry']['address']),
-                int(self.config['service_registry']['port']),
-                ''
-        )
-        orchestrator = ArrowheadSystem(
-                'orchestrator',
-                str(self.config['orchestrator']['address']),
-                int(self.config['orchestrator']['port']),
-                '')
 
-        self._store_consumed_service(core_service('register'), service_registry, 'POST')
-        self._store_consumed_service(core_service('unregister'), service_registry, 'DELETE')
-        self._store_consumed_service(core_service('orchestration-service'), orchestrator, 'POST')
+        self._store_consumed_service(
+                core_service('register'),
+                self.config['service_registry'],
+                'POST')
+        self._store_consumed_service(
+                core_service('unregister'),
+                self.config['service_registry'],
+                'DELETE')
+        self._store_consumed_service(
+                core_service('orchestration-service'),
+                self.config['orchestrator'],
+                'POST')
 
     def _store_consumed_service(
             self,
@@ -206,7 +198,6 @@ class ArrowheadClient():
 
         self._consumed_services[service.service_definition] = (service, system, http_method)
 
-
     def _register_service(self, service: Service):
         """
         Registers the given service with service registry
@@ -217,12 +208,10 @@ class ArrowheadClient():
 
         # TODO: Should accept a system and a service
         service_registration_form = forms.ServiceRegistrationForm(
-                service_definition=service.service_definition,
-                service_uri=service.service_uri,
-                secure='CERTIFICATE',
+                provided_service=service,
+                provider_system=self.system,
                 # TODO: secure should _NOT_ be hardcoded
-                interfaces=service.interface.dto,
-                provider_system=self.system.dto
+                secure='CERTIFICATE',
         )
 
         service_registration_response = self.consume_service(
@@ -236,14 +225,12 @@ class ArrowheadClient():
 
         # TODO: Do logging
 
-
     def _register_all_services(self) -> None:
         """
         Registers all provided services of the system with the system registry.
         """
         for service, _ in self._provided_services.values():
             self._register_service(service)
-
 
     def _unregister_service(self, service_definition: str) -> None:
         """
@@ -271,7 +258,6 @@ class ArrowheadClient():
         )
 
         print(service_unregistration_response.status_code)
-
 
     def _unregister_all_services(self) -> None:
         """
@@ -307,11 +293,8 @@ class ArrowheadClient():
         return True
     """
 
+
 def _service_uri(service: Service, system: ArrowheadSystem) -> str:
     service_uri = f'https://{system.authority}/{service.service_uri}'
 
     return service_uri
-
-
-if __name__ == '__main__':
-    pass

@@ -47,6 +47,7 @@ class Service():
             self.interface = ServiceInterface.from_str(interface)
         else:
             self.interface = interface
+        # TODO: Add security/access policy, metadata, and version fields.
 
     def __repr__(self) -> str:
         variable_string = ', '.join([f'{str(key)}={str(value)}' for key, value in vars(self).items()])

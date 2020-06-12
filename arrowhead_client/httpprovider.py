@@ -11,7 +11,7 @@ class HttpProvider(BaseProvider):
     def __init__(self, wsgi_server: Any) -> None: # type: ignore
         self.app = Flask(__name__)
         self.wsgi_server = wsgi_server
-        self.wsgi_server.app = self.app
+        self.wsgi_server.application = self.app
 
     def add_provided_service(self,
                              service_definition: str,

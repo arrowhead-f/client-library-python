@@ -40,7 +40,7 @@ class ArrowheadHttpClient(ArrowheadClient):
                 None,
                 keyfile=keyfile,
                 certfile=certfile,
-                logger=logger,
+                log=logger,
         )
         super().__init__(
                 ArrowheadSystem(system_name, address, port, authentication_info),
