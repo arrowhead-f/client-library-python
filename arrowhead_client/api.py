@@ -7,12 +7,12 @@ This module contains the visible api of the :code:`arrowhead_client` module.
 from arrowhead_client.configuration import config
 from arrowhead_client.client import ArrowheadClient
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.consumer import Consumer
-from arrowhead_client.provider import Provider
+from arrowhead_client.httpconsumer import HttpConsumer
+from arrowhead_client.httpprovider import HttpProvider
 from arrowhead_client.service import Service
 from arrowhead_client.logs import get_logger
 
-
+from gevent import pywsgi # type: ignore
 
 class ArrowheadHttpClient(ArrowheadClient):
     """
@@ -34,11 +34,19 @@ class ArrowheadHttpClient(ArrowheadClient):
                  authentication_info: str = '',
                  keyfile: str = '',
                  certfile: str = ''):
+        logger = get_logger(system_name, 'debug')
+        wsgi_server = pywsgi.WSGIServer(
+                (address, port),
+                None,
+                keyfile=keyfile,
+                certfile=certfile,
+                logger=logger,
+        )
         super().__init__(
                 ArrowheadSystem(system_name, address, port, authentication_info),
-                Consumer(),
-                Provider(),
-                get_logger(system_name, 'debug'),
+                HttpConsumer(),
+                HttpProvider(wsgi_server),
+                logger,
                 config,
                 keyfile=keyfile,
                 certfile=certfile

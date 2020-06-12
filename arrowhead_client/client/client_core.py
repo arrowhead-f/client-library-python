@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import configparser
 from typing import Any, Dict, Tuple
-from gevent import pywsgi # type: ignore
 from arrowhead_client.system import ArrowheadSystem
-#from arrowhead_client.consumer import Consumer
-from arrowhead_client.abc import BaseConsumer
-from arrowhead_client.provider import Provider
+from arrowhead_client.abc import BaseConsumer, BaseProvider
 from arrowhead_client.service import Service
 from arrowhead_client.client.core_services import core_service
 from arrowhead_client.client import core_service_forms as forms, core_service_responses as responses
@@ -20,8 +17,8 @@ class ArrowheadClient():
 
     Args:
         system: ArrowheadSystem
-        consumer: Consumer
-        provider: Provider
+        consumer: HttpConsumer
+        provider: HttpProvider
         logger: Logger, will default to the logger found in logs.get_logger()
         config: JSON config file containing the addresses and ports of the core systems
         server: WSGI server
@@ -31,7 +28,7 @@ class ArrowheadClient():
     def __init__(self,
                  system: ArrowheadSystem,
                  consumer: BaseConsumer,
-                 provider: Provider,
+                 provider: BaseProvider,
                  logger: Any,
                  config: Dict,
                  server: Any = None,  # type: ignore
@@ -44,10 +41,9 @@ class ArrowheadClient():
         self.keyfile = keyfile
         self.certfile = certfile
         self.config = config
+        self._consumed_services = {}
+        self._provided_services = {}
         #TODO: Remove this hardcodedness
-        self.server = pywsgi.WSGIServer((self.system.address, self.system.port), self.provider.app,
-                                        keyfile=self.keyfile, certfile=self.certfile,
-                                        log=self._logger)
         self._core_system_setup()
         self.add_provided_service = self.provider.add_provided_service
 
@@ -78,17 +74,21 @@ class ArrowheadClient():
             service_definition: The service definition of a consumable service
             **kwargs: Collection of keyword arguments passed to the consumer.
         """
-        return self.consumer.consume_service(service_definition, **kwargs)
+        consumed_service, consumer_system, method = self._consumed_services[service_definition]
+
+        service_uri = _service_uri(consumed_service, consumer_system)
+
+        return self.consumer.consume_service(service_uri, method, **kwargs)
 
     def add_consumed_service(self,
                              service_definition: str,
-                             http_method: str) -> None:
+                             method: str) -> None:
         """
         Add orchestration rule for service definition
 
         Args:
             service_definition: Service definition that is looked up from the orchestrator.
-            http_method: The HTTP method given in uppercase that is used to consume the service.
+            method: The HTTP method given in uppercase that is used to consume the service.
         """
 
         orchestration_form = forms.OrchestrationForm(self.system.dto, service_definition)
@@ -105,7 +105,7 @@ class ArrowheadClient():
 
         #TODO: Handle response with more than 1 service
         # Perhaps a list of consumed services for each service definition should be stored
-        self._store_consumed_service(orchestrated_service, system, http_method)
+        self._store_consumed_service(orchestrated_service, system, method)
 
     def provided_service(
             self,
@@ -124,16 +124,20 @@ class ArrowheadClient():
             interface: Arrowhead interface string(s)
             method: HTTP method required to access the service
         """
-        service = Service(
+        provided_service = Service(
                 service_definition,
                 service_uri,
                 interface,
         )
+
+
         def wrapped_func(func):
+            self._provided_services[service_definition] = (provided_service, func)
             self.provider.add_provided_service(
-                    service,
-                    http_method=method,
-                    view_func=func,
+                    service_definition,
+                    service_uri,
+                    method=method,
+                    func=func,
                     *func_args,
                     **func_kwargs)
             return func
@@ -149,7 +153,7 @@ class ArrowheadClient():
         try:
             self._logger.info(f'Starting server')
             print('Started Arrowhead ArrowheadSystem')
-            self.server.serve_forever()
+            self.provider.run_forever()
         except KeyboardInterrupt:
             self._logger.info(f'Shutting down server')
             print('Shutting down Arrowhead system')
@@ -200,7 +204,7 @@ class ArrowheadClient():
             http_method: HTTP method used to consume the service
         """
 
-        self.consumer._consumed_services[service.service_definition] = (service, system, http_method)
+        self._consumed_services[service.service_definition] = (service, system, http_method)
 
 
     def _register_service(self, service: Service):
@@ -237,7 +241,7 @@ class ArrowheadClient():
         """
         Registers all provided services of the system with the system registry.
         """
-        for service, _ in self.provider.provided_services.values():
+        for service, _ in self._provided_services.values():
             self._register_service(service)
 
 
@@ -249,7 +253,7 @@ class ArrowheadClient():
             service: Service to unregister with the Service registry.
         """
 
-        if service_definition not in self.provider.provided_services.keys():
+        if service_definition not in self._provided_services.keys():
             raise ValueError(f'{service_definition} not provided by {self}')
 
         # TODO: Should be a "form"?
@@ -274,11 +278,8 @@ class ArrowheadClient():
         Unregisters all provided services of the system with the system registry.
         """
 
-        for service_definition in self.provider.provided_services:
+        for service_definition in self._provided_services:
             self._unregister_service(service_definition)
-
-
-
 
     """
     def __enter__(self):
@@ -305,5 +306,12 @@ class ArrowheadClient():
 
         return True
     """
+
+def _service_uri(service: Service, system: ArrowheadSystem) -> str:
+    service_uri = f'https://{system.authority}/{service.service_uri}'
+
+    return service_uri
+
+
 if __name__ == '__main__':
     pass
