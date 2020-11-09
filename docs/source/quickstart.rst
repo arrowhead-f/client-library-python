@@ -8,15 +8,7 @@ Arrowhead Client library quickstart
 Setting up a local cloud
 ------------------------
 
-On Linux
-^^^^^^^^
-
-TBW.
-
-On windows
-^^^^^^^^^^
-
-TBW.
+You need to have an Arrowhead local cloud running and set up properly before running attempting this quickstart.
 
 Getting a provider running
 --------------------------

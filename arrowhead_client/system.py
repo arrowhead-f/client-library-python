@@ -1,10 +1,17 @@
 from typing import Dict, Union
 from dataclasses import dataclass
 
-
 @dataclass
 class ArrowheadSystem:
-    """ Basic Arrowhead ArrowheadSystem class """
+    """
+    ArrowheadSystem class.
+
+    Args:
+        system_name: System name as :code:`str`.
+        address: IP address as :code:`str`.
+        port: Port as :code:`int`.
+        authentication_info: Authentication info as :code:`str`.
+    """
 
     system_name: str
     address: str

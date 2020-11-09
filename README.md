@@ -13,11 +13,7 @@ Currently, it is working, but it's still missing many crucial features, such as:
  - Testing
  - Support for the following core services
    - Eventhandler
-   - Gateway
-   - Gatekeeper
- - Support for the following security modes (access policies):
-   - Token security
-   - Insecure security
+ - Support for the TOKEN security modes (access policy):
 
 As more Arrowhead Core Systems mature and are added to the official docker container, those will be added to this list.
 

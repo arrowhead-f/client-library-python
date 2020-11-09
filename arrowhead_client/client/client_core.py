@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple, Callable
+from typing import Any, Dict, Tuple, Callable, Union
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
 from arrowhead_client.service import Service
@@ -19,8 +19,8 @@ class ArrowheadClient():
 
     Args:
         system: ArrowheadSystem
-        consumer: HttpConsumer
-        provider: HttpProvider
+        consumer: Consumer
+        provider: Provider
         logger: Logger, will default to the logger found in logs.get_logger()
         config: JSON config file containing the addresses and ports of the core systems
         server: WSGI server
@@ -42,6 +42,7 @@ class ArrowheadClient():
         self._logger = logger
         self.keyfile = keyfile
         self.certfile = certfile
+        self.secure = True if self.keyfile else False
         self.config = config
         self._consumed_services: StoredConsumedService = {}
         self._provided_services: StoredProvidedService = {}
@@ -62,7 +63,14 @@ class ArrowheadClient():
 
         service_uri = _service_uri(consumed_service, consumer_system)
 
+        if consumed_service.interface.secure == 'SECURE':
+            # Add certificate files if service is secure
+            kwargs['cert'] = self.cert
+
         return self.consumer.consume_service(service_uri, method, **kwargs)
+
+    def extract_payload(self, service_response: Any, payload_type: str) -> Union[Dict, str]:
+        return self.consumer.extract_payload(service_response, payload_type)
 
     def add_consumed_service(self,
                              service_definition: str,
@@ -166,7 +174,7 @@ class ArrowheadClient():
         """
         Method that sets up the core services.
 
-        It is run when the client is created and should not be run manually.
+        Runs when the client is created and should not be run manually.
         """
 
         self._store_consumed_service(
@@ -206,12 +214,21 @@ class ArrowheadClient():
             service: Service to register with the Service registry.
         """
 
+        # Decide security level:
+        if service.interface.secure == 'INSECURE':
+            secure = 'NOT_SECURE'
+        elif service.interface.secure == 'SECURE':
+            secure = 'CERTIFICATE'
+        else:
+            secure= 'CERTIFICATE'
+        # TODO: Add 'TOKEN' security level
+
         # TODO: Should accept a system and a service
         service_registration_form = forms.ServiceRegistrationForm(
                 provided_service=service,
                 provider_system=self.system,
                 # TODO: secure should _NOT_ be hardcoded
-                secure='CERTIFICATE',
+                secure=secure
         )
 
         service_registration_response = self.consume_service(
@@ -221,6 +238,7 @@ class ArrowheadClient():
         )
 
         print(service_registration_response.status_code)
+        print(service_registration_response.text)
         # TODO: Error handling
 
         # TODO: Do logging
@@ -295,6 +313,6 @@ class ArrowheadClient():
 
 
 def _service_uri(service: Service, system: ArrowheadSystem) -> str:
-    service_uri = f'https://{system.authority}/{service.service_uri}'
+    service_uri = f'{system.authority}/{service.service_uri}'
 
     return service_uri

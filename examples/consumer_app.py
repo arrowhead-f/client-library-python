@@ -16,5 +16,6 @@ consumer_app.add_consumed_service('hello-arrowhead', 'GET')
 if __name__ == '__main__':
     response = consumer_app.consume_service('hello-arrowhead')
     message = consumer_app.consumer.extract_payload(response, 'json')
+    message_2 = consumer_app.extract_payload(response, 'json') # TODO: remove the first message extraction
 
     print(message['msg'])

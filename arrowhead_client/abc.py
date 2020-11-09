@@ -13,7 +13,7 @@ class BaseConsumer(Protocol):
     @abstractmethod
     def extract_payload(
             self,
-            service_response,
+            service_response: Any,
             payload_type: str):
         raise NotImplementedError
 

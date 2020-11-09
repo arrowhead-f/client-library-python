@@ -1,13 +1,31 @@
 .. automodule:: arrowhead_client.api
 
-..  autoclass:: arrowhead_client.api.ArrowheadApplication
+ArrowheadHttpClient
+-------------------
+.. autoclass:: arrowhead_client.api.ArrowheadHttpClient
     :members:
 
+ArrowheadClient
+---------------
+..  autoclass:: arrowhead_client.api.ArrowheadClient
+    :members:
+
+ArrowheadSystem
+---------------
 .. autoclass:: arrowhead_client.api.ArrowheadSystem
     :members:
 
-.. autoclass:: arrowhead_client.api.Consumer
+Service
+-------
+.. autoclass:: arrowhead_client.api.Service
     :members:
 
-.. autoclass:: arrowhead_client.api.Provider
+HttpConsumer
+------------
+.. autoclass:: arrowhead_client.api.HttpConsumer
+    :members:
+
+HttpProvider
+------------
+.. autoclass:: arrowhead_client.api.HttpProvider
     :members:

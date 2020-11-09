@@ -1,12 +1,19 @@
-Welcome to arrowhead-client's documentation!
+Welcome to arrowhead-client's documentatiön!
 ============================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    quickstart
    tut-trouble
+
+TODO
+====
+.. toctree::
+    :maxdepth: 2
+
+    todo
 
 Indices and tables
 ==================
@@ -19,7 +26,7 @@ API Reference
 =============
 
 ..  toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     api
 

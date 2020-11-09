@@ -47,7 +47,6 @@ def test_orchestration_form():
             0,
             True,
             {'dummy': True},
-            {'dummy': 'data'},
     )
 
     valid_keys = {

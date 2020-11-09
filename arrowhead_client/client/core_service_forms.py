@@ -73,7 +73,7 @@ class OrchestrationForm(CoreSystemServiceForm):
     def __init__(self,
                  requester_system: BaseServiceForm,
                  service_definition_requirement: str,
-                 interface_requirements: Optional[Union[Sequence[str], str]] = None,
+                 interface_requirements: Union[Sequence[str], str] = None,
                  security_requirements: Optional[Union[Sequence[str], str]] = None,
                  metadata_requirements: Optional[Mapping[str, str]] = None,
                  version_requirement: Optional[int] = None,

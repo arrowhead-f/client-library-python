@@ -2,7 +2,7 @@
 Arrowhead Client API module
 ===========================
 
-This module contains the visible api of the :code:`arrowhead_client` module.
+This module contains the api of the :code:`arrowhead_client` module.
 """
 from arrowhead_client.configuration import config
 from arrowhead_client.client import ArrowheadClient
