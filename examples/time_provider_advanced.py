@@ -1,5 +1,5 @@
 import datetime
-from arrowhead_client.application import ProviderSystem
+from arrowhead_client.client import ProviderSystem
 from flask import request
 #from source.service_provider import ServiceProvider
 

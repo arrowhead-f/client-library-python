@@ -5,6 +5,10 @@ from typing import Union
 
 @dataclass()
 class ServiceInterface:
+    """
+    Service interface triple class
+    """
+
     protocol: str
     secure: str
     payload: str
@@ -34,8 +38,16 @@ class ServiceInterface:
                self.secure == other.secure and \
                self.payload == other.payload
 
+
 class Service():
-    """ Base class for services """
+    """
+    Arrowhead Service class.
+
+    Args:
+        service_definition: service definition as :code:`str`.
+        service_uri: service uri location as :code:`str`.
+        interface: service interface triple, given as :code:`str` (ex. :code:`'HTTP-SECURE-JSON'`) or as :code:`ServiceInterface`.
+    """
 
     def __init__(self,
                  service_definition: str,
@@ -47,9 +59,8 @@ class Service():
             self.interface = ServiceInterface.from_str(interface)
         else:
             self.interface = interface
+        # TODO: Add security/access policy, metadata, and version fields.
 
     def __repr__(self) -> str:
         variable_string = ', '.join([f'{str(key)}={str(value)}' for key, value in vars(self).items()])
         return f'{self.__class__.__name__}({variable_string})'
-
-

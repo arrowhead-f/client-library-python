@@ -1,20 +1,24 @@
 from typing import Dict
 import arrowhead_client.api as ar
 
-time_provider = ar.ArrowheadSystem('time_provider',
+time_provider = ar.ArrowheadHttpClient('time_provider',
                                'localhost',
                                1337,
                                '',
                                keyfile='certificates/time_provider.key',
                                certfile='certificates/time_provider.crt')
 
+what_to_hello = 'Arrowhead'
 
-def echo(request) -> Dict[str, str]:
-    return {'msg': 'Hello Arrowhead'}
+@time_provider.provided_service('echo', 'echo', 'HTTP-SECURE-JSON', 'GET', hello_what=what_to_hello)
+def echo(request, hello_what) -> Dict[str, str]:
+    return {'msg': f'Hello {hello_what}'}
 
 
+@time_provider.provided_service('hej', 'hej', 'HTTP-SECURE-JSON', 'POST')
 def post(request) -> Dict[str, str]:
     print(request.json)
+    what_to_hello = request.json['what_to_hello']
     return {'response': 'OK'}
 
 
@@ -24,29 +28,4 @@ def decorator(request) -> Dict[str, str]:
 
 
 if __name__ == '__main__':
-    time_provider.add_provided_service(
-            service_definition='echo',
-            service_uri='echo',
-            interface='HTTP-SECURE-JSON',
-            http_method='GET',
-            view_func=echo
-    )
-
-    time_provider.add_provided_service(
-            service_definition='hej',
-            service_uri='hej',
-            interface='HTTP-SECURE-JSON',
-            http_method='POST',
-            view_func=post
-    )
-
-    time_provider.add_provided_service(
-            'lambda',
-            'lambda',
-            'HTTP-SECURE-JSON',
-            http_method='GET',
-            view_func=lambda: {'lambda': True}
-    )
-
-    print(time_provider.certfile)
     time_provider.run_forever()

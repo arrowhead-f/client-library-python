@@ -1,9 +1,6 @@
 from typing import Mapping, Dict, Tuple, List
-from collections import namedtuple
-from arrowhead_client.system import ArrowheadSystem as System
-from arrowhead_client.service import Service as ConsumedHttpService
-
-ServiceAndSystem = namedtuple('ServiceAndSystem', ['service', 'system'])
+from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.service import Service
 
 system_keys = ('systemName', 'address', 'port', 'authenticationInfo')
 service_keys = ('serviceDefinition', 'serviceUri', 'interfaces', 'secure')
@@ -27,30 +24,27 @@ def extract_service_data(data: Mapping) -> Dict:
     return service_data
 
 
-def handle_service_query_response(service_query_response: Mapping) -> List[ServiceAndSystem]:
+def handle_service_query_response(service_query_response: Mapping) -> List[Tuple[Dict, Dict]]:
     """ Handles service query responses and returns a lists of services and systems """
 
     service_query_data = service_query_response['serviceQueryData']
 
-    services_and_systems = []
+    service_and_system_list = [
+        (extract_service_data(data), extract_system_data(data))
+        for data in service_query_data
+    ]
 
-    for data in service_query_data:
-        service = extract_service_data(data)
-        system = extract_system_data(data['provider'])
-
-        services_and_systems.append(ServiceAndSystem(service, system))
-
-    return services_and_systems
+    return service_and_system_list
 
 
-def handle_service_register_response(service_register_response: Mapping) -> NotImplemented:
+def handle_service_register_response(service_register_response: Mapping) -> None:
     """ Handles service register responses """
     # TODO: Implement this
-    return NotImplemented
+    raise NotImplementedError
 
 
 def handle_orchestration_response(service_orchestration_response: Mapping) \
-        -> List[Tuple[ConsumedHttpService, System]]:
+        -> List[Tuple[Service, ArrowheadSystem]]:
     """ Turns orchestration response into list of services """
     orchestration_response_list = service_orchestration_response['response']
 
@@ -66,13 +60,13 @@ def handle_orchestration_response(service_orchestration_response: Mapping) \
         address = provider_dto['address']
         port = provider_dto['port']
 
-        service = ConsumedHttpService(
+        service = Service(
                 service_definition,
                 service_uri,
                 interface,
         )
 
-        system = System(
+        system = ArrowheadSystem(
                 system_name,
                 address,
                 port,

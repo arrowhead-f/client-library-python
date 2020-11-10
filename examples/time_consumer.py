@@ -1,6 +1,6 @@
-from arrowhead_client.api import ArrowheadHttpApplication
+from arrowhead_client.api import ArrowheadHttpClient
 
-time_consumer = ArrowheadHttpApplication(
+time_consumer = ArrowheadHttpClient(
         system_name='consumer_test',
         address='localhost',
         port=1338,
@@ -8,8 +8,8 @@ time_consumer = ArrowheadHttpApplication(
         keyfile='certificates/consumer_test.key',
         certfile='certificates/consumer_test.crt')
 
-time_consumer.add_consumed_service('echo', http_method='GET')
-time_consumer.add_consumed_service('hej', http_method='POST')
+time_consumer.add_consumed_service('echo', method='GET')
+time_consumer.add_consumed_service('hej', method='POST')
 
 if __name__ == '__main__':
     echo_response = time_consumer.consume_service('echo')
