@@ -1,6 +1,5 @@
 Arrowhead Client library quickstart
 ===================================
-
 .. warning::
 
     This document is a work in progress.

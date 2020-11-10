@@ -1,32 +1,23 @@
+############################################
 Welcome to arrowhead-client's documentation!
-============================================
+############################################
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    quickstart
    tut-trouble
+   security
+   todo
+   api
 
-TODO
-====
-.. toctree::
-    :maxdepth: 2
-
-    todo
-
+******************
 Indices and tables
-==================
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
 
-API Reference
-=============
-
-..  toctree::
-    :maxdepth: 1
-
-    api
 
