@@ -7,10 +7,8 @@ provider_app = ar.ArrowheadHttpClient(
         system_name='example-provider',
         address='127.0.0.1',
         port=7655,
-        #keyfile='/home/jacnil/my-ah-cloud/certificates/crypto/example-provider.key',
-        #certfile='/home/jacnil/my-ah-cloud/certificates/crypto/example-provider.crt'
-        #keyfile='certificates/example-provider.key',
-        #certfile='certificates/example-provider.crt',
+        keyfile='certificates/example-provider.key',
+        certfile='certificates/example-provider.crt',
 )
 
 

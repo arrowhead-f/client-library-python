@@ -3,7 +3,7 @@ Welcome to arrowhead-client's documentation!
 ############################################
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    quickstart
