@@ -91,4 +91,4 @@ Congratulations, you have created your first Arrowhead services and systems in u
 This tutorial is meant to show you the basics of using the library without any bells and whistles, just a simple pair
 of providers and consumers.
 
-If you had trouble getting these examples up and running, please look at :ref:`tutorial_trouble`.
+If you had trouble getting these examples up and running, please look at :ref:`Tutorial Troubleshooting and FAQ <tutorial_trouble>`.
