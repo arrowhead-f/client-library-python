@@ -25,10 +25,11 @@ setuptools.setup(
             'Development Status :: 3 - Alpha',
             'Intended Audience :: Developers',
             'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9'
             'Operating System :: POSIX :: Linux',
             'License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)',
         ],
-        python_requires='>=3.8'
+        python_requires='>=3.7'
 )
