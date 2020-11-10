@@ -10,4 +10,5 @@ python:
   version: 3.8
   system_packages: true
   install:
-    - requirements: docs/source/requirements.txt requirements.txt
+    - requirements: docs/source/requirements.txt
+    - requirements: requirements.txt
