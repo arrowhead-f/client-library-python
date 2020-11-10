@@ -3,6 +3,7 @@ from typing import Dict, Union
 import requests as backend
 from arrowhead_client.abc import BaseConsumer
 
+
 class HttpConsumer(BaseConsumer):
     """ Interface for consumer code """
 
@@ -17,7 +18,6 @@ class HttpConsumer(BaseConsumer):
         else:
             service_uri = f'http://{service_uri}'
 
-
         service_response = backend.request(method, service_uri, verify=False, **kwargs)
 
         return service_response
@@ -30,4 +30,3 @@ class HttpConsumer(BaseConsumer):
             return service_response.json()
 
         return service_response.text
-

@@ -34,5 +34,3 @@ class HttpProvider(BaseProvider):
 
     def run_forever(self):
         self.wsgi_server.serve_forever()
-
-

@@ -25,7 +25,7 @@ default_config = {
                 'gatekeeper',
                 _default_address,
                 8449,
-                '' ),
+                '', ),
     'gateway':
         ArrowheadSystem(
                 'gatekeeper',

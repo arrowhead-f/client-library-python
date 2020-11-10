@@ -9,10 +9,11 @@ from arrowhead_client.client import ArrowheadClient
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.httpconsumer import HttpConsumer
 from arrowhead_client.httpprovider import HttpProvider
-from arrowhead_client.service import Service
+from arrowhead_client.service import Service  # noqa: F401
 from arrowhead_client.logs import get_logger
 
-from gevent import pywsgi # type: ignore
+from gevent import pywsgi  # type: ignore
+
 
 class ArrowheadHttpClient(ArrowheadClient):
     """
@@ -52,4 +53,4 @@ class ArrowheadHttpClient(ArrowheadClient):
                 certfile=certfile
         )
         self._logger.info(f'{self.__class__.__name__} initialized at {self.system.address}:{self.system.port}')
-        #TODO: This line is a hack and needs to be fixed
+        # TODO: This line is a hack and needs to be fixed

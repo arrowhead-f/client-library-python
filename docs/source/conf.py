@@ -13,16 +13,17 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
+import _version
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'arrowhead-client'
-copyright = '2020, Jacob Nilsson'
-author = 'Jacob Nilsson'
+project = _version.__lib_name__
+copyright = f'2020, {_version.__author__}'
+author = _version.__author__
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.1a1'
+release = _version.__version__
 
 
 # -- General configuration ---------------------------------------------------

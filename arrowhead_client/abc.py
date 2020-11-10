@@ -1,5 +1,10 @@
-from typing import Protocol, Any, Callable
 from abc import abstractmethod
+from typing import Any, Callable
+try:
+    from typing import Protocol
+except ImportError:
+    from typing_extensions import Protocol  # type: ignore
+
 
 class BaseConsumer(Protocol):
     @abstractmethod
@@ -7,7 +12,7 @@ class BaseConsumer(Protocol):
             self,
             service_uri: str,
             method: str,
-            **kwargs) -> Any: # type: ignore
+            **kwargs) -> Any:  # type: ignore
         raise NotImplementedError
 
     @abstractmethod
@@ -16,6 +21,7 @@ class BaseConsumer(Protocol):
             service_response: Any,
             payload_type: str):
         raise NotImplementedError
+
 
 class BaseProvider(Protocol):
     @abstractmethod
@@ -32,4 +38,3 @@ class BaseProvider(Protocol):
     @abstractmethod
     def run_forever(self) -> None:
         pass
-

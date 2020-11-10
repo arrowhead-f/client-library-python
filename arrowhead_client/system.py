@@ -1,6 +1,7 @@
 from typing import Dict, Union
 from dataclasses import dataclass
 
+
 @dataclass
 class ArrowheadSystem:
     """
@@ -25,10 +26,10 @@ class ArrowheadSystem:
     @property
     def dto(self):
         system_dto = {
-            'systemName': self.system_name,
-            'address': self.address,
-            'port': self.port,
-            'authenticationInfo': self.authentication_info}
+                'systemName': self.system_name,
+                'address': self.address,
+                'port': self.port,
+                'authenticationInfo': self.authentication_info}
         return system_dto
 
     @classmethod

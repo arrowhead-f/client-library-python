@@ -1,4 +1,4 @@
-Welcome to arrowhead-client's documentatiön!
+Welcome to arrowhead-client's documentation!
 ============================================
 
 .. toctree::

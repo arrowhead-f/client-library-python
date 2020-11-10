@@ -13,8 +13,8 @@ def uppercase_strings_in_list(requirement_list: Union[List[str], str]) -> List[s
         return [requirement.upper() for requirement in requirement_list]
     else:
         raise TypeError(
-                "'requirement_list' is type {type(requirement_list)},"
-                "should be type str or list(str)"
+            "'requirement_list' is type {type(requirement_list)},"
+            "should be type str or list(str)"
         )
 
 
@@ -25,8 +25,7 @@ def to_camel_case(variable_name: str) -> str:
     trailing_underscore = '_' if variable_name.endswith('_') else ''
 
     return initial_underscore + split_name[0] + \
-           ''.join([split.capitalize() for split in split_name[1:]]) + \
-           trailing_underscore
+        ''.join([split.capitalize() for split in split_name[1:]]) + trailing_underscore
 
 
 def to_snake_case(variable_name: str) -> str:
@@ -36,5 +35,4 @@ def to_snake_case(variable_name: str) -> str:
     trailing_underscore = '_' if variable_name.endswith('_') else ''
 
     return initial_underscore + \
-           '_'.join([camel.lower() for camel in split_camel]) + \
-           trailing_underscore
+        '_'.join([camel.lower() for camel in split_camel]) + trailing_underscore

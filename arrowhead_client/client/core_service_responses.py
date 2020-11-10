@@ -37,10 +37,10 @@ def handle_service_query_response(service_query_response: Mapping) -> List[Tuple
     return service_and_system_list
 
 
-def handle_service_register_response(service_register_response: Mapping) -> NotImplemented:
+def handle_service_register_response(service_register_response: Mapping) -> None:
     """ Handles service register responses """
     # TODO: Implement this
-    return NotImplemented
+    raise NotImplementedError
 
 
 def handle_orchestration_response(service_orchestration_response: Mapping) \

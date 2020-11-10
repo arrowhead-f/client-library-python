@@ -1,8 +1,10 @@
+import pytest
 from arrowhead_client.client import core_service_responses as csr
 
 
 def test_registration_response():
-    csr.handle_service_register_response({'dummy': 'data'})
+    with pytest.raises(Exception) as e:
+        csr.handle_service_register_response({'dummy': 'data'})
 
 
 

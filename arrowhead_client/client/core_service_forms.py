@@ -50,6 +50,7 @@ class ServiceQueryForm(CoreSystemServiceForm):
 @dataclass
 class ServiceRegistrationForm(CoreSystemServiceForm):
     """ Service Registration Form """
+
     def __init__(
             self,
             provided_service: Service,
@@ -66,6 +67,7 @@ class ServiceRegistrationForm(CoreSystemServiceForm):
         self.metadata = metadata
         self.version = version
         self.end_of_validity = end_of_validity
+
 
 class OrchestrationForm(CoreSystemServiceForm):
     """ Orchestration Form """

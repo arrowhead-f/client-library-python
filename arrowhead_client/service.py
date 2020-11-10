@@ -38,6 +38,7 @@ class ServiceInterface:
                self.secure == other.secure and \
                self.payload == other.payload
 
+
 class Service():
     """
     Arrowhead Service class.
@@ -63,5 +64,3 @@ class Service():
     def __repr__(self) -> str:
         variable_string = ', '.join([f'{str(key)}={str(value)}' for key, value in vars(self).items()])
         return f'{self.__class__.__name__}({variable_string})'
-
-

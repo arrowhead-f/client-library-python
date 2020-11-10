@@ -220,7 +220,7 @@ class ArrowheadClient():
         elif service.interface.secure == 'SECURE':
             secure = 'CERTIFICATE'
         else:
-            secure= 'CERTIFICATE'
+            secure = 'CERTIFICATE'
         # TODO: Add 'TOKEN' security level
 
         # TODO: Should accept a system and a service
