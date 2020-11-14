@@ -11,7 +11,7 @@ StoredConsumedService = Dict[str, Tuple[Service, ArrowheadSystem, str]]
 StoredProvidedService = Dict[str, Tuple[Service, Callable]]
 
 
-class ArrowheadClient():
+class ArrowheadClient:
     """
     Application class for Arrowhead Systems.
 
@@ -23,7 +23,6 @@ class ArrowheadClient():
         provider: Provider
         logger: Logger, will default to the logger found in logs.get_logger()
         config: JSON config file containing the addresses and ports of the core systems
-        server: WSGI server
         keyfile: PEM keyfile
         certfile: PEM certfile
     """
@@ -67,7 +66,7 @@ class ArrowheadClient():
             # Add certificate files if service is secure
             kwargs['cert'] = self.cert
 
-        return self.consumer.consume_service(service_uri, method, **kwargs)
+        return self.consumer.consume_service(consumed_service, method, **kwargs)
 
     def extract_payload(self, service_response: Any, payload_type: str) -> Union[Dict, str]:
         return self.consumer.extract_payload(service_response, payload_type)
@@ -103,7 +102,7 @@ class ArrowheadClient():
                 'json'
         )
 
-        (orchestrated_service, system), *_ = responses.handle_orchestration_response(orchestration_payload)
+        (orchestrated_service, system), *_ = responses.handle_orchestration_response(orchestration_response.payload)
 
         # TODO: Handle response with more than 1 service
         # Perhaps a list of consumed services for each service definition should be stored

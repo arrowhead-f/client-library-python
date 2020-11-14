@@ -4,21 +4,23 @@ try:
     from typing import Protocol
 except ImportError:
     from typing_extensions import Protocol  # type: ignore
+from arrowhead_client.response import Response
+from arrowhead_client.service import Service
 
 
 class BaseConsumer(Protocol):
     @abstractmethod
     def consume_service(
             self,
-            service_uri: str,
+            service: Service,
             method: str,
-            **kwargs) -> Any:  # type: ignore
+            **kwargs) -> Response:
         raise NotImplementedError
 
     @abstractmethod
     def extract_payload(
             self,
-            service_response: Any,
+            service_response: Response,
             payload_type: str):
         raise NotImplementedError
 

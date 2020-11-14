@@ -3,9 +3,8 @@ from arrowhead_client.client import core_service_responses as csr
 
 
 def test_registration_response():
-    with pytest.raises(Exception) as e:
+    with pytest.raises(NotImplementedError) as e:
         csr.handle_service_register_response({'dummy': 'data'})
-
 
 
 def test_orchestration_response():
@@ -65,11 +64,10 @@ def test_orchestration_response():
         ]
     }
 
-
     handled_responses = csr.handle_orchestration_response(orchestrator_response)
-    assert len(handled_responses) == 2
+    assert len(handled_responses) == len(orchestrator_response)
 
-    service, system = handled_responses[0]
+    (service, system), *_ = handled_responses
     assert 'test' == service.service_definition
     assert 'test/service' == service.service_uri
     assert 'HTTP-SECURE-JSON' == service.interface
