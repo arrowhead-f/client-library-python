@@ -58,15 +58,13 @@ class ArrowheadClient:
             service_definition: The service definition of a consumable service
             **kwargs: Collection of keyword arguments passed to the consumer.
         """
-        consumed_service, consumer_system, method = self._consumed_services[service_definition]
-
-        service_uri = _service_uri(consumed_service, consumer_system)
+        consumed_service, provider_system, method = self._consumed_services[service_definition]
 
         if consumed_service.interface.secure == 'SECURE':
             # Add certificate files if service is secure
             kwargs['cert'] = self.cert
 
-        return self.consumer.consume_service(consumed_service, method, **kwargs)
+        return self.consumer.consume_service(consumed_service, provider_system, method, **kwargs)
 
     def extract_payload(self, service_response: Any, payload_type: str) -> Union[Dict, str]:
         return self.consumer.extract_payload(service_response, payload_type)
@@ -97,6 +95,7 @@ class ArrowheadClient:
 
         # TODO: Handle orchestrator error codes
 
+        # TODO: extract_payload may be unnecessary with the Response class introduced
         orchestration_payload = self.consumer.extract_payload(
                 orchestration_response,
                 'json'
@@ -237,7 +236,7 @@ class ArrowheadClient:
         )
 
         print(service_registration_response.status_code)
-        print(service_registration_response.text)
+        print(service_registration_response.payload)
         # TODO: Error handling
 
         # TODO: Do logging

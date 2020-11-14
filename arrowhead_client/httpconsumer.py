@@ -4,12 +4,13 @@ import requests as backend
 from arrowhead_client.abc import BaseConsumer
 from arrowhead_client.service import Service
 from arrowhead_client.response import Response
+from arrowhead_client.system import ArrowheadSystem
 
 
 class HttpConsumer(BaseConsumer):
     """ Interface for consumer code """
 
-    def consume_service(self, service: Service, method: str, **kwargs) -> Response:
+    def consume_service(self, service: Service, system: ArrowheadSystem, method: str, **kwargs) -> Response:
         """ Consume registered service """
         # TODO: Add error handling for the case where the service is not
         # registered in _consumed_services
@@ -19,9 +20,9 @@ class HttpConsumer(BaseConsumer):
 
         # Check if cert- and keyfiles are given and use tls if they are.
         if any(kwargs['cert']):
-            service_url = f'https://{service_uri}'
+            service_url = f'https://{system.authority}/{service_uri}'
         else:
-            service_url = f'http://{service_uri}'
+            service_url = f'http://{system.authority}/{service_uri}'
 
         service_response = backend.request(method, service_url, verify=False, **kwargs)
 

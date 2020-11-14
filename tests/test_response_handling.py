@@ -65,7 +65,7 @@ def test_orchestration_response():
     }
 
     handled_responses = csr.handle_orchestration_response(orchestrator_response)
-    assert len(handled_responses) == len(orchestrator_response)
+    assert len(handled_responses) == len(orchestrator_response['response'])
 
     (service, system), *_ = handled_responses
     assert 'test' == service.service_definition

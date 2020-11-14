@@ -1,11 +1,12 @@
 from abc import abstractmethod
-from typing import Any, Callable
+from typing import Callable
 try:
     from typing import Protocol
 except ImportError:
     from typing_extensions import Protocol  # type: ignore
 from arrowhead_client.response import Response
 from arrowhead_client.service import Service
+from arrowhead_client.system import ArrowheadSystem
 
 
 class BaseConsumer(Protocol):
@@ -13,6 +14,7 @@ class BaseConsumer(Protocol):
     def consume_service(
             self,
             service: Service,
+            system: ArrowheadSystem,
             method: str,
             **kwargs) -> Response:
         raise NotImplementedError
