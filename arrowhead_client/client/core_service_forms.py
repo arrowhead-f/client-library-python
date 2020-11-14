@@ -85,14 +85,14 @@ class OrchestrationForm(CoreSystemServiceForm):
                  orchestration_flags: Optional[Mapping[str, bool]] = None, ) -> None:
         self.requester_system = requester_system
         self.requested_service = ServiceQueryForm(
-                service_definition_requirement,
-                interface_requirements if interface_requirements else [],
-                security_requirements if security_requirements else [],
-                metadata_requirements,
-                version_requirement,
-                max_version_requirement,
-                min_version_requirement,
-                ping_providers).dto
+            service_definition_requirement,
+            interface_requirements if interface_requirements else [],
+            security_requirements if security_requirements else [],
+            metadata_requirements,
+            version_requirement,
+            max_version_requirement,
+            min_version_requirement,
+            ping_providers).dto
         # TODO: Implement preferred_providers
         self.preferred_providers = None
         if orchestration_flags:
