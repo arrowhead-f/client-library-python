@@ -6,6 +6,7 @@ from arrowhead_client.abc import BaseConsumer, BaseProvider
 from arrowhead_client.service import Service
 from arrowhead_client.client.core_services import core_service
 from arrowhead_client.client import core_service_forms as forms, core_service_responses as responses
+import arrowhead_client.errors as errors
 
 StoredConsumedService = Dict[str, Tuple[Service, ArrowheadSystem, str]]
 StoredProvidedService = Dict[str, Tuple[Service, Callable]]
@@ -94,18 +95,19 @@ class ArrowheadClient:
         )
 
         # TODO: Handle orchestrator error codes
+        if orchestration_response.status_code == 401:
+            raise errors.NotAuthorizedError(orchestration_response.payload['errorMessage'])
+        elif orchestration_response.status_code == 500:
+            raise errors.CoreServiceNotAvailableError('orchestration')
 
-        # TODO: extract_payload may be unnecessary with the Response class introduced
-        orchestration_payload = self.consumer.extract_payload(
-                orchestration_response,
-                'json'
-        )
-
-        (orchestrated_service, system), *_ = responses.handle_orchestration_response(orchestration_response.payload)
-
-        # TODO: Handle response with more than 1 service
-        # Perhaps a list of consumed services for each service definition should be stored
-        self._store_consumed_service(orchestrated_service, system, method)
+        try:
+            (orchestrated_service, provider_system), *_ = responses.handle_orchestration_response(orchestration_response)
+        except errors.NoAvailableServicesError as e:
+            print(e)
+        else:
+            # TODO: Handle response with more than 1 service
+            # Perhaps a list of consumed services for each service definition should be stored
+            self._store_consumed_service(orchestrated_service, provider_system, method)
 
     def provided_service(
             self,
@@ -149,16 +151,16 @@ class ArrowheadClient:
         import warnings
         warnings.simplefilter('ignore')
 
-        self._register_all_services()
         try:
+            self._register_all_services()
             self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
             self.provider.run_forever()
         except KeyboardInterrupt:
             self._logger.info('Shutting down server')
+        finally:
             print('Shutting down Arrowhead system')
             self._unregister_all_services()
-        finally:
             self._logger.info('Server shut down')
 
     @property
@@ -225,7 +227,6 @@ class ArrowheadClient:
         service_registration_form = forms.ServiceRegistrationForm(
                 provided_service=service,
                 provider_system=self.system,
-                # TODO: secure should _NOT_ be hardcoded
                 secure=secure
         )
 
@@ -234,27 +235,39 @@ class ArrowheadClient:
                 json=service_registration_form.dto,
                 cert=self.cert
         )
-
-        print(service_registration_response.status_code)
         print(service_registration_response.payload)
-        # TODO: Error handling
 
+        # TODO: Error handling - Done
         # TODO: Do logging
+        if service_registration_response.status_code == 400:
+            raise errors.CouldNotRegisterServiceError(
+                    service.service_definition,
+                    service_registration_response.payload['errorMessage'],
+            )
+        elif service_registration_response.status_code == 401:
+            raise errors.NotAuthorizedError
+        elif service_registration_response.status_code == 500:
+            raise errors.CoreServiceNotAvailableError('Service Registry')
 
     def _register_all_services(self) -> None:
         """
         Registers all provided services of the system with the system registry.
         """
         for service, _ in self._provided_services.values():
-            self._register_service(service)
+            try:
+                self._register_service(service)
+            except errors.CouldNotRegisterServiceError as e:
+                print(e)
 
-    def _unregister_service(self, service_definition: str) -> None:
+    def _unregister_service(self, service: Service) -> None:
         """
         Unregisters the given service with service registry
 
         Args:
             service: Service to unregister with the Service registry.
         """
+
+        service_definition = service.service_definition
 
         if service_definition not in self._provided_services.keys():
             raise ValueError(f'{service_definition} not provided by {self}')
@@ -273,15 +286,26 @@ class ArrowheadClient:
                 cert=self.cert
         )
 
-        print(service_unregistration_response.status_code)
+        if service_unregistration_response.status_code == 400:
+            raise errors.CouldNotUnregisterServiceError(
+                    service.service_definition,
+                    service_unregistration_response.payload['errorMessage']
+            )
+        if service_unregistration_response.status_code == 401:
+            raise errors.NotAuthorizedError
+        if service_unregistration_response.status_code == 500:
+            raise errors.CoreServiceNotAvailableError
 
     def _unregister_all_services(self) -> None:
         """
         Unregisters all provided services of the system with the system registry.
         """
 
-        for service_definition in self._provided_services:
-            self._unregister_service(service_definition)
+        for service, _ in self._provided_services.values():
+            try:
+                self._unregister_service(service)
+            except errors.CouldNotUnregisterServiceError as e:
+                print(e)
 
     """
     def __enter__(self):

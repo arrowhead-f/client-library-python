@@ -1,5 +1,7 @@
 import pytest
 from arrowhead_client.client import core_service_responses as csr
+from arrowhead_client.response import Response
+from arrowhead_client import errors
 
 
 def test_registration_response():
@@ -8,7 +10,7 @@ def test_registration_response():
 
 
 def test_orchestration_response():
-    orchestrator_response = {
+    orchestrator_response_json = {
         "response": [{
             "provider": {
                 "id": 0,
@@ -63,9 +65,10 @@ def test_orchestration_response():
             "warnings": []},
         ]
     }
+    orchestrator_response = Response(orchestrator_response_json, 'JSON', 200, '')
 
     handled_responses = csr.handle_orchestration_response(orchestrator_response)
-    assert len(handled_responses) == len(orchestrator_response['response'])
+    assert len(handled_responses) == len(orchestrator_response_json['response'])
 
     (service, system), *_ = handled_responses
     assert 'test' == service.service_definition
@@ -78,8 +81,8 @@ def test_orchestration_response():
 
 
 def test_empty_orchestration_response():
-    orchestration_response = {"response": []}
+    orchestration_response = Response({"response": []}, 'JSON', 200, '')
 
-    handled_responses = csr.handle_orchestration_response(orchestration_response)
+    with pytest.raises(errors.NoAvailableServicesError) as e:
+        handled_responses = csr.handle_orchestration_response(orchestration_response)
 
-    assert len(handled_responses) == 0

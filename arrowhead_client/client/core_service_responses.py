@@ -1,6 +1,8 @@
 from typing import Mapping, Dict, Tuple, List
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
+from arrowhead_client.response import Response
+from arrowhead_client import errors
 
 system_keys = ('systemName', 'address', 'port', 'authenticationInfo')
 service_keys = ('serviceDefinition', 'serviceUri', 'interfaces', 'secure')
@@ -43,14 +45,16 @@ def handle_service_register_response(service_register_response: Mapping) -> None
     raise NotImplementedError
 
 
-def handle_orchestration_response(service_orchestration_response: Mapping) \
+def handle_orchestration_response(service_orchestration_response: Response) \
         -> List[Tuple[Service, ArrowheadSystem]]:
     """ Turns orchestration response into list of services """
-    orchestration_response_list = service_orchestration_response['response']
+    if isinstance(service_orchestration_response.payload, dict):
+        orchestration_response_list = service_orchestration_response.payload['response']
+    else:
+        raise ValueError('Response payload type must be \'JSON\'')
 
-    extracted_data = []
-    for orchestration_response in orchestration_response_list:
-        service_dto = orchestration_response
+    def extract_orchestration_data(orchestration_response_entry):
+        service_dto = orchestration_response_entry
         provider_dto = service_dto['provider']
 
         service_definition = service_dto['service']['serviceDefinition']
@@ -73,6 +77,14 @@ def handle_orchestration_response(service_orchestration_response: Mapping) \
                 ''
         )
 
-        extracted_data.append((service, system))
+        return service, system
+
+
+    extracted_data = [extract_orchestration_data(orchestration_entry)
+                      for orchestration_entry in orchestration_response_list]
+
+    if len(extracted_data) == 0:
+        raise errors.NoAvailableServicesError()
 
     return extracted_data
+
