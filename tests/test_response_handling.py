@@ -67,7 +67,8 @@ def test_orchestration_response():
     }
     orchestrator_response = Response(orchestrator_response_json, 'JSON', 200, '')
 
-    handled_responses = csr.handle_orchestration_response(orchestrator_response)
+    handled_responses = csr.process_orchestration_response(orchestrator_response)
+    assert len(orchestrator_response_json['response']) == 2
     assert len(handled_responses) == len(orchestrator_response_json['response'])
 
     (service, system), *_ = handled_responses
@@ -84,5 +85,5 @@ def test_empty_orchestration_response():
     orchestration_response = Response({"response": []}, 'JSON', 200, '')
 
     with pytest.raises(errors.NoAvailableServicesError) as e:
-        handled_responses = csr.handle_orchestration_response(orchestration_response)
+        handled_responses = csr.process_orchestration_response(orchestration_response)
 

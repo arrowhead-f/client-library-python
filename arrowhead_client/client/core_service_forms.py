@@ -55,18 +55,16 @@ class ServiceRegistrationForm(CoreSystemServiceForm):
             self,
             provided_service: Service,
             provider_system: ArrowheadSystem,
-            secure: str,
-            metadata: Optional[Mapping[str, str]] = None,
-            end_of_validity: Optional[str] = None,
-            version: Optional[int] = None, ):
+            end_of_validity: Optional[str] = None, ):
         self.service_definition = provided_service.service_definition
         self.service_uri = provided_service.service_uri
         self.interfaces = [provided_service.interface.dto]
         self.provider_system = provider_system.dto
-        self.secure = secure
-        self.metadata = metadata
-        self.version = version
+        self.secure = provided_service.access_policy
+        self.metadata = provided_service.metadata
+        self.version = provided_service.version
         self.end_of_validity = end_of_validity
+        # TODO: How to do end_of_validity
 
 
 class OrchestrationForm(CoreSystemServiceForm):

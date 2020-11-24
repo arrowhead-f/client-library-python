@@ -15,7 +15,8 @@ provider_app = ar.ArrowheadHttpClient(
 @provider_app.provided_service(
         'hello-arrowhead',
         'hello',
-        'HTTP-INSECURE-JSON',
+        'HTTP-SECURE-JSON',
+        'TOKEN',
         'GET', )
 def hello_arrowhead(request):
     return {"msg": "Hello, Arrowhead!"}

@@ -45,8 +45,8 @@ def handle_service_register_response(service_register_response: Mapping) -> None
     raise NotImplementedError
 
 
-def handle_orchestration_response(service_orchestration_response: Response) \
-        -> List[Tuple[Service, ArrowheadSystem]]:
+def process_orchestration_response(service_orchestration_response: Response) \
+        -> List[Tuple[Service, ArrowheadSystem, str]]:
     """ Turns orchestration response into list of services """
     if isinstance(service_orchestration_response.payload, dict):
         orchestration_response_list = service_orchestration_response.payload['response']
@@ -63,6 +63,8 @@ def handle_orchestration_response(service_orchestration_response: Response) \
         system_name = provider_dto['systemName']
         address = provider_dto['address']
         port = provider_dto['port']
+        auth_token = service_dto['authorizationTokens'][interface]
+
 
         service = Service(
                 service_definition,
@@ -74,10 +76,9 @@ def handle_orchestration_response(service_orchestration_response: Response) \
                 system_name,
                 address,
                 port,
-                ''
         )
 
-        return service, system
+        return service, system, auth_token
 
 
     extracted_data = [extract_orchestration_data(orchestration_entry)

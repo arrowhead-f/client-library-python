@@ -1,5 +1,9 @@
-from typing import Dict, Union
-from dataclasses import dataclass
+from typing import Dict, Union, Optional
+from dataclasses import dataclass, field
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+
+from arrowhead_client.security import create_authentication_info
 
 
 @dataclass
@@ -17,7 +21,12 @@ class ArrowheadSystem:
     system_name: str
     address: str
     port: int
-    authentication_info: str
+    _privatekey: Optional[RSAPrivateKey] = field(default=None)
+    _publickey: Optional[RSAPublicKey] = field(default=None)
+
+    @property
+    def authentication_info(self):
+        return create_authentication_info(self._publickey)
 
     @property
     def authority(self):

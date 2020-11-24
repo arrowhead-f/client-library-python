@@ -20,12 +20,12 @@ def uppercase_strings_in_list(requirement_list: Union[List[str], str]) -> List[s
 
 def to_camel_case(variable_name: str) -> str:
     """ Turns snake_case variable name into camelCase """
-    split_name = [split for split in variable_name.split('_') if split != '']
+    first_split, *split_name = [split for split in variable_name.split('_') if split != '']
     initial_underscore = '_' if variable_name.startswith('_') else ''
     trailing_underscore = '_' if variable_name.endswith('_') else ''
 
-    return initial_underscore + split_name[0] + \
-        ''.join([split.capitalize() for split in split_name[1:]]) + trailing_underscore
+    return initial_underscore + first_split + \
+        ''.join([split.capitalize() for split in split_name]) + trailing_underscore
 
 
 def to_snake_case(variable_name: str) -> str:

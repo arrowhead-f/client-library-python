@@ -18,11 +18,16 @@ _http_core_services: Dict[str, Service] = {
     'orchestration-service': Service(
             service_definition='orchestration-service',
             service_uri='orchestrator/orchestration',
-            interface='HTTP-SECURE-JSON', )
+            interface='HTTP-SECURE-JSON', ),
+    'publickey': Service(
+            service_definition='publickey',
+            service_uri='authorization/publickey',
+            interface='HTTP-SECURE-TEXT', ),
 }
 
 
 def core_service(service_defintion: str) -> Service:
+    # TODO: Why are the services being copied?
     core_service_instance = deepcopy(_http_core_services.get(service_defintion, None))
 
     if not core_service_instance:

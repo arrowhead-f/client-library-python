@@ -6,32 +6,32 @@ default_config = {
         ArrowheadSystem(
                 'service_registry',
                 _default_address,
-                8443,
-                '', ),
+                8443, ),
     'orchestrator':
         ArrowheadSystem(
                 'orchestrator',
                 _default_address,
-                8441,
-                '', ),
+                8441, ),
+    'authorization':
+        ArrowheadSystem(
+                'authorization',
+                _default_address,
+                8445, ),
     'eventhandler':
         ArrowheadSystem(
                 'eventhandler',
                 _default_address,
-                8455,
-                '', ),
+                8455, ),
     'gatekeeper':
         ArrowheadSystem(
                 'gatekeeper',
                 _default_address,
-                8449,
-                '', ),
+                8449, ),
     'gateway':
         ArrowheadSystem(
                 'gatekeeper',
                 _default_address,
-                8453,
-                '', )
+                8453, )
 }
 
 config = default_config

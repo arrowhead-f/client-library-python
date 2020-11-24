@@ -1,6 +1,6 @@
 from typing import Dict, Union
 
-import requests as backend
+import requests
 from arrowhead_client.abc import BaseConsumer
 from arrowhead_client.service import Service
 from arrowhead_client.response import Response
@@ -10,7 +10,12 @@ from arrowhead_client.system import ArrowheadSystem
 class HttpConsumer(BaseConsumer):
     """ Interface for consumer code """
 
-    def consume_service(self, service: Service, system: ArrowheadSystem, method: str, **kwargs) -> Response:
+    def consume_service(self,
+                        service: Service,
+                        system: ArrowheadSystem,
+                        method: str,
+                        token: str,
+                        **kwargs) -> Response:
         """ Consume registered service """
         # TODO: Add error handling for the case where the service is not
         # registered in _consumed_services
@@ -24,9 +29,15 @@ class HttpConsumer(BaseConsumer):
         else:
             service_url = f'http://{system.authority}/{service_uri}'
 
-        service_response = backend.request(method, service_url, verify=False, **kwargs)
+        service_response = requests.request(method,
+                                            service_url,
+                                            verify=False,
+                                            auth=ArrowheadAuth(token),
+                                            **kwargs
+        )
 
         if payload_type == 'JSON':
+            print(service_response.text)
             return Response(service_response.json(), 'JSON', service_response.status_code, '')
         elif payload_type == 'TEXT':
             return Response(service_response.text, 'TEXT', service_response.status_code, '')
@@ -45,3 +56,14 @@ class HttpConsumer(BaseConsumer):
         """
         # TODO: See if this method is still useful
         return {}
+
+class ArrowheadAuth(requests.auth.AuthBase):
+    def __init__(self, token: str):
+        self.token = token
+
+    def __call__(self, r: requests.Request):
+        if self.token:
+            r.headers['Authorization'] = f'Bearer {self.token}'
+
+        return r
+

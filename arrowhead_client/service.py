@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Dict, Optional
 
 
 @dataclass()
@@ -52,15 +52,22 @@ class Service():
     def __init__(self,
                  service_definition: str,
                  service_uri: str,
-                 interface: Union[str, ServiceInterface]) -> None:
+                 interface: Union[str, ServiceInterface],
+                 access_policy: str = 'NOT_SECURE',
+                 metadata: Dict = None,
+                 version: Optional[int] = None) -> None:
         self.service_definition = service_definition
         self.service_uri = service_uri
         if isinstance(interface, str):
             self.interface = ServiceInterface.from_str(interface)
         else:
             self.interface = interface
-        # TODO: Add security/access policy, metadata, and version fields.
+        self.access_policy = access_policy
+        self.metadata = metadata or {}
+        self.version = version
+        # TODO: Access policy is string, maybe it should be custom class?
 
     def __repr__(self) -> str:
-        variable_string = ', '.join([f'{str(key)}={str(value)}' for key, value in vars(self).items()])
+        variable_string = ', '.join([f'{str(key)}={str(value)}'
+                                     for key, value in vars(self).items()])
         return f'{self.__class__.__name__}({variable_string})'

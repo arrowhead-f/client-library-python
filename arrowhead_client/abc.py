@@ -16,6 +16,7 @@ class BaseConsumer(Protocol):
             service: Service,
             system: ArrowheadSystem,
             method: str,
+            token: str,
             **kwargs) -> Response:
         raise NotImplementedError
 
@@ -31,10 +32,11 @@ class BaseProvider(Protocol):
     @abstractmethod
     def add_provided_service(
             self,
-            service_definition: str,
-            service_uri: str,
+            service: Service,
+            provider: ArrowheadSystem,
             method: str,
             func: Callable,
+            authorization_key, # TODO: Put this somewhere else
             *func_args,
             **func_kwargs, ) -> None:
         pass

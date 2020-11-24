@@ -8,17 +8,18 @@ provider_system = ArrowheadSystem('test_system', 'localhost', 0, '')
 
 def test_registration_form():
     service = Service(
-            'test_service',
-            '/test/test/test',
-            'HTTP-SECURE-JSON',
+            service_definition='test_service',
+            service_uri='/test/test/test',
+            interface='HTTP-SECURE-JSON',
+            access_policy='CERTIFICATE',
+            metadata={'dummy': 'data'},
+            version=0,
     )
+
     registration_form = forms.ServiceRegistrationForm(
             provided_service=service,
             provider_system=provider_system,
-            secure='CERTIFICATE',
-            metadata={'dummy': 'data'},
             end_of_validity='dummy-date',
-            version=0,
     )
 
     valid_keys = {

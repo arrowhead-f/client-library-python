@@ -1,4 +1,6 @@
 Flask>=1.0.2
 requests>=2.21
 gevent>=20.5.0
+cryptography==3.2
+python-jose==3.2
 typing-extensions>=3.7
