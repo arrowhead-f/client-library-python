@@ -1,5 +1,5 @@
 import pytest
-from arrowhead_client.client import core_service_responses as csr
+from arrowhead_client.core_services import core_service_responses as csr
 from arrowhead_client.response import Response
 from arrowhead_client import errors
 

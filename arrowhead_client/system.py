@@ -4,10 +4,11 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 from arrowhead_client.security import create_authentication_info
+from arrowhead_client.mixins import DTOMixin
 
 
 @dataclass
-class ArrowheadSystem:
+class ArrowheadSystem(DTOMixin):
     """
     ArrowheadSystem class.
 
@@ -32,6 +33,7 @@ class ArrowheadSystem:
     def authority(self):
         return f'{self.address}:{self.port}'
 
+    """
     @property
     def dto(self):
         system_dto = {
@@ -40,6 +42,9 @@ class ArrowheadSystem:
                 'port': self.port,
                 'authenticationInfo': self.authentication_info}
         return system_dto
+    """
+    _dto_excludes = {'_privatekey', '_publickey'}
+    _dto_property_include = {'authentication_info'}
 
     @classmethod
     def from_dto(cls, system_dto: Dict[str, Union[int, str]]):
@@ -47,5 +52,4 @@ class ArrowheadSystem:
                 system_name=str(system_dto['systemName']),
                 address=str(system_dto['address']),
                 port=int(system_dto['port']),
-                authentication_info=str(system_dto['authenticationInfo'])
         )

@@ -1,9 +1,9 @@
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
-import arrowhead_client.client.core_service_forms as forms
+import arrowhead_client.core_services.core_service_forms as forms
 
-requester_system = ArrowheadSystem('test_system', 'localhost', 0, '')
-provider_system = ArrowheadSystem('test_system', 'localhost', 0, '')
+requester_system = ArrowheadSystem('test_system', 'localhost', 0)
+provider_system = ArrowheadSystem('test_system', 'localhost', 0)
 
 
 def test_registration_form():
@@ -35,8 +35,25 @@ def test_registration_form():
 
     assert valid_keys == registration_form.dto.keys()
 
+def test_orchestration_flags():
+    valid_keys = {
+        'matchmaking',
+        'metadataSearch',
+        'onlyPreferred',
+        'pingProviders',
+        'overrideStore',
+        'enableInterCloud',
+        'triggerInterCloud',
+    }
+
+    of = forms.OrchestrationFlags()
+
+    assert set(of.dto.keys()) == valid_keys
+    assert of.override_store == True
+
 
 def test_orchestration_form():
+    orchestration_flags = forms.OrchestrationFlags(matchmaking=True)
     orchestration_form = forms.OrchestrationForm(
             requester_system.dto,
             'test_service',
@@ -47,7 +64,7 @@ def test_orchestration_form():
             0,
             0,
             True,
-            {'dummy': True},
+            orchestration_flags,
     )
 
     valid_keys = {

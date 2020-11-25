@@ -24,7 +24,7 @@ def test_from_dto():
         "systemName": "test_system",
         "address": "127.0.0.1",
         "port": 0,
-        "authenticationInfo": "look away"
+        "authenticationInfo": ""
     }
 
     test_system = ArrowheadSystem.from_dto(dto)
@@ -32,5 +32,5 @@ def test_from_dto():
     assert test_system.dto.keys() == valid_keys
     assert test_system.authority == '127.0.0.1:0'
     assert test_system.system_name == 'test_system'
-    assert test_system.authentication_info == 'look away'
+    assert test_system.authentication_info == ''
 
