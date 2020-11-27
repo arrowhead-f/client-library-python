@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Tuple, Callable, Union, Optional
+from functools import wraps
+
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
 from arrowhead_client.service import Service
-from arrowhead_client.client.core_services import core_service
-from arrowhead_client.client import core_service_forms as forms, core_service_responses as responses
+from arrowhead_client.core_services.core_services import core_service
+from arrowhead_client.core_services import core_service_responses as responses, core_service_forms as forms
+from arrowhead_client.configuration import config as ar_config
 from arrowhead_client.security import (
     extract_publickey,
     extract_privatekey,
-    create_authentication_info,
     publickey_from_base64,)
 import arrowhead_client.errors as errors
 
+
 StoredConsumedService = Dict[str, Tuple[Service, ArrowheadSystem, str, Optional[str]]]
-StoredProvidedService = Dict[str, Tuple[Service, Callable]]
+StoredProvidedService = Dict[str, Tuple[Service, Callable, str]]
 
 
 class ArrowheadClient:
@@ -28,7 +31,6 @@ class ArrowheadClient:
         consumer: Consumer
         provider: Provider
         logger: Logger, will default to the logger found in logs.get_logger()
-        config: JSON config file containing the addresses and ports of the core systems
         keyfile: PEM keyfile
         certfile: PEM certfile
     """
@@ -38,7 +40,6 @@ class ArrowheadClient:
                  consumer: BaseConsumer,
                  provider: BaseProvider,
                  logger: Any,
-                 config: Dict,
                  keyfile: str = '',
                  certfile: str = '', ):
         self.system = system
@@ -47,7 +48,6 @@ class ArrowheadClient:
         self.keyfile = keyfile
         self.certfile = certfile
         self.secure = True if (self.keyfile and self.certfile) else False
-        self.config = config
         self._logger = logger
         # TODO: Should these two be set in a different place?
         self.system._publickey = extract_publickey(certfile)
@@ -64,17 +64,18 @@ class ArrowheadClient:
 
     def consume_service(self, service_definition: str, **kwargs):
         """
-        Consumes the given service definition
+        Consumes the given provided_service definition
 
         Args:
-            service_definition: The service definition of a consumable service
+            service_definition: The provided_service definition of a consumable provided_service
             **kwargs: Collection of keyword arguments passed to the consumer.
         """
+
         consumed_service, provider_system, method, auth_token = self._consumed_services[service_definition]
 
         # TODO: these should be normal arguments, not live in kwargs
         if consumed_service.interface.secure == 'SECURE':
-            # Add certificate files if service is secure
+            # Add certificate files if provided_service is secure
             kwargs['cert'] = self.cert
 
         return self.consumer.consume_service(consumed_service,
@@ -89,24 +90,27 @@ class ArrowheadClient:
     def add_consumed_service(self,
                              service_definition: str,
                              method: str,
+                             access_policy: str = '',
                              **kwargs, ) -> None:
         """
-        Add orchestration rule for service definition
+        Add orchestration rule for provided_service definition
 
         Args:
             service_definition: Service definition that is looked up from the orchestrator.
-            method: The HTTP method given in uppercase that is used to consume the service.
+            method: The HTTP method given in uppercase that is used to consume the provided_service.
         """
 
+        requested_service = Service(service_definition, access_policy=access_policy)
+
         orchestration_form = forms.OrchestrationForm(
-                self.system.dto,
-                service_definition,
+                self.system,
+                requested_service,
                 **kwargs
         )
 
         orchestration_response = self.consume_service(
-                'orchestration-service',
-                json=orchestration_form.dto,
+                'orchestration-provided_service',
+                json=orchestration_form.dto(),
                 cert=self.cert,
         )
 
@@ -121,8 +125,8 @@ class ArrowheadClient:
         except errors.NoAvailableServicesError as e:
             print(e)
         else:
-            # TODO: Handle response with more than 1 service
-            # Perhaps a list of consumed services for each service definition should be stored
+            # TODO: Handle response with more than 1 provided_service
+            # Perhaps a list of consumed services for each provided_service definition should be stored
             self._store_consumed_service(orchestrated_service, provider_system, method, token)
 
     def provided_service(
@@ -135,13 +139,13 @@ class ArrowheadClient:
             *func_args,
             **func_kwargs, ):
         """
-        Decorator to add a provided service to the provider.
+        Decorator to add a provided provided_service to the provider.
 
         Args:
-            service_definition: Service definition to be stored in the service registry
-            service_uri: The path to the service
+            service_definition: Service definition to be stored in the provided_service registry
+            service_uri: The path to the provided_service
             interface: Arrowhead interface string(s)
-            method: HTTP method required to access the service
+            method: HTTP method required to access the provided_service
         """
         provided_service = Service(
                 service_definition,
@@ -152,27 +156,28 @@ class ArrowheadClient:
 
         def wrapped_func(func):
             # TODO: This should not bind the func to provider, that should be done when the client starts.
-            self._provided_services[service_definition] = (provided_service, func)
-            self.provider.add_provided_service(
-                    provided_service,
-                    self.system,
-                    method=method,
-                    func=func,
-                    authorization_key = self._authorization_publickey,
-                    *func_args,
-                    **func_kwargs)
+            self._provided_services[service_definition] = (provided_service,
+                                                           func,
+                                                           method,
+                                                           'not_initiated',
+                                                           func_args,
+                                                           func_kwargs)
+            '''
+            '''
             return func
 
         return wrapped_func
 
     def run_forever(self) -> None:
-        """ Start the server, publish all service, and run until interrupted. Then, unregister all services"""
+        """ Start the server, publish all provided_service, and run until interrupted. Then, unregister all services"""
 
         # TODO: This filter should be removed
         import warnings
         warnings.simplefilter('ignore')
 
         try:
+            self._authorization_publickey = responses.process_publickey(self.consume_service('publickey'))
+            self._initialize_provided_services()
             self._register_all_services()
             # TODO: Put this in a process_publickey function
             self._authorization_publickey = publickey_from_base64(
@@ -195,6 +200,17 @@ class ArrowheadClient:
         """
         return self.certfile, self.keyfile
 
+    def _initialize_provided_services(self) -> None:
+        for provided_service, func, method, status, func_args, func_kwargs in self._provided_services.values():
+            self.provider.add_provided_service(
+                    provided_service,
+                    method=method,
+                    func=func,
+                    authorization_key=self._authorization_publickey,
+                    *func_args,
+                    **func_kwargs)
+            #self._provided_services[provided_service.service_definition][3] = 'suspended'
+
     def _core_system_setup(self) -> None:
         """
         Method that sets up the core services.
@@ -204,19 +220,19 @@ class ArrowheadClient:
 
         self._store_consumed_service(
                 core_service('register'),
-                self.config['service_registry'],
+                ar_config['core_service']['service_registry'],
                 'POST')
         self._store_consumed_service(
                 core_service('unregister'),
-                self.config['service_registry'],
+                ar_config['core_service']['service_registry'],
                 'DELETE')
         self._store_consumed_service(
-                core_service('orchestration-service'),
-                self.config['orchestrator'],
+                core_service('orchestration-provided_service'),
+                ar_config['core_service']['orchestrator'],
                 'POST')
         self._store_consumed_service(
                 core_service('publickey'),
-                self.config['authorization'],
+                ar_config['core_service']['authorization'],
                 'GET'
         )
 
@@ -231,8 +247,8 @@ class ArrowheadClient:
 
         Args:
             service: Service to be stored
-            system: System containing the service
-            http_method: HTTP method used to consume the service
+            system: System containing the provided_service
+            http_method: HTTP method used to consume the provided_service
         """
 
         self._consumed_services[service.service_definition] = (
@@ -244,7 +260,7 @@ class ArrowheadClient:
 
     def _register_service(self, service: Service):
         """
-        Registers the given service with service registry
+        Registers the given provided_service with provided_service registry
 
         Args:
             service: Service to register with the Service registry.
@@ -259,7 +275,7 @@ class ArrowheadClient:
             secure = 'CERTIFICATE'
         # TODO: Add 'TOKEN' security level
 
-        # TODO: Should accept a system and a service
+        # TODO: Should accept a system and a provided_service
         service_registration_form = forms.ServiceRegistrationForm(
                 provided_service=service,
                 provider_system=self.system,
@@ -267,7 +283,7 @@ class ArrowheadClient:
 
         service_registration_response = self.consume_service(
                 'register',
-                json=service_registration_form.dto,
+                json=service_registration_form.dto(),
                 cert=self.cert
         )
         print(service_registration_response.payload)
@@ -288,7 +304,7 @@ class ArrowheadClient:
         """
         Registers all provided services of the system with the system registry.
         """
-        for service, _ in self._provided_services.values():
+        for service, *_ in self._provided_services.values():
             try:
                 self._register_service(service)
             except errors.CouldNotRegisterServiceError as e:
@@ -296,7 +312,7 @@ class ArrowheadClient:
 
     def _unregister_service(self, service: Service) -> None:
         """
-        Unregisters the given service with service registry
+        Unregisters the given provided_service with provided_service registry
 
         Args:
             service: Service to unregister with the Service registry.
@@ -336,7 +352,7 @@ class ArrowheadClient:
         Unregisters all provided services of the system with the system registry.
         """
 
-        for service, _ in self._provided_services.values():
+        for service, *_ in self._provided_services.values():
             try:
                 self._unregister_service(service)
             except errors.CouldNotUnregisterServiceError as e:

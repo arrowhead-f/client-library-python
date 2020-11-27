@@ -2,6 +2,7 @@ from typing import Mapping, Dict, Tuple, List
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.response import Response
+from arrowhead_client.security import publickey_from_base64
 from arrowhead_client import errors
 
 system_keys = ('systemName', 'address', 'port', 'authenticationInfo')
@@ -9,7 +10,7 @@ service_keys = ('serviceDefinition', 'serviceUri', 'interfaces', 'secure')
 
 
 def extract_system_data(system_data: Mapping) -> Dict:
-    """ Extracts system data from core service response """
+    """ Extracts system data from core provided_service response """
 
     system_data = {key: system_data[key] for key in system_keys}
 
@@ -17,7 +18,7 @@ def extract_system_data(system_data: Mapping) -> Dict:
 
 
 def extract_service_data(data: Mapping) -> Dict:
-    """ Extracts service data from core service response """
+    """ Extracts provided_service data from core provided_service response """
 
     service_data = {key: data[key] for key in service_keys}
 
@@ -27,7 +28,7 @@ def extract_service_data(data: Mapping) -> Dict:
 
 
 def handle_service_query_response(service_query_response: Mapping) -> List[Tuple[Dict, Dict]]:
-    """ Handles service query responses and returns a lists of services and systems """
+    """ Handles provided_service query responses and returns a lists of services and systems """
 
     service_query_data = service_query_response['serviceQueryData']
 
@@ -40,7 +41,7 @@ def handle_service_query_response(service_query_response: Mapping) -> List[Tuple
 
 
 def handle_service_register_response(service_register_response: Mapping) -> None:
-    """ Handles service register responses """
+    """ Handles provided_service register responses """
     # TODO: Implement this
     raise NotImplementedError
 
@@ -63,13 +64,17 @@ def process_orchestration_response(service_orchestration_response: Response) \
         system_name = provider_dto['systemName']
         address = provider_dto['address']
         port = provider_dto['port']
-        auth_token = service_dto['authorizationTokens'][interface]
+        access_policy = orchestration_response_entry['secure']
+        auth_token = service_dto['authorizationTokens']
+        if auth_token:
+            auth_token = auth_token.get(interface)
 
 
         service = Service(
                 service_definition,
                 service_uri,
                 interface,
+                access_policy,
         )
 
         system = ArrowheadSystem(
@@ -88,4 +93,9 @@ def process_orchestration_response(service_orchestration_response: Response) \
         raise errors.NoAvailableServicesError()
 
     return extracted_data
+
+def process_publickey(publickey_response: Response):
+    encoded_key = publickey_response.payload
+
+    return publickey_from_base64(encoded_key)
 

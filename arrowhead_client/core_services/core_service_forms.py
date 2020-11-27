@@ -4,23 +4,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Dict, Union, Sequence, Mapping
 
-from arrowhead_client.mixins import DTOMixin
+from arrowhead_client.dto import DTOMixin
 from arrowhead_client import utils
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
-
-
-# TODO: This class is unnecessary now, should be removed
-class BaseServiceForm(ABC):
-    """ Abstract base class for forms """
-
-    @property
-    @abstractmethod
-    def dto(self) -> Dict[str, Dict[str, Union[str, bool]]]:
-        """ Compiles form into dictionary """
-
-    def __str__(self) -> str:
-        return str(self.dto)
 
 
 @dataclass
@@ -39,8 +26,23 @@ class ServiceQueryForm(DTOMixin):
         self.interface_requirements = utils.uppercase_strings_in_list(self.interface_requirements)
         self.security_requirements = utils.uppercase_strings_in_list(self.security_requirements)
 
+    @classmethod
+    def make(cls,
+             service: Service,
+             max_version_requirement: Optional[int] = None,
+             min_version_requirement: Optional[int] = None,
+             ping_providers: bool = True) -> 'ServiceQueryForm':
+        return cls(
+                service.service_definition,
+                service.interface.dto() if service.interface else 'HTTP-SECURE-JSON',
+                service.access_policy,
+                service.metadata,
+                service.version,
+                max_version_requirement,
+                min_version_requirement,
+                ping_providers,
+        )
 
-@dataclass
 class ServiceRegistrationForm(DTOMixin):
     """ Service Registration Form """
 
@@ -51,8 +53,8 @@ class ServiceRegistrationForm(DTOMixin):
             end_of_validity: Optional[str] = None, ):
         self.service_definition = provided_service.service_definition
         self.service_uri = provided_service.service_uri
-        self.interfaces = [provided_service.interface.dto]
-        self.provider_system = provider_system.dto
+        self.interfaces = [provided_service.interface.dto()]
+        self.provider_system = provider_system.dto()
         self.secure = provided_service.access_policy
         self.metadata = provided_service.metadata
         self.version = provided_service.version
@@ -76,34 +78,13 @@ class OrchestrationForm(DTOMixin):
     """ Orchestration Form """
 
     def __init__(self,
-                 requester_system: BaseServiceForm,
-                 service_definition_requirement: str,
-                 interface_requirements: Union[Sequence[str], str] = None,
-                 security_requirements: Optional[Union[Sequence[str], str]] = None,
-                 metadata_requirements: Optional[Mapping[str, str]] = None,
-                 version_requirement: Optional[int] = None,
-                 max_version_requirement: Optional[int] = None,
-                 min_version_requirement: Optional[int] = None,
-                 ping_providers: bool = True,
+                 requester_system: ArrowheadSystem,
+                 requested_service: Service,
                  orchestration_flags: Optional[OrchestrationFlags] = None, ) -> None:
-        self.requester_system = requester_system
-        # TODO: Change `... if ... else []` to `... or []`, test later if it works
-        self.requested_service = ServiceQueryForm(
-            service_definition_requirement,
-            interface_requirements or [],
-            security_requirements or [],
-            metadata_requirements,
-            version_requirement,
-            max_version_requirement,
-            min_version_requirement,
-            ping_providers).dto
+        self.requester_system = requester_system.dto(exclude={'authentication_info'})
+        self.requested_service = ServiceQueryForm.make(
+            requested_service,
+        ).dto(exclude={'ping_providers'})
         # TODO: Implement preferred_providers
         self.preferred_providers = None
-        self.orchestration_flags = orchestration_flags.dto or {'overrideStore': True}
-        # TODO: If line above works, remove the commented code below
-        """
-        if orchestration_flags:
-            self.orchestration_flags = orchestration_flags
-        else:
-            self.orchestration_flags = {'overrideStore': True}
-        """
+        self.orchestration_flags = orchestration_flags.dto() if orchestration_flags else {'overrideStore': True}

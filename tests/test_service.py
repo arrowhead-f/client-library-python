@@ -14,5 +14,5 @@ def test_interface():
 
     assert test_interface == 'HTTP-SECURE-JSON'
     assert test_interface == service.ServiceInterface.from_str('HTTP-SECURE-JSON')
-    assert test_interface.dto == 'HTTP-SECURE-JSON'
+    assert test_interface.dto() == 'HTTP-SECURE-JSON'
     assert test_interface_lower == test_interface

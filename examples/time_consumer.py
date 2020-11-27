@@ -19,13 +19,13 @@ if __name__ == '__main__':
     print('Done')
     '''
     
-    # Consume service provided by the 'get_time' rule
+    # Consume provided_service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)
     input()
-    # Consume service provided by the 'change_format' rule
+    # Consume provided_service provided by the 'change_format' rule
     time_consumer.consume('change_format', payload='%S:%M:%H')
-    # Consume service provided by the 'get_time' rule
+    # Consume provided_service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)
     '''

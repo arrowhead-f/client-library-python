@@ -1,6 +1,3 @@
-import json
-from arrowhead_client.response import Response
-from arrowhead_client.service import Service
 
 class ArrowheadError(Exception):
     pass

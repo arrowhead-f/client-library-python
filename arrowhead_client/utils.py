@@ -13,7 +13,7 @@ def uppercase_strings_in_list(requirement_list: Union[List[str], str]) -> List[s
         return [requirement.upper() for requirement in requirement_list]
     else:
         raise TypeError(
-            "'requirement_list' is type {type(requirement_list)},"
+            f"'requirement_list' is type {type(requirement_list)},"
             "should be type str or list(str)"
         )
 

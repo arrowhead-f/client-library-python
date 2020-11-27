@@ -22,7 +22,6 @@ class ServiceInterface:
     def from_str(cls, interface_str: str) -> ServiceInterface:
         return cls(*interface_str.split('-'))
 
-    @property
     def dto(self) -> str:
         return '-'.join(vars(self).values())
 
@@ -44,26 +43,29 @@ class Service():
     Arrowhead Service class.
 
     Args:
-        service_definition: service definition as :code:`str`.
-        service_uri: service uri location as :code:`str`.
-        interface: service interface triple, given as :code:`str` (ex. :code:`'HTTP-SECURE-JSON'`) or as :code:`ServiceInterface`.
+        service_definition: provided_service definition as :code:`str`.
+        service_uri: provided_service uri location as :code:`str`.
+        interface: provided_service interface triple, given as :code:`str` (ex. :code:`'HTTP-SECURE-JSON'`) or as :code:`ServiceInterface`.
     """
 
     def __init__(self,
                  service_definition: str,
-                 service_uri: str,
-                 interface: Union[str, ServiceInterface],
-                 access_policy: str = 'NOT_SECURE',
+                 service_uri: str = '',
+                 interface: Union[str, ServiceInterface] = '',
+                 access_policy: str = 'CERTIFICATE',
                  metadata: Dict = None,
                  version: Optional[int] = None) -> None:
         self.service_definition = service_definition
         self.service_uri = service_uri
         if isinstance(interface, str):
-            self.interface = ServiceInterface.from_str(interface)
+            try:
+                self.interface = ServiceInterface.from_str(interface)
+            except TypeError:
+                self.interface = ''
         else:
             self.interface = interface
         self.access_policy = access_policy
-        self.metadata = metadata or {}
+        self.metadata = metadata
         self.version = version
         # TODO: Access policy is string, maybe it should be custom class?
 

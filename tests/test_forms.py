@@ -4,20 +4,19 @@ import arrowhead_client.core_services.core_service_forms as forms
 
 requester_system = ArrowheadSystem('test_system', 'localhost', 0)
 provider_system = ArrowheadSystem('test_system', 'localhost', 0)
+provided_service = Service(
+        service_definition='test_service',
+        service_uri='/test/test/test',
+        interface='HTTP-SECURE-JSON',
+        access_policy='CERTIFICATE',
+        metadata={'dummy': 'data'},
+        version=0,
+)
 
 
 def test_registration_form():
-    service = Service(
-            service_definition='test_service',
-            service_uri='/test/test/test',
-            interface='HTTP-SECURE-JSON',
-            access_policy='CERTIFICATE',
-            metadata={'dummy': 'data'},
-            version=0,
-    )
-
     registration_form = forms.ServiceRegistrationForm(
-            provided_service=service,
+            provided_service=provided_service,
             provider_system=provider_system,
             end_of_validity='dummy-date',
     )
@@ -33,7 +32,7 @@ def test_registration_form():
         'endOfValidity',
     }
 
-    assert valid_keys == registration_form.dto.keys()
+    assert valid_keys == registration_form.dto().keys()
 
 def test_orchestration_flags():
     valid_keys = {
@@ -48,22 +47,15 @@ def test_orchestration_flags():
 
     of = forms.OrchestrationFlags()
 
-    assert set(of.dto.keys()) == valid_keys
+    assert set(of.dto().keys()) == valid_keys
     assert of.override_store == True
 
 
 def test_orchestration_form():
     orchestration_flags = forms.OrchestrationFlags(matchmaking=True)
     orchestration_form = forms.OrchestrationForm(
-            requester_system.dto,
-            'test_service',
-            ['HTTP-SECURE-JSON'],
-            ['CERTIFICATE'],
-            {'dummy': 'data'},
-            0,
-            0,
-            0,
-            True,
+            requester_system,
+            provided_service,
             orchestration_flags,
     )
 
@@ -74,4 +66,4 @@ def test_orchestration_form():
         'orchestrationFlags',
     }
 
-    assert set(orchestration_form.dto.keys()) == valid_keys
+    assert set(orchestration_form.dto().keys()) == valid_keys

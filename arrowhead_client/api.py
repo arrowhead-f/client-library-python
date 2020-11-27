@@ -32,23 +32,15 @@ class ArrowheadHttpClient(ArrowheadClient):
                  system_name: str,
                  address: str,
                  port: int,
-                 authentication_info: str = '',
                  keyfile: str = '',
                  certfile: str = ''):
         logger = get_logger(system_name, 'debug')
-        wsgi_server = pywsgi.WSGIServer(
-                (address, port),
-                None,
-                keyfile=keyfile,
-                certfile=certfile,
-                log=logger,
-        )
+        system = ArrowheadSystem(system_name, address, port)
         super().__init__(
-                ArrowheadSystem(system_name, address, port, authentication_info),
+                system,
                 HttpConsumer(),
-                HttpProvider(wsgi_server),
+                HttpProvider(system, keyfile, certfile),
                 logger,
-                config,
                 keyfile=keyfile,
                 certfile=certfile
         )

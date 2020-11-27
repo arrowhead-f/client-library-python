@@ -3,6 +3,9 @@ HttpProvider example app
 """
 import arrowhead_client.api as ar
 
+ar.config['certificate authority'] = 'certificates/sysop.ca'
+ar.config['app_name'] = __name__
+
 provider_app = ar.ArrowheadHttpClient(
         system_name='example-provider',
         address='127.0.0.1',
@@ -13,11 +16,11 @@ provider_app = ar.ArrowheadHttpClient(
 
 
 @provider_app.provided_service(
-        'hello-arrowhead',
-        'hello',
-        'HTTP-SECURE-JSON',
-        'TOKEN',
-        'GET', )
+        service_definition='hello-arrowhead',
+        service_uri='hello',
+        interface='HTTP-SECURE-JSON',
+        access_policy='TOKEN',
+        method='GET', )
 def hello_arrowhead(request):
     return {"msg": "Hello, Arrowhead!"}
 

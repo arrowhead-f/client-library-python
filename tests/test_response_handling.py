@@ -20,12 +20,12 @@ def test_orchestration_response():
                 "authenticationInfo": "",
                 "createdAt": "string",
                 "updatedAt": "string"},
-            "service": {
+            "provided_service": {
                 "id": 0,
                 "serviceDefinition": "test",
                 "createdAt": "string",
                 "updatedAt": "string"},
-            "serviceUri": "test/service",
+            "serviceUri": "test/provided_service",
             "secure": "CERTIFICATE",
             "metadata": {},
             "interfaces": [{
@@ -46,12 +46,12 @@ def test_orchestration_response():
                 "authenticationInfo": "",
                 "createdAt": "string",
                 "updatedAt": "string"},
-            "service": {
+            "provided_service": {
                 "id": 0,
                 "serviceDefinition": "test",
                 "createdAt": "string",
                 "updatedAt": "string"},
-            "serviceUri": "test/service",
+            "serviceUri": "test/provided_service",
             "secure": "CERTIFICATE",
             "metadata": {},
             "interfaces": [{
@@ -71,9 +71,9 @@ def test_orchestration_response():
     assert len(orchestrator_response_json['response']) == 2
     assert len(handled_responses) == len(orchestrator_response_json['response'])
 
-    (service, system), *_ = handled_responses
+    (service, system, token), *_ = handled_responses
     assert 'test' == service.service_definition
-    assert 'test/service' == service.service_uri
+    assert 'test/provided_service' == service.service_uri
     assert 'HTTP-SECURE-JSON' == service.interface
     assert 'test_provider' == system.system_name
     assert '127.0.0.1' == system.address

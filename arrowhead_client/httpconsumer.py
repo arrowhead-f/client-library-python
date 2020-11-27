@@ -1,10 +1,12 @@
 from typing import Dict, Union
 
 import requests
+import json
 from arrowhead_client.abc import BaseConsumer
 from arrowhead_client.service import Service
 from arrowhead_client.response import Response
 from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.configuration import config
 
 
 class HttpConsumer(BaseConsumer):
@@ -16,8 +18,8 @@ class HttpConsumer(BaseConsumer):
                         method: str,
                         token: str,
                         **kwargs) -> Response:
-        """ Consume registered service """
-        # TODO: Add error handling for the case where the service is not
+        """ Consume registered provided_service """
+        # TODO: Add error handling for the case where the provided_service is not
         # registered in _consumed_services
 
         service_uri = service.service_uri
@@ -31,17 +33,20 @@ class HttpConsumer(BaseConsumer):
 
         service_response = requests.request(method,
                                             service_url,
-                                            verify=False,
+                                            # TODO: Remove the hardcoded CA
+                                            verify=config['certificate authority'],
                                             auth=ArrowheadAuth(token),
                                             **kwargs
         )
+        if service_response.status_code == 403:
+            raise RuntimeError(service_response.text)
 
         if payload_type == 'JSON':
-            print(service_response.text)
-            return Response(service_response.json(), 'JSON', service_response.status_code, '')
-        elif payload_type == 'TEXT':
-            return Response(service_response.text, 'TEXT', service_response.status_code, '')
-
+            try:
+                r = Response(service_response.json(), 'JSON', service_response.status_code, '')
+            except json.decoder.JSONDecodeError:
+                r = Response(service_response.text, 'TEXT', service_response.status_code, '')
+            return r
         return Response(service_response.content, 'bytes', service_response.status_code, '')
 
     def extract_payload(

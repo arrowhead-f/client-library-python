@@ -15,8 +15,8 @@ _http_core_services: Dict[str, Service] = {
             service_definition='unregister',
             service_uri='serviceregistry/unregister',
             interface='HTTP-SECURE-TEXT', ),
-    'orchestration-service': Service(
-            service_definition='orchestration-service',
+    'orchestration-provided_service': Service(
+            service_definition='orchestration-provided_service',
             service_uri='orchestrator/orchestration',
             interface='HTTP-SECURE-JSON', ),
     'publickey': Service(
@@ -28,10 +28,10 @@ _http_core_services: Dict[str, Service] = {
 
 def core_service(service_defintion: str) -> Service:
     # TODO: Why are the services being copied?
-    core_service_instance = deepcopy(_http_core_services.get(service_defintion, None))
+    core_service_instance = _http_core_services.get(service_defintion, None)
 
     if not core_service_instance:
-        raise ValueError(f'Core service \'{service_defintion}\' not found, '
+        raise ValueError(f'Core provided_service \'{service_defintion}\' not found, '
                          f'available core services are {list(_http_core_services.keys())}')
 
     return core_service_instance

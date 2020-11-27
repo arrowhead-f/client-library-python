@@ -3,6 +3,9 @@ HttpConsumer example app
 """
 import arrowhead_client.api as ar
 
+ar.config['certificate authority'] = 'certificates/sysop.ca'
+ar.config['app_name'] = __name__
+
 consumer_app = ar.ArrowheadHttpClient(
         system_name='example-consumer',
         address='127.0.0.1',
@@ -11,7 +14,7 @@ consumer_app = ar.ArrowheadHttpClient(
         certfile='certificates/example-consumer.crt',
 )
 
-consumer_app.add_consumed_service('hello-arrowhead', 'GET')
+consumer_app.add_consumed_service('hello-arrowhead', 'GET', 'TOKEN')
 
 if __name__ == '__main__':
     response = consumer_app.consume_service('hello-arrowhead')

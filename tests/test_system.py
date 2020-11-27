@@ -12,12 +12,12 @@ def test_arrowhead_system():
             'test_system',
             '127.0.0.1',
             0,
-            '',
     )
 
-
-    assert test_system.dto.keys() == valid_keys
+    assert test_system.dto().keys() == valid_keys
     assert test_system.authority == '127.0.0.1:0'
+    assert test_system.system_name == 'test_system'
+    assert test_system.port == 0
 
 def test_from_dto():
     dto = {
@@ -29,7 +29,7 @@ def test_from_dto():
 
     test_system = ArrowheadSystem.from_dto(dto)
 
-    assert test_system.dto.keys() == valid_keys
+    assert test_system.dto().keys() == valid_keys
     assert test_system.authority == '127.0.0.1:0'
     assert test_system.system_name == 'test_system'
     assert test_system.authentication_info == ''

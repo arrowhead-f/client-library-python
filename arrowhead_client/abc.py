@@ -33,7 +33,7 @@ class BaseProvider(Protocol):
     def add_provided_service(
             self,
             service: Service,
-            provider: ArrowheadSystem,
+            #provider: ArrowheadSystem,
             method: str,
             func: Callable,
             authorization_key, # TODO: Put this somewhere else
