@@ -34,7 +34,7 @@ class ServiceQueryForm(DTOMixin):
              ping_providers: bool = True) -> 'ServiceQueryForm':
         return cls(
                 service.service_definition,
-                service.interface.dto() if service.interface else 'HTTP-SECURE-JSON',
+                service.interface.dto() if service.interface else '',
                 service.access_policy,
                 service.metadata,
                 service.version,
@@ -59,7 +59,7 @@ class ServiceRegistrationForm(DTOMixin):
         self.metadata = provided_service.metadata
         self.version = provided_service.version
         self.end_of_validity = end_of_validity
-        # TODO: How to do end_of_validity
+        # TODO: How to do end_of_validity?
 
 @dataclass
 class OrchestrationFlags(DTOMixin):
@@ -80,7 +80,7 @@ class OrchestrationForm(DTOMixin):
     def __init__(self,
                  requester_system: ArrowheadSystem,
                  requested_service: Service,
-                 orchestration_flags: Optional[OrchestrationFlags] = None, ) -> None:
+                 orchestration_flags: OrchestrationFlags=None, ) -> None:
         self.requester_system = requester_system.dto(exclude={'authentication_info'})
         self.requested_service = ServiceQueryForm.make(
             requested_service,

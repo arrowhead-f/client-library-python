@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Tuple, Callable, Union, Optional
-from functools import wraps
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
@@ -9,10 +8,8 @@ from arrowhead_client.service import Service
 from arrowhead_client.core_services.core_services import core_service
 from arrowhead_client.core_services import core_service_responses as responses, core_service_forms as forms
 from arrowhead_client.configuration import config as ar_config
-from arrowhead_client.security import (
-    extract_publickey,
-    extract_privatekey,
-    publickey_from_base64,)
+from arrowhead_client.security.utils import extract_publickey, extract_privatekey
+from arrowhead_client.security import access_policy
 import arrowhead_client.errors as errors
 
 
@@ -26,7 +23,7 @@ class ArrowheadClient:
 
     This class serves as a bridge that connects systems, consumers, and providers to the user.
 
-    Args:
+    Attributes:
         system: ArrowheadSystem
         consumer: Consumer
         provider: Provider
@@ -155,15 +152,13 @@ class ArrowheadClient:
         )
 
         def wrapped_func(func):
-            # TODO: This should not bind the func to provider, that should be done when the client starts.
-            self._provided_services[service_definition] = (provided_service,
-                                                           func,
-                                                           method,
-                                                           'not_initiated',
-                                                           func_args,
-                                                           func_kwargs)
-            '''
-            '''
+            self._provided_services[service_definition] = (
+                provided_service,
+                func,
+                method,
+                access_policy,
+                func_args,
+                func_kwargs)
             return func
 
         return wrapped_func
@@ -179,10 +174,6 @@ class ArrowheadClient:
             self._authorization_publickey = responses.process_publickey(self.consume_service('publickey'))
             self._initialize_provided_services()
             self._register_all_services()
-            # TODO: Put this in a process_publickey function
-            self._authorization_publickey = publickey_from_base64(
-                    self.consume_service('publickey').payload
-            )
             self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
             self.provider.run_forever()
@@ -201,12 +192,16 @@ class ArrowheadClient:
         return self.certfile, self.keyfile
 
     def _initialize_provided_services(self) -> None:
-        for provided_service, func, method, status, func_args, func_kwargs in self._provided_services.values():
+        for provided_service, func, method, access_policy, func_args, func_kwargs in self._provided_services.values():
             self.provider.add_provided_service(
                     provided_service,
                     method=method,
                     func=func,
-                    authorization_key=self._authorization_publickey,
+                    # TODO: Here I change the type of access_policy from str to AccessPolicy, this is not good and should be changed
+                    access_policy=access_policy.get_access_policy(
+                            access_policy,
+                            authorization_key=self._authorization_publickey
+                    ),
                     *func_args,
                     **func_kwargs)
             #self._provided_services[provided_service.service_definition][3] = 'suspended'

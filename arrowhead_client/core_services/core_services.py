@@ -1,5 +1,4 @@
 from typing import Dict
-from copy import deepcopy
 from arrowhead_client.service import Service
 
 _http_core_services: Dict[str, Service] = {

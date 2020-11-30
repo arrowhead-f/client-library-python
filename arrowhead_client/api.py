@@ -2,24 +2,23 @@
 Arrowhead Client API module
 ===========================
 
-This module contains the api of the :code:`arrowhead_client` module.
+This module contains the public api of the :code:`arrowhead_client` module.
 """
-from arrowhead_client.configuration import config
+from arrowhead_client.configuration import config # noqa: F401
 from arrowhead_client.client import ArrowheadClient
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.httpconsumer import HttpConsumer
-from arrowhead_client.httpprovider import HttpProvider
+from arrowhead_client.implementations.httpconsumer import HttpConsumer
+from arrowhead_client.implementations.httpprovider import HttpProvider
 from arrowhead_client.service import Service  # noqa: F401
 from arrowhead_client.logs import get_logger
 
-from gevent import pywsgi  # type: ignore
 
 
 class ArrowheadHttpClient(ArrowheadClient):
     """
     Arrowhead client using HTTP.
 
-    Args:
+    Attributes:
         system_name: A string to assign the system name
         address: A string to assign the system address
         port: An int to assign the system port

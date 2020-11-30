@@ -2,7 +2,7 @@ from typing import Mapping, Dict, Tuple, List
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.response import Response
-from arrowhead_client.security import publickey_from_base64
+from arrowhead_client.security.utils import publickey_from_base64
 from arrowhead_client import errors
 
 system_keys = ('systemName', 'address', 'port', 'authenticationInfo')
@@ -12,7 +12,7 @@ service_keys = ('serviceDefinition', 'serviceUri', 'interfaces', 'secure')
 def extract_system_data(system_data: Mapping) -> Dict:
     """ Extracts system data from core provided_service response """
 
-    system_data = {key: system_data[key] for key in system_keys}
+    system_data = {key: system_data[key] for key, system in system_keys}
 
     return system_data
 

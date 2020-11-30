@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
-from arrowhead_client.security import create_authentication_info
+from arrowhead_client.security.utils import create_authentication_info
 from arrowhead_client.dto import DTOMixin
 
 
@@ -33,17 +33,6 @@ class ArrowheadSystem(DTOMixin):
     def authority(self):
         return f'{self.address}:{self.port}'
 
-    # TODO: Refactoring works, this comment should be removed
-    """
-    @property
-    def dto(self):
-        system_dto = {
-                'systemName': self.system_name,
-                'address': self.address,
-                'port': self.port,
-                'authenticationInfo': self.authentication_info}
-        return system_dto
-    """
     _dto_excludes = {'_privatekey', '_publickey'}
     _dto_property_include = {'authentication_info'}
 

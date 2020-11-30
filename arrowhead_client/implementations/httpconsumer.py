@@ -66,7 +66,7 @@ class ArrowheadAuth(requests.auth.AuthBase):
     def __init__(self, token: str):
         self.token = token
 
-    def __call__(self, r: requests.Request):
+    def __call__(self, r: requests.PreparedRequest):
         if self.token:
             r.headers['Authorization'] = f'Bearer {self.token}'
 
