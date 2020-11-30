@@ -33,6 +33,7 @@ class ArrowheadHttpClient(ArrowheadClient):
                  address: str,
                  port: int,
                  authentication_info: str = '',
+                 customConfig: dict = config,
                  keyfile: str = '',
                  certfile: str = ''):
         logger = get_logger(system_name, 'debug')
@@ -48,7 +49,7 @@ class ArrowheadHttpClient(ArrowheadClient):
                 HttpConsumer(),
                 HttpProvider(wsgi_server),
                 logger,
-                config,
+                config=customConfig,
                 keyfile=keyfile,
                 certfile=certfile
         )
