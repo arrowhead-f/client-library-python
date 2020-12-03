@@ -4,6 +4,7 @@ Arrowhead Client API module
 
 This module contains the api of the :code:`arrowhead_client` module.
 """
+from typing import Dict
 from arrowhead_client.configuration import config
 from arrowhead_client.client import ArrowheadClient
 from arrowhead_client.system import ArrowheadSystem
@@ -33,6 +34,7 @@ class ArrowheadHttpClient(ArrowheadClient):
                  address: str,
                  port: int,
                  authentication_info: str = '',
+                 config: Dict = config,
                  keyfile: str = '',
                  certfile: str = ''):
         logger = get_logger(system_name, 'debug')
@@ -48,7 +50,7 @@ class ArrowheadHttpClient(ArrowheadClient):
                 HttpConsumer(),
                 HttpProvider(wsgi_server),
                 logger,
-                config,
+                config=config,
                 keyfile=keyfile,
                 certfile=certfile
         )
