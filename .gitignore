@@ -16,3 +16,5 @@ arrowhead_client.egg-info/
 .idea/
 venv*
 */__pycache__/*
+.coverage
+htmlcov/*
