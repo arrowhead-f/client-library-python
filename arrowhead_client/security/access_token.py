@@ -3,7 +3,9 @@ import time
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
-from jwcrypto import jwk, jwt
+from jwcrypto import jwk, jwt # type: ignore
+
+from arrowhead_client import errors
 
 
 class AccessToken:
@@ -41,20 +43,23 @@ class AccessToken:
             ValueError: Malformed authorization header.
             RuntimeError: Invalid token claims.
         """
-        bearer, token_string = auth_string.split()
+        try:
+            bearer, token_string = auth_string.split()
+        except ValueError as e:
+            raise errors.InvalidTokenError('Malformed authorization header')
 
         if bearer != 'Bearer':
-            raise ValueError('Malformed authorization header')
+            raise errors.InvalidTokenError('Malformed authorization header')
 
-        # Generate jwk for private key
-        keybytes = privatekey.private_bytes(
+        # Generate jwk for provider private key
+        keybytes = privatekey.private_bytes( # type: ignore
                 encoding=serialization.Encoding.PEM,
                 encryption_algorithm=serialization.NoEncryption(),
                 format=serialization.PrivateFormat.PKCS8,
         )
         jwk_privatekey = jwk.JWK.from_pem(keybytes)
 
-        # Generate jwk for public key
+        # Generate jwk for authorization public key
         auth_keybytes = authorization_key.public_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -63,12 +68,18 @@ class AccessToken:
 
         # Decrypt, sign, and extract claims from token
         decrypted_token = jwt.JWT(key=jwk_privatekey, jwt=token_string)
-        signed_token = jwt.JWT(key=jwk_authkey, jwt=decrypted_token.claims)
+        try:
+            signed_token = jwt.JWT(key=jwk_authkey, jwt=decrypted_token.claims)
+        except jwt.JWException as e:
+            raise errors.InvalidTokenError from e
+
         token_claims = json.loads(signed_token.claims)
 
         now = time.time()
         if token_claims['iat'] > now:
-            raise RuntimeError('JWT not yet issued')
+            raise errors.InvalidTokenError('JWT not yet issued')
+        if token_claims['iss'] != 'Authorization':
+            raise errors.InvalidTokenError('JWT not issued by Authorization system')
         # TODO: Implement checks for other standard claims.
 
         new_access_token = cls(

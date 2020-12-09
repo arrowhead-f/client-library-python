@@ -9,9 +9,20 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPriva
 # TODO: Implement this https://blog.cyberreboot.org/using-pkcs-12-formatted-certificates-in-python-fd98362f90ba to reduce file io and use pkcs12
 
 def cert_cn(cert_string: str) -> str:
-    cert = x509.load_pem_x509_certificate(cert_string.encode(), default_backend())
-    subject = cert.subject
-    _, common_name = subject.rfc4514_string().split('=')
+    cert = x509.load_pem_x509_certificate(
+            cert_string.encode(),
+            default_backend()
+    )
+    common_names = cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
+    # TODO: Make sure the consumer gets a 400 response when these errors occur.
+    if len(common_names) > 1:
+        raise RuntimeError('Multiple common names in cert, expected 1.')
+    elif len(common_names) == 0:
+        raise RuntimeError('No common name in cert, expected 1.')
+
+    common_name = common_names[0].value
+    if common_name == '':
+        raise RuntimeError('Common name is empty')
     return common_name
 
 
@@ -76,3 +87,10 @@ def publickey_from_base64(key64: str) -> RSAPublicKey:
             default_backend()
     )
     return publickey
+
+def cert_to_authentication_info(pem_certfile: str):
+    publickey = extract_publickey(pem_certfile)
+    authentication_info = create_authentication_info(publickey)
+
+    return authentication_info
+
