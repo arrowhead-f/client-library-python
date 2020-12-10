@@ -1,78 +1,61 @@
 from abc import abstractmethod, ABC
-from typing import Callable, Tuple
 
-try:
-    from typing import Protocol
-except ImportError:
-    from typing_extensions import Protocol  # type: ignore
 from arrowhead_client.response import Response
-from arrowhead_client.service import Service
-from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.rules import OrchestrationRule, ProvisionRule
 
 
-class BaseConsumer(Protocol):
+class ProtocolMixin(ABC):
+    def __init_subclass__(cls, protocol='', **kwargs):
+        if protocol == '':
+            raise ValueError(f'No protocol specified.')
+        elif not isinstance(protocol, str):
+            raise TypeError(f'Protocol must be of type str.')
+        cls._protocol = protocol.upper()
+
+
+class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
+    """Abstract base class for consumers"""
     @abstractmethod
     def consume_service(
             self,
-            service: Service,
-            system: ArrowheadSystem,
-            method: str,
-            token: str,
+            rule: OrchestrationRule,
             **kwargs) -> Response:
-        raise NotImplementedError
-
-    @abstractmethod
-    def extract_payload(
-            self,
-            service_response: Response,
-            payload_type: str):
-        raise NotImplementedError
-
-
-class BaseProvider(Protocol):
-    @abstractmethod
-    def add_provided_service(
-            self,
-            service: Service,
-            #provider: ArrowheadSystem,
-            method: str,
-            func: Callable,
-            authorization_key, # TODO: Put this somewhere else
-            *func_args,
-            **func_kwargs, ) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def run_forever(self) -> None:
-        raise NotImplementedError
-
-
-class AccessPolicy(ABC):
-    """
-    Abstract class that describes the interface for access policies.
-    """
-    @abstractmethod
-    def is_authorized(self,
-                      consumer_cn: str,
-                      provider: ArrowheadSystem,
-                      provided_service: Service,
-                      token: str,
-                      **kwargs, ) -> Tuple[bool, str]:
         """
-        Check if consumer is authorized to consume the provided service.
+        Consume service according to the consumation rule and return the response.
 
         Args:
-            consumer_cn: Common name of consumer extracted from the consumer certificate.
-            provider: System providing the service.
-            provided_service: The provided service.
-            token: Token used with the token access policy.
-            kwargs: Possible extra arguments.
+           rule: Orchestration rule.
         Returns:
-            A tuple with a bool value and message string.
-            If authorization is successful, the value will be :code:`(True, '')`,
-            but if the authorization is unsuccessful value will be :code:`(False, <message>)`,
-            where the message will contain information about what went wrong in the
-            authorization process.
-
+            A Response object containing the payload and error codes.
         """
-        raise NotImplementedError
+
+
+class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
+    """Abstract base class for providers"""
+    @abstractmethod
+    def add_provided_service(self, rule: ProvisionRule, ) -> None:
+        """
+        Adds the provided service to the provider according the provision rule.
+
+        Args:
+            rule: Provision rule.
+        """
+
+    @abstractmethod
+    def run_forever(
+            self,
+            address: str,
+            port: int,
+            keyfile: str,
+            certfile: str,) -> None:
+        """
+        Starts the provider and runs until interrupted.
+
+        Args:
+            address: system ip address.
+            port: system port.
+            keyfile: client keyfile.
+            certfile: client certfile.
+        """
+
+
