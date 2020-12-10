@@ -1,43 +1,39 @@
-from typing import Dict, Union
+import json
 
 import requests
-import json
+
 from arrowhead_client.abc import BaseConsumer
-from arrowhead_client.service import Service
 from arrowhead_client.response import Response
-from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.configuration import config
+from arrowhead_client.rules import OrchestrationRule
 
 
-class HttpConsumer(BaseConsumer):
+class HttpConsumer(BaseConsumer, protocol='HTTP'):
     """ Interface for consumer code """
 
     def consume_service(self,
-                        service: Service,
-                        system: ArrowheadSystem,
-                        method: str,
-                        token: str,
+                        rule: OrchestrationRule,
                         **kwargs) -> Response:
         """ Consume registered provided_service """
         # TODO: Add error handling for the case where the provided_service is not
-        # registered in _consumed_services
+        # registered in orchestration_rules
+        # TODO: This should be done in client_core.py
 
-        service_uri = service.service_uri
-        payload_type = service.interface.payload
+        payload_type = rule.payload_type
 
         # Check if cert- and keyfiles are given and use tls if they are.
-        if any(kwargs['cert']):
-            service_url = f'https://{system.authority}/{service_uri}'
-        else:
-            service_url = f'http://{system.authority}/{service_uri}'
+        service_url = f'{http(rule.secure)}{rule.endpoint}'
 
-        service_response = requests.request(method,
-                                            service_url,
-                                            # TODO: Remove the hardcoded CA
-                                            verify=config['certificate authority'],
-                                            auth=ArrowheadAuth(token),
-                                            **kwargs
+        service_response = requests.request(
+                rule.method,
+                service_url,
+                # TODO: CA should be a parameter of some kind, not part of config
+                # TODO: CA should probably be an argument to the consumer
+                verify=config['certificate authority'],
+                auth=ArrowheadTokenAuth(rule.authorization_token),
+                **kwargs
         )
+        # TODO: Fix the error handling, it looks like a mess
         if service_response.status_code == 403:
             raise RuntimeError(service_response.text)
 
@@ -49,20 +45,12 @@ class HttpConsumer(BaseConsumer):
             return r
         return Response(service_response.content, 'bytes', service_response.status_code, '')
 
-    def extract_payload(
-            self,
-            service_response: Response,
-            payload_type: str) -> Union[Dict, str]:
-        """
-        if payload_type.upper() == 'JSON':
-            return service_response.json()
+def http(secure: str) -> str:
+    if secure == 'INSECURE':
+        return 'http://'
+    return 'https://'
 
-        return service_response.text
-        """
-        # TODO: See if this method is still useful
-        return {}
-
-class ArrowheadAuth(requests.auth.AuthBase):
+class ArrowheadTokenAuth(requests.auth.AuthBase):
     def __init__(self, token: str):
         self.token = token
 
