@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple, Callable
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
 from arrowhead_client.service import Service, ServiceInterface
-from arrowhead_client.client.core_services import core_service
+from arrowhead_client.client.core_services import get_core_rules, CoreServices
 from arrowhead_client.client import (
     core_service_responses as responses,
     core_service_forms as forms
@@ -120,7 +120,7 @@ class ArrowheadClient:
         )
 
         orchestration_response = self.consume_service(
-                'orchestration-provided_service',
+                CoreServices.ORCHESTRATION.service_definition,
                 json=orchestration_form.dto(),
                 cert=self.cert,
         )
@@ -177,7 +177,9 @@ class ArrowheadClient:
 
         try:
             self.setup()
-            self.auth_authentication_info = responses.process_publickey(self.consume_service('publickey'))
+            # TODO: These three should go into self.setup()
+            self.auth_authentication_info = responses.process_publickey(
+                    self.consume_service(CoreServices.PUBLICKEY.service_definition))
             self._initialize_provided_services()
             self._register_all_services()
             self._logger.info('Starting server')
@@ -219,31 +221,10 @@ class ArrowheadClient:
         Runs when the client is created and should not be run manually.
         """
 
-        # TODO: This should be done with a loop somehow
-        self.orchestration_rules.store(
-                OrchestrationRule(
-                        core_service('register'),
-                        self.config['core_service']['service_registry'],
-                        'POST')
-        )
-        self.orchestration_rules.store(
-                OrchestrationRule(
-                        core_service('unregister'),
-                        self.config['core_service']['service_registry'],
-                        'DELETE')
-        )
-        self.orchestration_rules.store(
-                OrchestrationRule(
-                        core_service('orchestration-provided_service'),
-                        self.config['core_service']['orchestrator'],
-                        'POST')
-        )
-        self.orchestration_rules.store(
-                OrchestrationRule(
-                        core_service('publickey'),
-                        self.config['core_service']['authorization'],
-                        'GET')
-        )
+        core_rules = get_core_rules(self.config, self.secure)
+
+        for rule in core_rules:
+            self.orchestration_rules.store(rule)
 
     def _register_service(self, service: Service):
         """
@@ -259,7 +240,7 @@ class ArrowheadClient:
         )
 
         service_registration_response = self.consume_service(
-                'register',
+                CoreServices.SERVICE_REGISTER.service_definition,
                 json=service_registration_form.dto(),
                 cert=self.cert
         )
@@ -298,7 +279,7 @@ class ArrowheadClient:
         }
 
         service_unregistration_response = self.consume_service(
-                'unregister',
+                CoreServices.SERVICE_UNREGISTER.service_definition,
                 params=unregistration_payload,
                 cert=self.cert
         )
