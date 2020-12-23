@@ -11,7 +11,7 @@ from arrowhead_client import errors
 class HttpProvider(BaseProvider, protocol='HTTP'):
     """ Class for provided_service provision """
 
-    def __init__(self, cafile: str, app_name='') -> None:
+    def __init__(self, cafile: str, app_name: str='') -> None:
         self.app_name = __name__ or app_name
         self.app = Flask(app_name)
         self.cafile = cafile
@@ -23,9 +23,9 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
             auth_string = request.headers.get('authorization')
             consumer_cert_str = request.headers.environ.get('SSL_CLIENT_CERT')
             try:
-                is_authorized = rule.access_policy.is_authorized(
+                is_authorized = rule.is_authorized(
                         consumer_cert_str=consumer_cert_str,
-                        auth_header=auth_string,
+                        auth_str=auth_string,
                 )
             except errors.AuthorizationError as e:
                 is_authorized = False
@@ -36,15 +36,14 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
                 flask.abort(
                         403,
                         f'Not authorized to consume service'
-                        f'{rule.provided_service.service_definition}@'
-                        f'{rule.provider_system.authority}: '
-                        #f'{auth_message}.'
+                        f'{rule.service_definition}@'
+                        f'{rule.authority}'
                 )
 
 
         self.app.add_url_rule(
-                rule=f'/{rule.provided_service.service_uri}',
-                endpoint=rule.provided_service.service_definition,
+                rule=f'/{rule.service_uri}',
+                endpoint=rule.service_definition,
                 methods=[rule.method],
                 # TODO: Create Request class similar to Response
                 view_func=partial(func_with_access_policy, request)

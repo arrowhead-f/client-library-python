@@ -15,6 +15,7 @@ from arrowhead_client.security.access_policy import get_access_policy
 from arrowhead_client.common import Constants
 from arrowhead_client.rules import (
     OrchestrationRuleContainer,
+    RegistrationRuleContainer,
     RegistrationRule,
     OrchestrationRule,
 )
@@ -56,7 +57,7 @@ class ArrowheadClient:
         self.config = config or ar_config
         self.auth_authentication_info = None
         self.orchestration_rules = OrchestrationRuleContainer()
-        self._provided_services: StoredProvidedService = {}
+        self.registration_rules = RegistrationRuleContainer()
         # TODO: Should add_provided_service be exactly the same as the provider's,
         # or should this class do something on top of it?
         # It's currently not even being used so it could likely be removed.
@@ -160,10 +161,13 @@ class ArrowheadClient:
         )
 
         def wrapped_func(func):
-            self._provided_services[service_definition] = (
-                provided_service,
-                func,
-                method,
+            self.registration_rules.store(
+                    RegistrationRule(
+                            provided_service,
+                            self.system,
+                            method,
+                            func,
+                    )
             )
             return func
 
@@ -199,20 +203,14 @@ class ArrowheadClient:
             self._logger.info('Server shut down')
 
     def _initialize_provided_services(self) -> None:
-        for provided_service, func, method in self._provided_services.values():
-            registration_rule = RegistrationRule(
-                    provided_service,
-                    provider_system=self.system,
-                    method=method,
-                    func=func,
-                    access_policy=get_access_policy(
-                            policy_name=provided_service.access_policy,
-                            provided_service=provided_service,
+        for rule in self.registration_rules:
+            rule.access_policy = get_access_policy(
+                            policy_name=rule.provided_service.access_policy,
+                            provided_service=rule.provided_service,
                             privatekey=self.keyfile,
                             authorization_key=self.auth_authentication_info
-                    ),
             )
-            self.provider.add_provided_service(registration_rule)
+            self.provider.add_provided_service(rule)
 
     def _core_service_setup(self) -> None:
         """
@@ -253,12 +251,14 @@ class ArrowheadClient:
         """
         Registers all provided services of the system with the system registry.
         """
-        for service, *_ in self._provided_services.values():
+        for rule in self.registration_rules:
             try:
-                self._register_service(service)
+                self._register_service(rule.provided_service)
             except errors.CoreServiceInputError as e:
                 # TODO: Do logging
                 print(e)
+            else:
+                rule.is_provided = True
 
     def _unregister_service(self, service: Service) -> None:
         """
@@ -291,8 +291,12 @@ class ArrowheadClient:
         Unregisters all provided services of the system with the system registry.
         """
 
-        for service, *_ in self._provided_services.values():
+        for rule in self.registration_rules:
+            if not rule.is_provided:
+                continue
             try:
-                self._unregister_service(service)
+                self._unregister_service(rule.provided_service)
             except errors.CoreServiceInputError as e:
                 print(e)
+            else:
+                rule.is_provided = False
