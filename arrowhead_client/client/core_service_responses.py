@@ -128,7 +128,7 @@ def _extract_orchestration_rules(orchestration_result, method) -> OrchestrationR
     port = provider_dto['port']
     access_policy = orchestration_result['secure']
     auth_tokens = service_dto['authorizationTokens']
-    auth_token = auth_tokens.get(interface) or ''
+    auth_token = auth_tokens.get(interface, '') if auth_tokens else ''
 
     service = Service(
             service_definition,

@@ -122,7 +122,7 @@ class RegistrationRule:
         self._access_policy = new_policy
 
     def is_authorized(self, consumer_cert_str: str, auth_str: str):
-        return self._access_policy.is_authorized(consumer_cert_str, auth_str)
+        return self._access_policy.is_authorized(consumer_cert_str, auth_str)  # type: ignore
 
 
 class OrchestrationRuleContainer(MutableMapping):

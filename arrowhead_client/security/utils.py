@@ -46,7 +46,7 @@ def extract_publickey(certfile: str) -> Optional[RSAPublicKey]:
     cert = extract_cert(certfile)
 
     # Extract RSA public key
-    publickey = cert.public_key()
+    publickey = cert.public_key()  # type: ignore
 
     return publickey
 
