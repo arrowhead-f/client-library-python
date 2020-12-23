@@ -2,6 +2,7 @@ from typing import Dict
 from enum import Enum
 
 from arrowhead_client.service import Service
+from arrowhead_client.common import Constants
 
 
 class CoreServiceConfig(str, Enum):

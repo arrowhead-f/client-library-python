@@ -12,7 +12,7 @@ from arrowhead_client.client import (
 )
 from arrowhead_client.configuration import config as ar_config
 from arrowhead_client.security.access_policy import get_access_policy
-from arrowhead_client.common_constants import SecurityInfo
+from arrowhead_client.common import Constants
 from arrowhead_client.rules import (
     OrchestrationRuleContainer,
     RegistrationRule,
@@ -90,7 +90,7 @@ class ArrowheadClient:
             )
 
         # TODO: these should be normal arguments to consumer.consume, not a part of **kwargs
-        if rule.secure == SecurityInfo.SECURE:
+        if rule.secure == Constants.SECURITY_SECURE:
             # Add certificate files if provided_service is secure
             kwargs['cert'] = self.cert
 

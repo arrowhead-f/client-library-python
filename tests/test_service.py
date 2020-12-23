@@ -2,7 +2,7 @@ import pytest
 from contextlib import nullcontext
 
 from arrowhead_client import service
-from arrowhead_client.common_constants import AccessPolicies, SecurityInfo
+from arrowhead_client.common import Constants
 
 class TestServiceInterface:
     @pytest.mark.parametrize(
@@ -45,9 +45,9 @@ class TestServiceInterface:
             assert test_interface.payload == payload.upper()
 
     @pytest.mark.parametrize('access_policy, secure',[
-        (AccessPolicies.UNRESTRICTED, SecurityInfo.INSECURE),
-        (AccessPolicies.CERTIFICATE, SecurityInfo.SECURE),
-        (AccessPolicies.TOKEN, SecurityInfo.SECURE),
+        (Constants.POLICY_UNRESTRICTED, Constants.SECURITY_INSECURE),
+        (Constants.POLICY_CERTIFICATE, Constants.SECURITY_SECURE),
+        (Constants.POLICY_TOKEN, Constants.SECURITY_SECURE),
     ])
     def test_interface_from_access_policy(self, access_policy, secure):
         test_interface = service.ServiceInterface.with_access_policy('HTTP', access_policy, 'JSON')

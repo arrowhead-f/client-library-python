@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Union, Dict, Optional
 
 from arrowhead_client.dto import DTOMixin
-from arrowhead_client.common_constants import SecurityInfo, AccessPolicies
+from arrowhead_client.common import Constants, Constants
 
 
 @dataclass()
@@ -32,7 +32,7 @@ class ServiceInterface:
         Construct a ServiceInterface from a string representation.
 
         Args:
-            interface_str: string representation of type 'PROTOCOL-SECURE-PAYLOAD'
+            interface_str: string representation of type 'PROTOCOL-SECURITY_SECURE-PAYLOAD'
         Returns:
             ServiceInterface from string description.
         Raises:
@@ -47,7 +47,7 @@ class ServiceInterface:
     def with_access_policy(cls, protocol, access_policy, payload):
         """
         Construct a ServiceInterface similar to the normal constructor,
-        but using the name of an access policy instead of 'SECURE' or 'INSECURE'
+        but using the name of an access policy instead of 'SECURITY_SECURE' or 'SECURITY_INSECURE'
 
         Args:
             protocol: Protocol supported by service.
@@ -56,9 +56,9 @@ class ServiceInterface:
         Returns:
             ServiceInterface from string description.
         """
-        if access_policy == AccessPolicies.UNRESTRICTED:
-            return cls(protocol, SecurityInfo.INSECURE, payload)
-        return cls(protocol, SecurityInfo.SECURE, payload)
+        if access_policy == Constants.POLICY_UNRESTRICTED:
+            return cls(protocol, Constants.SECURITY_INSECURE, payload)
+        return cls(protocol, Constants.SECURITY_SECURE, payload)
 
     def dto(self) -> str:
         return '-'.join(vars(self).values())
@@ -89,8 +89,8 @@ class Service:
     Attributes:
         service_definition: Service definition as :code:`str`.
         service_uri: Service uri location as :code:`str`.
-        interface: Service interface triple, given as :code:`str` (ex. :code:`'HTTP-SECURE-JSON'`) or as :code:`ServiceInterface`.
-        access_policy: Access policy for the service, needs to be one of `NOT_SECURE`, `CERTIFICATE`, or `TOKEN`.
+        interface: Service interface triple, given as :code:`str` (ex. :code:`'HTTP-SECURITY_SECURE-JSON'`) or as :code:`ServiceInterface`.
+        access_policy: Access policy for the service, needs to be one of `NOT_SECURE`, `POLICY_CERTIFICATE`, or `POLICY_TOKEN`.
         metadata: Metadata provided in a json-compliant dictionary.
         version: Service version.
     """
@@ -99,7 +99,7 @@ class Service:
                  service_definition: str,
                  service_uri: str = '',
                  interface: Union[str, ServiceInterface] = '',
-                 access_policy: str = AccessPolicies.CERTIFICATE,
+                 access_policy: str = Constants.POLICY_CERTIFICATE,
                  metadata: Dict = None,
                  version: Optional[int] = None) -> None:
         self.service_definition = service_definition

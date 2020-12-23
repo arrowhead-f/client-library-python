@@ -7,7 +7,7 @@ from typing import Any
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-from arrowhead_client.common_constants import AccessPolicies
+from arrowhead_client.common import Constants
 from arrowhead_client.security.access_token import AccessToken
 from arrowhead_client.security.utils import cert_cn
 from arrowhead_client.service import Service
@@ -43,7 +43,7 @@ class AccessPolicy(ABC):
 
 class TokenAccessPolicy(AccessPolicy):
     """
-    Access policy used when :code:`TOKEN` is specified.
+    Access policy used when :code:`POLICY_TOKEN` is specified.
 
     Attributes:
         authorization_key: Public key of the Authorization system in the local cloud.
@@ -85,7 +85,7 @@ class TokenAccessPolicy(AccessPolicy):
 
 class CertificateAccessPolicy(AccessPolicy):
     """
-    Access policy used when :code:`CERTIFICATE` is specified.
+    Access policy used when :code:`POLICY_CERTIFICATE` is specified.
     """
 
     def is_authorized(self,
@@ -122,11 +122,11 @@ def get_access_policy(
         privatekey: Any,
         **kwargs) -> AccessPolicy:
     """Factory function for access policies"""
-    if policy_name == AccessPolicies.UNRESTRICTED:
+    if policy_name == Constants.POLICY_UNRESTRICTED:
         return UnrestrictedAccessPolicy()
-    elif policy_name == AccessPolicies.CERTIFICATE:
+    elif policy_name == Constants.POLICY_CERTIFICATE:
         return CertificateAccessPolicy()
-    elif policy_name == AccessPolicies.TOKEN:
+    elif policy_name == Constants.POLICY_TOKEN:
         return TokenAccessPolicy(
                 provided_service,
                 privatekey,
@@ -135,5 +135,5 @@ def get_access_policy(
     else:
         raise ValueError(
             f'{policy_name} is not a valid access policy.'
-            f'Valid policies are {set(policy for policy in AccessPolicies)}'
+            f'Valid policies are {set(policy for policy in Constants)}'
         )

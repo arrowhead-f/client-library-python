@@ -26,7 +26,7 @@ class HttpConsumer(BaseConsumer, protocol='HTTP'):
         return Response(service_response.content, rule.payload_type, service_response.status_code, '')
 
 def http(secure: str) -> str:
-    if secure == 'INSECURE':
+    if secure == 'SECURITY_INSECURE':
         return 'http://'
     return 'https://'
 
