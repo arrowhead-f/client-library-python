@@ -43,6 +43,7 @@ class ArrowheadClient:
                  consumer: BaseConsumer,
                  provider: BaseProvider,
                  logger: Any,
+                 config: Dict = None,
                  keyfile: str = '',
                  certfile: str = '', ):
         self.system = system
@@ -52,6 +53,7 @@ class ArrowheadClient:
         self.certfile = certfile
         self.secure = True if all(self.cert) else False
         self._logger = logger
+        self.config = config or ar_config
         self.auth_authentication_info = None
         self.orchestration_rules = OrchestrationRuleContainer()
         self._provided_services: StoredProvidedService = {}
@@ -221,25 +223,25 @@ class ArrowheadClient:
         self.orchestration_rules.store(
                 OrchestrationRule(
                         core_service('register'),
-                        ar_config['core_service']['service_registry'],
+                        self.config['core_service']['service_registry'],
                         'POST')
         )
         self.orchestration_rules.store(
                 OrchestrationRule(
                         core_service('unregister'),
-                        ar_config['core_service']['service_registry'],
+                        self.config['core_service']['service_registry'],
                         'DELETE')
         )
         self.orchestration_rules.store(
                 OrchestrationRule(
                         core_service('orchestration-provided_service'),
-                        ar_config['core_service']['orchestrator'],
+                        self.config['core_service']['orchestrator'],
                         'POST')
         )
         self.orchestration_rules.store(
                 OrchestrationRule(
                         core_service('publickey'),
-                        ar_config['core_service']['authorization'],
+                        self.config['core_service']['authorization'],
                         'GET')
         )
 

@@ -48,7 +48,7 @@ class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             port: int,
             keyfile: str,
             certfile: str,
-            cafile: str) -> None:
+        ) -> None:
         """
         Starts the provider and runs until interrupted.
 
