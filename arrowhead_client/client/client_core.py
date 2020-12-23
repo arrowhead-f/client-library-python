@@ -51,7 +51,7 @@ class ArrowheadClient:
         self.provider = provider
         self.keyfile = keyfile
         self.certfile = certfile
-        self.secure = True if all(self.cert) else False
+        self.secure = all(self.cert)
         self._logger = logger
         self.config = config or ar_config
         self.auth_authentication_info = None

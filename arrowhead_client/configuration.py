@@ -1,40 +1,36 @@
-from arrowhead_client.system import ArrowheadSystem
 _default_address = '127.0.0.1'
 
 default_config = {
-    'core_service': {
-        'service_registry':
-            ArrowheadSystem(
-                    'service_registry',
-                    _default_address,
-                    8443, ),
-        'orchestrator':
-            ArrowheadSystem(
-                    'orchestrator',
-                    _default_address,
-                    8441, ),
-        'authorization':
-            ArrowheadSystem(
-                    'authorization',
-                    _default_address,
-                    8445, ),
-        'eventhandler':
-            ArrowheadSystem(
-                    'eventhandler',
-                    _default_address,
-                    8455, ),
-        'gatekeeper':
-            ArrowheadSystem(
-                    'gatekeeper',
-                    _default_address,
-                    8449, ),
-        'gateway':
-            ArrowheadSystem(
-                    'gatekeeper',
-                    _default_address,
-                    8453, )
+    'service_registry': {
+                'system_name': 'service_registry',
+                'address': _default_address,
+                'port': 8443,
     },
-    'certificate authority': '',
+    'orchestrator': {
+                'system_name': 'orchestrator',
+                'address': _default_address,
+                'port': 8441,
+    },
+    'authorization': {
+                'system_name': 'authorization',
+                'address': _default_address,
+                'port': 8445,
+    },
+    'eventhandler': {
+                'system_name': 'eventhandler',
+                'address': _default_address,
+                'port': 8455,
+    },
+    'gatekeeper': {
+                'system_name': 'gatekeeper',
+                'address': _default_address,
+                'port': 8449,
+    },
+    'gateway': {
+                'system_name': 'gatekeeper',
+                'address': _default_address,
+                'port': 8453,
+    },
 }
 
 config = default_config
