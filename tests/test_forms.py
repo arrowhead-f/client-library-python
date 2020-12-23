@@ -1,6 +1,6 @@
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
-import arrowhead_client.core_services.core_service_forms as forms
+import arrowhead_client.client.core_service_forms as forms
 
 requester_system = ArrowheadSystem('test_system', 'localhost', 0)
 provider_system = ArrowheadSystem('test_system', 'localhost', 0)
@@ -45,7 +45,7 @@ def test_orchestration_flags():
         'triggerInterCloud',
     }
 
-    of = forms.OrchestrationFlags()
+    of = forms.OrchestrationFlags(*([True]*7))
 
     assert set(of.dto().keys()) == valid_keys
     assert of.override_store == True

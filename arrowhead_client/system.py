@@ -1,10 +1,8 @@
-from typing import Dict, Union, Optional
-from dataclasses import dataclass, field
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from typing import Dict
+from dataclasses import dataclass
 
-from arrowhead_client.security.utils import create_authentication_info
 from arrowhead_client.dto import DTOMixin
+from arrowhead_client.security.utils import cert_to_authentication_info
 
 
 @dataclass
@@ -12,34 +10,38 @@ class ArrowheadSystem(DTOMixin):
     """
     ArrowheadSystem class.
 
-    Args:
-        system_name: System name as :code:`str`.
-        address: IP address as :code:`str`.
-        port: Port as :code:`int`.
-        authentication_info: Authentication info as :code:`str`.
+    Attributes:
+        system_name: System name.
+        address: IP address.
+        port: Port.
+        authentication_info: Authentication info.
     """
 
     system_name: str
     address: str
     port: int
-    _privatekey: Optional[RSAPrivateKey] = field(default=None)
-    _publickey: Optional[RSAPublicKey] = field(default=None)
-
-    @property
-    def authentication_info(self):
-        return create_authentication_info(self._publickey)
+    authentication_info: str = ''
 
     @property
     def authority(self):
         return f'{self.address}:{self.port}'
 
-    _dto_excludes = {'_privatekey', '_publickey'}
-    _dto_property_include = {'authentication_info'}
-
     @classmethod
-    def from_dto(cls, system_dto: Dict[str, Union[int, str]]):
+    def from_dto(cls, system_dto: Dict):
         return cls(
                 system_name=str(system_dto['systemName']),
                 address=str(system_dto['address']),
                 port=int(system_dto['port']),
         )
+
+    @classmethod
+    def with_certfile(
+            cls,
+            system_name: str,
+            address: str,
+            port: int,
+            certfile: str,
+            ) -> 'ArrowheadSystem':
+        authentication_info = cert_to_authentication_info(certfile)
+
+        return cls(system_name, address, port, authentication_info)

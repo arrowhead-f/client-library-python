@@ -13,7 +13,6 @@ from arrowhead_client.service import Service  # noqa: F401
 from arrowhead_client.logs import get_logger
 
 
-
 class ArrowheadHttpClient(ArrowheadClient):
     """
     Arrowhead client using HTTP.
@@ -32,16 +31,21 @@ class ArrowheadHttpClient(ArrowheadClient):
                  address: str,
                  port: int,
                  keyfile: str = '',
-                 certfile: str = ''):
+                 certfile: str = '',
+                 cafile: str = ''):
         logger = get_logger(system_name, 'debug')
-        system = ArrowheadSystem(system_name, address, port)
+        system = ArrowheadSystem.with_certfile(
+                system_name,
+                address,
+                port,
+                certfile,
+        )
         super().__init__(
                 system,
-                HttpConsumer(),
-                HttpProvider(system, keyfile, certfile),
+                HttpConsumer(cafile),
+                HttpProvider(cafile),
                 logger,
                 keyfile=keyfile,
                 certfile=certfile
         )
         self._logger.info(f'{self.__class__.__name__} initialized at {self.system.address}:{self.system.port}')
-        # TODO: This line is a hack and needs to be fixed

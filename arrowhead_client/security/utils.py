@@ -4,7 +4,8 @@ from typing import Optional
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPrivateKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+
 
 # TODO: Implement this https://blog.cyberreboot.org/using-pkcs-12-formatted-certificates-in-python-fd98362f90ba to reduce file io and use pkcs12
 
@@ -14,7 +15,7 @@ def cert_cn(cert_string: str) -> str:
             default_backend()
     )
     common_names = cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
-    # TODO: Make sure the consumer gets a 400 response when these errors occur.
+    # TODO: Are these checks necessary anymore?
     if len(common_names) > 1:
         raise RuntimeError('Multiple common names in cert, expected 1.')
     elif len(common_names) == 0:
@@ -46,25 +47,8 @@ def extract_publickey(certfile: str) -> Optional[RSAPublicKey]:
 
     # Extract RSA public key
     publickey = cert.public_key()
-    assert isinstance(publickey, RSAPublicKey)
-    # TODO: assert to make mypy happy, needs a cleaner solution
 
     return publickey
-
-
-def extract_privatekey(keyfile: str) -> Optional[RSAPrivateKey]:
-    if not keyfile:
-        return None
-
-    with open(keyfile, 'rb') as key:
-        # Read private key from key file
-        privatekey = serialization.load_pem_private_key(
-                data=key.read(),
-                password=None,
-                backend=default_backend(),
-        )
-
-    return privatekey
 
 
 def create_authentication_info(publickey: Optional[RSAPublicKey]) -> str:
@@ -81,16 +65,17 @@ def create_authentication_info(publickey: Optional[RSAPublicKey]) -> str:
     return b64encode(public_bytes).decode()
 
 
-def publickey_from_base64(key64: str) -> RSAPublicKey:
-    publickey = serialization.load_der_public_key(
-            b64decode(key64),
-            default_backend()
+def der_to_pem(der64: str) -> str:
+    publickey = serialization.load_der_public_key(b64decode(der64), backend=default_backend())
+    pem_string = publickey.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
-    return publickey
+    return pem_string.decode()
+
 
 def cert_to_authentication_info(pem_certfile: str):
     publickey = extract_publickey(pem_certfile)
     authentication_info = create_authentication_info(publickey)
 
     return authentication_info
-

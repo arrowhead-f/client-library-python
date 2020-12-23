@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 
 from arrowhead_client.response import Response
-from arrowhead_client.rules import OrchestrationRule, ProvisionRule
+from arrowhead_client.rules import OrchestrationRule, RegistrationRule
 
 
 class ProtocolMixin(ABC):
@@ -26,14 +26,14 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
         Args:
            rule: Orchestration rule.
         Returns:
-            A Response object containing the payload and error codes.
+            A Response object.
         """
 
 
 class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
     """Abstract base class for providers"""
     @abstractmethod
-    def add_provided_service(self, rule: ProvisionRule, ) -> None:
+    def add_provided_service(self, rule: RegistrationRule, ) -> None:
         """
         Adds the provided service to the provider according the provision rule.
 
@@ -47,7 +47,8 @@ class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             address: str,
             port: int,
             keyfile: str,
-            certfile: str,) -> None:
+            certfile: str,
+            cafile: str) -> None:
         """
         Starts the provider and runs until interrupted.
 
@@ -56,6 +57,7 @@ class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             port: system port.
             keyfile: client keyfile.
             certfile: client certfile.
+            cafile: certificate authority file
         """
 
 

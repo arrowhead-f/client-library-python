@@ -1,13 +1,10 @@
 from dataclasses import dataclass
-from typing import Optional, Iterator, Union, Tuple, Callable, Dict
+from typing import Optional, Iterator, Callable, Dict
 from collections.abc import MutableMapping
 
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.service import Service
 from arrowhead_client.security.access_policy import AccessPolicy
-
-# TODO: The OrchestrationRuleTuple should be removed eventually
-OrchestrationRuleTuple = Tuple[Service, ArrowheadSystem, str, str]
 
 
 class OrchestrationRule:
@@ -17,7 +14,7 @@ class OrchestrationRule:
             provider_system: ArrowheadSystem,
             method: str,
             authorization_token: str = '',
-        ):
+            ):
         self._consumed_service = consumed_service
         self._provider_system = provider_system
         self._method = method
@@ -44,7 +41,7 @@ class OrchestrationRule:
         return self._consumed_service.access_policy
 
     @property
-    def metadata(self) -> Dict:
+    def metadata(self) -> Optional[Dict]:
         return self._consumed_service.metadata
 
     @property
@@ -74,13 +71,15 @@ class OrchestrationRule:
         return self._authorization_token
 
 
+# TODO: Give this class the same treatment as OrchestrationRule
+# I.e. give it bunch of properties to decouple the behaviours of systems/services and providers
 @dataclass
-class ProvisionRule:
+class RegistrationRule:
     provided_service: Service
     provider_system: ArrowheadSystem
     method: str
     func: Callable
-    access_policy: Optional[AccessPolicy]
+    access_policy: AccessPolicy
 
 
 class OrchestrationRuleContainer(MutableMapping):
@@ -93,18 +92,14 @@ class OrchestrationRuleContainer(MutableMapping):
     def __setitem__(
             self,
             key: str,
-            item: Union[OrchestrationRule, OrchestrationRuleTuple]) -> None:
-        if isinstance(item, OrchestrationRule):
-            self._rulecontainer[key] = item
-        else:
-            # If given a tuple of values, create the orchestrationrule
-            # TODO: This is not necessary and will be removed in the future, connected to comment at the top
-            self._rulecontainer[key] = OrchestrationRule(*item)
+            item: OrchestrationRule
+            ) -> None:
+        self._rulecontainer[key] = item
 
     def __delitem__(self, key: str) -> None:
         del self._rulecontainer[key]
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[OrchestrationRule]:
         return iter(self._rulecontainer)
 
     def __len__(self) -> int:

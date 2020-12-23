@@ -7,7 +7,7 @@ from arrowhead_client.security import utils
 from arrowhead_client import errors
 
 
-def public_serialization(public_key):
+def public_serialization(public_key) -> bytes:
     return public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -22,7 +22,6 @@ def private_serialization(private_key):
     )
 
 
-
 def test_cert_cn(provider_variables):
     *_, common_name, _, certfile, _, = provider_variables
 
@@ -30,6 +29,7 @@ def test_cert_cn(provider_variables):
         test_cn = utils.cert_cn(cf.read().decode())
 
     assert test_cn == common_name
+
 
 @pytest.mark.parametrize('provider_variables, expectation', [
     (None, pytest.raises(RuntimeError)),
@@ -65,27 +65,11 @@ def test_extract_publickey(provider_variables):
 
     assert test_key_serial == public_key_serial
 
+
 def test_extract_empty_publickey():
     test_public_key = utils.extract_publickey('')
 
     assert test_public_key is None
-
-
-def test_extract_private_key(provider_variables):
-    private_key, *_, keyfile, _, _, = provider_variables
-
-    test_private_key = utils.extract_privatekey(keyfile)
-
-    private_key_serial = private_serialization(private_key)
-    test_key_serial = private_serialization(test_private_key)
-
-    assert test_key_serial == private_key_serial
-
-
-def test_extract_empty_private_key():
-    test_private_key = utils.extract_privatekey('')
-
-    assert test_private_key is None
 
 
 def test_create_authentication_info(provider_variables):
@@ -95,21 +79,21 @@ def test_create_authentication_info(provider_variables):
 
     assert test_authentication_info == authentication_info
 
+
 def test_create_empty_authentication_info():
     test_authentication_info = utils.create_authentication_info(None)
 
     assert test_authentication_info == ''
 
 
-def test_publickey_from_base64(provider_variables):
+def test_der_to_pem(provider_variables):
     _, public_key, *_, authentication_info = provider_variables
 
-    test_public_key = utils.publickey_from_base64(authentication_info)
+    test_public_serial = utils.der_to_pem(authentication_info)
 
-    test_key_serial = public_serialization(test_public_key)
-    public_key_serial = public_serialization(public_key)
+    public_key_serial = public_serialization(public_key).decode()
 
-    assert test_key_serial == public_key_serial
+    assert test_public_serial == public_key_serial
 
 
 def test_cert_to_authentication_info(provider_variables):

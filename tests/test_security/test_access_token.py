@@ -29,77 +29,26 @@ class TestAccessToken:
     iid = 'HTTP-SECURE-JSON'
     params = {
         'test_valid_claims': [{
-            'token_test_variables': generate_claims(
-                    '39hu209cp239c',
-                    'Authorization',
-                    now - 200,
-                    now - 300,
-                    cid,
-                    sid,
-                    iid,
-                    now + 2000
-            ),
+            'token_test_variables': generate_claims('39hu209cp239c', 'Authorization', now - 200, now - 300, cid, sid, iid, now + 2000),
         }],
         'test_malformed_auth_string': [{
-            'token_test_variables': generate_claims(
-                    '93pc239pc203',
-                    'Authorization',
-                    now - 2000,
-                    now - 300,
-                    cid,
-                    sid,
-                    iid,
-                    now + 3000
-            )
+            'token_test_variables': generate_claims('93pc239pc203', 'Authorization', now - 2000, now - 300, cid, sid, iid, now + 3000)
         }],
         'test_invalid_claims': [{
-            'token_test_variables': generate_claims(
-                    '93pc239pc203',
-                    'Authorization',
-                    now + 2000,
-                    now - 300,
-                    cid,
-                    sid,
-                    iid,
-                    now + 3000
-            )}, {
-            'token_test_variables': generate_claims(
-                    '93pc239pc203',
-                    'Authorization',
-                    now - 2000,
-                    now + 300,
-                    cid,
-                    sid,
-                    iid,
-                    now + 3000
-            )}, {
-            'token_test_variables': generate_claims(
-                    '93pc239pc203',
-                    'auth',
-                    now - 2000,
-                    now - 300,
-                    cid,
-                    sid,
-                    iid,
-                    now + 3000
-            )}, {
-            'token_test_variables': generate_claims(
-                    '93pc239pc203',
-                    'Authorization',
-                    now - 2000,
-                    now - 300,
-                    cid,
-                    sid,
-                    iid,
-                    now - 3000
-            )
+            'token_test_variables': generate_claims('93pc239pc203', 'Authorization', now + 2000, now - 300, cid, sid, iid, now + 3000)
+        }, {
+            'token_test_variables': generate_claims('93pc239pc203', 'Authorization', now - 2000, now + 300, cid, sid, iid, now + 3000)
+        }, {
+            'token_test_variables': generate_claims('93pc239pc203', 'auth', now - 2000, now - 300, cid, sid, iid, now + 3000 )
+        }, {
+            'token_test_variables': generate_claims('93pc239pc203', 'Authorization', now - 2000, now - 300, cid, sid, iid, now - 3000)
         }]
     }
 
     def test_valid_claims(self, token_test_variables):
-        auth_string, p_priv_key, a_pub_key, claims = token_test_variables
+        auth_string, provider_keyfile, a_pub_key, claims = token_test_variables
 
-        token = AccessToken.from_string(auth_string, p_priv_key, a_pub_key)
+        token = AccessToken.from_string(auth_string, provider_keyfile, a_pub_key)
 
         assert token.consumer_id == claims['cid']
         assert token.service_id == claims['sid']

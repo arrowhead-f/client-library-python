@@ -113,9 +113,7 @@ ProviderVariables = namedtuple(
 
 
 @pytest.fixture
-def token_test_variables(request):
-    # TODO: return all things related to the authorization system
-    # TODO: Should be a JWT token and public key, maybe some other things?
+def token_test_variables(request, tmp_path):
     provider_private_key, _ = generate_keys()
 
     authorization_private_key, authorization_public_key = generate_keys()
@@ -144,8 +142,19 @@ def token_test_variables(request):
     encrypted_token = jwt.JWT(header=encryption_header, claims=signed_token.serialize())
     encrypted_token.make_encrypted_token(provider_private_jwk)
 
+    provider_keyfile = tmp_path / 'provider.key'
+    with open(provider_keyfile, 'wb') as keyfile:
+        keyfile.write(provider_private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ))
+    auth_authorization_info = authorization_public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    ).decode()
     auth_string = f'Bearer {encrypted_token.serialize()}'
-    return auth_string, provider_private_key, authorization_public_key, claims
+    return auth_string, provider_keyfile, auth_authorization_info, claims
 
 
 @pytest.fixture

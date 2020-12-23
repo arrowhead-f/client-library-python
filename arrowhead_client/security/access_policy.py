@@ -2,14 +2,14 @@
 Access Policy module
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
+from arrowhead_client.common_constants import AccessPolicies
 from arrowhead_client.security.access_token import AccessToken
 from arrowhead_client.security.utils import cert_cn
-from arrowhead_client.security.utils import RSAPublicKey, RSAPrivateKey
 from arrowhead_client.service import Service
 from arrowhead_client import errors
 
@@ -17,17 +17,7 @@ from arrowhead_client import errors
 class AccessPolicy(ABC):
     """
     Abstract class that describes the interface for access policies.
-
-    Attributes:
-        provider_system: ArrowheadSystem providing the service
-        provided_service: Service being provided
     """
-    def __init__(
-            self,
-            provided_service: Service,
-            privatekey: Optional[RSAPrivateKey]):
-        self.privatekey = privatekey
-        self.provided_service = provided_service
 
     @abstractmethod
     def is_authorized(self,
@@ -60,11 +50,13 @@ class TokenAccessPolicy(AccessPolicy):
     """
     def __init__(
             self,
-            *args,
-            authorization_key: RSAPublicKey = None,
+            provided_service: Service,
+            provider_keyfile: str,
+            auth_info: str,
             ) -> None:
-        super().__init__(*args)
-        self._authorization_key = authorization_key
+        self.provided_service = provided_service
+        self.provider_keyfile = provider_keyfile
+        self.auth_info = auth_info
 
     def is_authorized(
             self,
@@ -77,8 +69,8 @@ class TokenAccessPolicy(AccessPolicy):
         try:
             token = AccessToken.from_string(
                     auth_header,
-                    self.privatekey,
-                    self._authorization_key
+                    self.provider_keyfile,
+                    self.auth_info
             )
         except errors.InvalidTokenError as e:
             # TODO: Log failure
@@ -95,8 +87,6 @@ class CertificateAccessPolicy(AccessPolicy):
     """
     Access policy used when :code:`CERTIFICATE` is specified.
     """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def is_authorized(self,
                       consumer_cert_str: str,
@@ -119,8 +109,6 @@ class UnrestrictedAccessPolicy(AccessPolicy):
 
     This access policy should only be used in development.
     """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def is_authorized(self,
                       *args,
@@ -128,3 +116,24 @@ class UnrestrictedAccessPolicy(AccessPolicy):
         return True
 
 
+def get_access_policy(
+        policy_name: str,
+        provided_service: Service,
+        privatekey: Any,
+        **kwargs) -> AccessPolicy:
+    """Factory function for access policies"""
+    if policy_name == AccessPolicies.UNRESTRICTED:
+        return UnrestrictedAccessPolicy()
+    elif policy_name == AccessPolicies.CERTIFICATE:
+        return CertificateAccessPolicy()
+    elif policy_name == AccessPolicies.TOKEN:
+        return TokenAccessPolicy(
+                provided_service,
+                privatekey,
+                kwargs['authorization_key']
+        )
+    else:
+        raise ValueError(
+            f'{policy_name} is not a valid access policy.'
+            f'Valid policies are {set(policy for policy in AccessPolicies)}'
+        )

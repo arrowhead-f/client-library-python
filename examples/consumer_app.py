@@ -3,22 +3,19 @@ HttpConsumer example app
 """
 import arrowhead_client.api as ar
 
-ar.config['certificate authority'] = 'certificates/sysop.ca'
-ar.config['app_name'] = __name__
-
 consumer_app = ar.ArrowheadHttpClient(
         system_name='example-consumer',
         address='127.0.0.1',
         port=7656,
         keyfile='certificates/example-consumer.key',
         certfile='certificates/example-consumer.crt',
+        cafile='certificates/sysop.ca',
 )
 
-consumer_app.add_consumed_service('hello-arrowhead', 'GET', 'TOKEN')
 
 if __name__ == '__main__':
+    consumer_app.setup()
+    consumer_app.add_orchestration_rule('hello-arrowhead', 'GET', 'TOKEN')
     response = consumer_app.consume_service('hello-arrowhead')
-    #message = consumer_app.consumer.extract_payload(response, 'json')
-    #message_2 = consumer_app.extract_payload(response, 'json') # TODO: remove the first message extraction
 
-    print(response.payload['msg'])
+    print(response.read_json()['msg'])

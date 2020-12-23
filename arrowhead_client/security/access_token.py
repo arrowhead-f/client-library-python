@@ -1,8 +1,6 @@
 import json
 import time
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 from jwcrypto import jwk, jwt # type: ignore
 
 from arrowhead_client import errors
@@ -26,16 +24,18 @@ class AccessToken:
         self.service_id = service_id
 
     @classmethod
-    def from_string(cls,
-                    auth_string: str,
-                    privatekey: RSAPrivateKey,
-                    authorization_key: RSAPublicKey) -> 'AccessToken':
+    def from_string(
+            cls,
+            auth_string: str,
+            provider_keyfile: str,
+            auth_authorization_info: str,
+        ) -> 'AccessToken':
         """
         Creates an AccessToken from the given authorization header.
 
         Args:
             auth: the AUTHORIZATION string.
-            privatekey: Provider private key.
+            provider_keyfile: Provider keyfile.
             authorization_key: Authorization system public key.
         Returns:
             An AccessToken constructed from the information in the authentication header.
@@ -52,19 +52,13 @@ class AccessToken:
             raise errors.InvalidTokenError('Malformed authorization header')
 
         # Generate jwk for provider private key
-        keybytes = privatekey.private_bytes( # type: ignore
-                encoding=serialization.Encoding.PEM,
-                encryption_algorithm=serialization.NoEncryption(),
-                format=serialization.PrivateFormat.PKCS8,
-        )
-        jwk_privatekey = jwk.JWK.from_pem(keybytes)
+        with open(provider_keyfile,'rb') as keyfile:
+            jwk_privatekey = jwk.JWK.from_pem(keyfile.read())
 
         # Generate jwk for authorization public key
-        auth_keybytes = authorization_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        jwk_authkey = jwk.JWK.from_pem(
+                auth_authorization_info.encode()
         )
-        jwk_authkey = jwk.JWK.from_pem(auth_keybytes)
 
         # Decrypt, sign, and extract claims from token
         decrypted_token = jwt.JWT(key=jwk_privatekey, jwt=token_string)
