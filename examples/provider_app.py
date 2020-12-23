@@ -9,14 +9,17 @@ provider_app = ar.ArrowheadHttpClient(
         port=7655,
         keyfile='certificates/example-provider.key',
         certfile='certificates/example-provider.crt',
+        cafile='certificates/sysop.ca',
 )
 
 
 @provider_app.provided_service(
-        'hello-arrowhead',
-        'hello',
-        'HTTP-INSECURE-JSON',
-        'GET', )
+        service_definition='hello-arrowhead',
+        service_uri='hello',
+        protocol='HTTP',
+        method='GET',
+        payload_format='JSON',
+        access_policy='TOKEN', )
 def hello_arrowhead(request):
     return {"msg": "Hello, Arrowhead!"}
 

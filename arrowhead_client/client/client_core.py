@@ -1,29 +1,39 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple, Callable, Union
+from typing import Any, Dict, Tuple, Callable
+
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
-from arrowhead_client.service import Service
+from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.client.core_services import core_service
-from arrowhead_client.client import core_service_forms as forms, core_service_responses as responses
+from arrowhead_client.client import (
+    core_service_responses as responses,
+    core_service_forms as forms
+)
+from arrowhead_client.configuration import config as ar_config
+from arrowhead_client.security.access_policy import get_access_policy
+from arrowhead_client.common_constants import SecurityInfo
+from arrowhead_client.rules import (
+    OrchestrationRuleContainer,
+    RegistrationRule,
+    OrchestrationRule,
+)
+import arrowhead_client.errors as errors
 
-StoredConsumedService = Dict[str, Tuple[Service, ArrowheadSystem, str]]
-StoredProvidedService = Dict[str, Tuple[Service, Callable]]
+StoredProvidedService = Dict[str, Tuple[Service, Callable, str]]
 
 
-class ArrowheadClient():
+class ArrowheadClient:
     """
     Application class for Arrowhead Systems.
 
     This class serves as a bridge that connects systems, consumers, and providers to the user.
 
-    Args:
+    Attributes:
         system: ArrowheadSystem
         consumer: Consumer
         provider: Provider
         logger: Logger, will default to the logger found in logs.get_logger()
-        config: JSON config file containing the addresses and ports of the core systems
-        server: WSGI server
         keyfile: PEM keyfile
         certfile: PEM certfile
     """
@@ -33,233 +43,251 @@ class ArrowheadClient():
                  consumer: BaseConsumer,
                  provider: BaseProvider,
                  logger: Any,
-                 config: Dict,
+                 config: Dict = None,
                  keyfile: str = '',
                  certfile: str = '', ):
         self.system = system
         self.consumer = consumer
         self.provider = provider
-        self._logger = logger
         self.keyfile = keyfile
         self.certfile = certfile
-        self.secure = True if self.keyfile else False
-        self.config = config
-        self._consumed_services: StoredConsumedService = {}
+        self.secure = True if all(self.cert) else False
+        self._logger = logger
+        self.config = config or ar_config
+        self.auth_authentication_info = None
+        self.orchestration_rules = OrchestrationRuleContainer()
         self._provided_services: StoredProvidedService = {}
-
-        # Setup methods
-        self._core_system_setup()
+        # TODO: Should add_provided_service be exactly the same as the provider's,
+        # or should this class do something on top of it?
+        # It's currently not even being used so it could likely be removed.
+        # Maybe it should be it's own method?
         self.add_provided_service = self.provider.add_provided_service
+
+    @property
+    def cert(self) -> Tuple[str, str]:
+        """ Tuple of the keyfile and certfile """
+        return self.certfile, self.keyfile
+
+    def setup(self):
+        # Setup methods
+        self._core_service_setup()
 
     def consume_service(self, service_definition: str, **kwargs):
         """
-        Consumes the given service definition
+        Consumes the given provided_service definition
 
         Args:
-            service_definition: The service definition of a consumable service
+            service_definition: The provided_service definition of a consumable provided_service
             **kwargs: Collection of keyword arguments passed to the consumer.
         """
-        consumed_service, consumer_system, method = self._consumed_services[service_definition]
 
-        service_uri = _service_uri(consumed_service, consumer_system)
+        rule = self.orchestration_rules.get(service_definition)
+        if rule is None:
+            # TODO: Not sure if this should raise an error or just log?
+            raise errors.NoAvailableServicesError(
+                    f'No services available for'
+                    f' service \'{service_definition}\''
+            )
 
-        if consumed_service.interface.secure == 'SECURE':
-            # Add certificate files if service is secure
+        # TODO: these should be normal arguments to consumer.consume, not a part of **kwargs
+        if rule.secure == SecurityInfo.SECURE:
+            # Add certificate files if provided_service is secure
             kwargs['cert'] = self.cert
 
-        return self.consumer.consume_service(service_uri, method, **kwargs)
+        return self.consumer.consume_service(rule, **kwargs, )
 
-    def extract_payload(self, service_response: Any, payload_type: str) -> Union[Dict, str]:
-        return self.consumer.extract_payload(service_response, payload_type)
-
-    def add_consumed_service(self,
-                             service_definition: str,
-                             method: str,
-                             **kwargs, ) -> None:
+    def add_orchestration_rule(self,
+                               service_definition: str,
+                               method: str,
+                               access_policy: str = '',
+                               # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+                               **kwargs, ) -> None:
         """
-        Add orchestration rule for service definition
+        Add orchestration rule for provided_service definition
 
         Args:
             service_definition: Service definition that is looked up from the orchestrator.
-            method: The HTTP method given in uppercase that is used to consume the service.
+            method: The HTTP method given in uppercase that is used to consume the provided_service.
+            access_policy: Service access policy.
         """
 
+        requested_service = Service(service_definition, access_policy=access_policy)
+
         orchestration_form = forms.OrchestrationForm(
-                self.system.dto,
-                service_definition,
+                self.system,
+                requested_service,
                 **kwargs
         )
 
         orchestration_response = self.consume_service(
-                'orchestration-service',
-                json=orchestration_form.dto,
+                'orchestration-provided_service',
+                json=orchestration_form.dto(),
                 cert=self.cert,
         )
 
-        # TODO: Handle orchestrator error codes
+        rules = responses.process_orchestration(orchestration_response, method)
 
-        orchestration_payload = self.consumer.extract_payload(
-                orchestration_response,
-                'json'
-        )
-
-        (orchestrated_service, system), *_ = responses.handle_orchestration_response(orchestration_payload)
-
-        # TODO: Handle response with more than 1 service
-        # Perhaps a list of consumed services for each service definition should be stored
-        self._store_consumed_service(orchestrated_service, system, method)
+        for rule in rules:
+            self.orchestration_rules.store(rule)
 
     def provided_service(
             self,
             service_definition: str,
             service_uri: str,
-            interface: str,
+            protocol: str,
             method: str,
-            *func_args,
-            **func_kwargs, ):
+            payload_format: str,
+            access_policy: str,
+    ) -> Callable:
         """
-        Decorator to add a provided service to the provider.
+        Decorator to add a provided provided_service to the provider.
 
         Args:
-            service_definition: Service definition to be stored in the service registry
-            service_uri: The path to the service
-            interface: Arrowhead interface string(s)
-            method: HTTP method required to access the service
+            service_definition: Service definition to be stored in the provided_service registry
+            service_uri: The path to the provided_service
+            method: HTTP method required to access the provided_service
         """
+
         provided_service = Service(
                 service_definition,
                 service_uri,
-                interface,
+                ServiceInterface.with_access_policy(
+                        protocol,
+                        access_policy,
+                        payload_format,
+                ),
+                access_policy,
         )
 
         def wrapped_func(func):
-            self._provided_services[service_definition] = (provided_service, func)
-            self.provider.add_provided_service(
-                    service_definition,
-                    service_uri,
-                    method=method,
-                    func=func,
-                    *func_args,
-                    **func_kwargs)
+            self._provided_services[service_definition] = (
+                provided_service,
+                func,
+                method,
+            )
             return func
 
         return wrapped_func
 
     def run_forever(self) -> None:
-        """ Start the server, publish all service, and run until interrupted. Then, unregister all services"""
+        """
+        Start the server, publish all provided_service, and run until interrupted.
+        Then, unregister all services.
+        """
 
-        import warnings
-        warnings.simplefilter('ignore')
-
-        self._register_all_services()
         try:
+            self.setup()
+            self.auth_authentication_info = responses.process_publickey(self.consume_service('publickey'))
+            self._initialize_provided_services()
+            self._register_all_services()
             self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
-            self.provider.run_forever()
+            self.provider.run_forever(
+                    address=self.system.address,
+                    port=self.system.port,
+                    # TODO: keyfile and certfile should be given in provider.__init__
+                    keyfile=self.keyfile,
+                    certfile=self.certfile,
+            )
         except KeyboardInterrupt:
             self._logger.info('Shutting down server')
+        finally:
             print('Shutting down Arrowhead system')
             self._unregister_all_services()
-        finally:
             self._logger.info('Server shut down')
 
-    @property
-    def cert(self) -> Tuple[str, str]:
-        """
-        Tuple of the keyfile and certfile
-        """
-        return self.certfile, self.keyfile
+    def _initialize_provided_services(self) -> None:
+        for provided_service, func, method in self._provided_services.values():
+            registration_rule = RegistrationRule(
+                    provided_service,
+                    provider_system=self.system,
+                    method=method,
+                    func=func,
+                    access_policy=get_access_policy(
+                            policy_name=provided_service.access_policy,
+                            provided_service=provided_service,
+                            privatekey=self.keyfile,
+                            authorization_key=self.auth_authentication_info
+                    ),
+            )
+            self.provider.add_provided_service(registration_rule)
 
-    def _core_system_setup(self) -> None:
+    def _core_service_setup(self) -> None:
         """
-        Method that sets up the core services.
+        Method that sets up the test_core services.
 
         Runs when the client is created and should not be run manually.
         """
 
-        self._store_consumed_service(
-                core_service('register'),
-                self.config['service_registry'],
-                'POST')
-        self._store_consumed_service(
-                core_service('unregister'),
-                self.config['service_registry'],
-                'DELETE')
-        self._store_consumed_service(
-                core_service('orchestration-service'),
-                self.config['orchestrator'],
-                'POST')
-
-    def _store_consumed_service(
-            self,
-            service: Service,
-            system: ArrowheadSystem,
-            http_method: str) -> None:
-        """
-        Register consumed services with the consumer
-
-        Args:
-            service: Service to be stored
-            system: System containing the service
-            http_method: HTTP method used to consume the service
-        """
-
-        self._consumed_services[service.service_definition] = (service, system, http_method)
+        # TODO: This should be done with a loop somehow
+        self.orchestration_rules.store(
+                OrchestrationRule(
+                        core_service('register'),
+                        self.config['core_service']['service_registry'],
+                        'POST')
+        )
+        self.orchestration_rules.store(
+                OrchestrationRule(
+                        core_service('unregister'),
+                        self.config['core_service']['service_registry'],
+                        'DELETE')
+        )
+        self.orchestration_rules.store(
+                OrchestrationRule(
+                        core_service('orchestration-provided_service'),
+                        self.config['core_service']['orchestrator'],
+                        'POST')
+        )
+        self.orchestration_rules.store(
+                OrchestrationRule(
+                        core_service('publickey'),
+                        self.config['core_service']['authorization'],
+                        'GET')
+        )
 
     def _register_service(self, service: Service):
         """
-        Registers the given service with service registry
+        Registers the given provided_service with provided_service registry
 
         Args:
             service: Service to register with the Service registry.
         """
 
-        # Decide security level:
-        if service.interface.secure == 'INSECURE':
-            secure = 'NOT_SECURE'
-        elif service.interface.secure == 'SECURE':
-            secure = 'CERTIFICATE'
-        else:
-            secure = 'CERTIFICATE'
-        # TODO: Add 'TOKEN' security level
-
-        # TODO: Should accept a system and a service
         service_registration_form = forms.ServiceRegistrationForm(
                 provided_service=service,
                 provider_system=self.system,
-                # TODO: secure should _NOT_ be hardcoded
-                secure=secure
         )
 
         service_registration_response = self.consume_service(
                 'register',
-                json=service_registration_form.dto,
+                json=service_registration_form.dto(),
                 cert=self.cert
         )
 
-        print(service_registration_response.status_code)
-        print(service_registration_response.text)
-        # TODO: Error handling
-
-        # TODO: Do logging
+        responses.process_service_register(
+                service_registration_response,
+        )
 
     def _register_all_services(self) -> None:
         """
         Registers all provided services of the system with the system registry.
         """
-        for service, _ in self._provided_services.values():
-            self._register_service(service)
+        for service, *_ in self._provided_services.values():
+            try:
+                self._register_service(service)
+            except errors.CoreServiceInputError as e:
+                # TODO: Do logging
+                print(e)
 
-    def _unregister_service(self, service_definition: str) -> None:
+    def _unregister_service(self, service: Service) -> None:
         """
-        Unregisters the given service with service registry
+        Unregisters the given provided_service with provided_service registry
 
         Args:
             service: Service to unregister with the Service registry.
         """
 
-        if service_definition not in self._provided_services.keys():
-            raise ValueError(f'{service_definition} not provided by {self}')
+        service_definition = service.service_definition
 
         # TODO: Should be a "form"?
         unregistration_payload = {
@@ -275,44 +303,15 @@ class ArrowheadClient():
                 cert=self.cert
         )
 
-        print(service_unregistration_response.status_code)
+        responses.process_service_unregister(service_unregistration_response)
 
     def _unregister_all_services(self) -> None:
         """
         Unregisters all provided services of the system with the system registry.
         """
 
-        for service_definition in self._provided_services:
-            self._unregister_service(service_definition)
-
-    """
-    def __enter__(self):
-        '''Start server and register all services'''
-        import warnings
-        warnings.simplefilter('ignore')
-
-        print('Starting server')
-        self.server.start()
-        print('Registering services')
-        self.register_all_services()
-
-    def __exit__(self, exc_type, exc_value, tb):
-        '''Unregister all services and stop the server'''
-        if exc_type != KeyboardInterrupt:
-            print(f'Exception was raised:')
-            print(exc_value)
-
-        print('\nArrowheadSystem was stopped, unregistering services')
-        self.unregister_all_services()
-        print('Stopping server')
-        self.server.stop()
-        print('Shutdown completed')
-
-        return True
-    """
-
-
-def _service_uri(service: Service, system: ArrowheadSystem) -> str:
-    service_uri = f'{system.authority}/{service.service_uri}'
-
-    return service_uri
+        for service, *_ in self._provided_services.values():
+            try:
+                self._unregister_service(service)
+            except errors.CoreServiceInputError as e:
+                print(e)
