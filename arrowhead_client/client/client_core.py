@@ -10,14 +10,13 @@ from arrowhead_client.client import (
     core_service_responses as responses,
     core_service_forms as forms
 )
-from arrowhead_client.configuration import config as ar_config
+from arrowhead_client.client.core_system_defaults import config as ar_config
 from arrowhead_client.security.access_policy import get_access_policy
 from arrowhead_client.common import Constants
 from arrowhead_client.rules import (
     OrchestrationRuleContainer,
     RegistrationRuleContainer,
     RegistrationRule,
-    OrchestrationRule,
 )
 import arrowhead_client.errors as errors
 

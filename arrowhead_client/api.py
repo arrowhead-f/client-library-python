@@ -5,7 +5,6 @@ Arrowhead Client API module
 This module contains the public api of the :code:`arrowhead_client` module.
 """
 from typing import Dict
-from arrowhead_client.configuration import config
 from arrowhead_client.client import ArrowheadClient
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.implementations.httpconsumer import HttpConsumer
@@ -31,7 +30,7 @@ class ArrowheadHttpClient(ArrowheadClient):
                  system_name: str,
                  address: str,
                  port: int,
-                 config: Dict = config,
+                 config: Dict = None,
                  keyfile: str = '',
                  certfile: str = '',
                  cafile: str = ''):
