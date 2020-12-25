@@ -30,15 +30,12 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
             except errors.AuthorizationError as e:
                 is_authorized = False
 
-            if is_authorized:
-                return rule.func(request)
-            else:
-                flask.abort(
-                        403,
-                        f'Not authorized to consume service'
-                        f'{rule.service_definition}@'
-                        f'{rule.authority}'
-                )
+            if not is_authorized:
+                return {'errorMessage': f'Not authorized to consume service '
+                                        f'{rule.service_definition}@{rule.authority}/'
+                                        f'{rule.service_uri}'}, 403
+
+            return rule.func(request)
 
 
         self.app.add_url_rule(
