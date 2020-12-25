@@ -18,7 +18,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
 
         @self.app.errorhandler(500)
         def internal_error(error):
-            return {'errorMessage': 'Internal issue'}
+            return {Constants.ERROR_MESSAGE: 'Internal issue'}
 
     def add_provided_service(self, rule: RegistrationRule) -> None:
         """ Add provided_service to provider system"""
@@ -35,7 +35,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
                 is_authorized = False
 
             if not is_authorized:
-                return {'errorMessage':
+                return {Constants.ERROR_MESSAGE:
                             f'Not authorized to consume service '
                             f'{rule.service_definition}@{rule.authority}/'
                             f'{rule.service_uri}'}, 403

@@ -24,31 +24,31 @@ class CoreServices(CoreConfig, Enum):
         'service-register',
         'serviceregistry/register',
         'POST', 'HTTP', 'JSON',
-        'service_registry',
+        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
     )
     SERVICE_UNREGISTER = (
         'service-unregister',
         'serviceregistry/unregister',
         'DELETE', 'HTTP', 'JSON',
-        'service_registry',
+        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
     )
     SERVICE_QUERY = (
         'service-query',
         'serviceregistry/query',
         'POST', 'HTTP', 'JSON',
-        'service_registry',
+        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
     )
     ORCHESTRATION = (
         'orchestration-service',
         'orchestrator/orchestration',
         'POST', 'HTTP', 'JSON',
-        'orchestrator',
+        Constants.CORE_SYSTEM_ORCHESTRATOR.value,
     )
     PUBLICKEY = (
         'auth-public-key',
         'authorization/publickey',
         'GET', 'HTTP', 'JSON',
-        'authorization',
+        Constants.CORE_SYSTEM_AUTHORIZATION.value,
     )
 
 def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
