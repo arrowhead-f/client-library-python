@@ -1,14 +1,14 @@
 from functools import partial
 from flask import Flask, request
-import flask
 import ssl
 
 from arrowhead_client.abc import BaseProvider
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client import errors
+from arrowhead_client.common import Constants
 
 
-class HttpProvider(BaseProvider, protocol='HTTP'):
+class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     """ Class for provided_service provision """
 
     def __init__(self, cafile: str, app_name: str='') -> None:
