@@ -16,6 +16,10 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
         self.app = Flask(app_name)
         self.cafile = cafile
 
+        @self.app.errorhandler(500)
+        def internal_error(error):
+            return {'errorMessage': 'Internal issue'}
+
     def add_provided_service(self, rule: RegistrationRule) -> None:
         """ Add provided_service to provider system"""
         def func_with_access_policy(request):
