@@ -9,9 +9,6 @@ from arrowhead_client.common import Constants
 from arrowhead_client.security.utils import der_to_pem
 from arrowhead_client import errors
 
-system_keys = {'systemName', 'address', 'port', 'authenticationInfo'}
-service_keys = {'serviceDefinition', 'serviceUri', 'interfaces', 'secure'}
-
 
 def core_service_error_handler(func) -> Callable:
     """
@@ -49,7 +46,7 @@ def process_service_query(query_response: Response) -> List[Tuple[Service, Arrow
     service_and_system = [
         (
             _extract_service(query_result),
-            _extract_system(query_result)
+            ArrowheadSystem.from_dto(query_result)
         )
         for query_result in query_data
     ]
@@ -121,45 +118,28 @@ def _extract_orchestration_rules(orchestration_result, method) -> OrchestrationR
     service_dto = orchestration_result
     provider_dto = service_dto['provider']
 
-    service_definition = service_dto['service']['serviceDefinition']
-    service_uri = service_dto['serviceUri']
+    service = _extract_service(service_dto)
+
+    system = ArrowheadSystem.from_dto(provider_dto)
+
     interface = service_dto['interfaces'][0]['interfaceName']
-    system_name = provider_dto['systemName']
-    address = provider_dto['address']
-    port = provider_dto['port']
-    access_policy = orchestration_result['secure']
     auth_tokens = service_dto['authorizationTokens']
     auth_token = auth_tokens.get(interface, '') if auth_tokens else ''
-
-    service = Service(
-            service_definition,
-            service_uri,
-            interface,
-            access_policy,
-    )
-
-    system = ArrowheadSystem(
-            system_name,
-            address,
-            port,
-    )
 
     return OrchestrationRule(service, system, method, auth_token)
 
 
-def _extract_system(query_data: Mapping) -> ArrowheadSystem:
-    """ Extracts system data from test_core provided_service response """
-
-    system = ArrowheadSystem.from_dto(query_data['provider'])
-
-    return system
-
-
 def _extract_service(query_data: Mapping) -> Service:
     """ Extracts provided_service data from test_core provided_service response """
+    if 'serviceDefinition' in query_data:
+        service_definition_base = 'serviceDefinition'
+    elif 'service' in query_data:
+        service_definition_base = 'service'
+    else:
+        raise ValueError
 
     service = Service(
-            query_data['serviceDefinition']['serviceDefinition'],
+            query_data[service_definition_base]['serviceDefinition'],
             query_data['serviceUri'],
             query_data['interfaces'][0]['interfaceName'],
             query_data['secure'],
