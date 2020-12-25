@@ -19,4 +19,8 @@ class Constants(str, Enum):
     # Payload types
     PAYLOAD_JSON = 'JSON'
     PAYLOAD_TEXT = 'TEXT'
+    # Core systems
+    CORE_SYSTEM_SERVICE_REGISTRY = 'service-registry'
+    CORE_SYSTEM_ORCHESTRATOR = 'orchestrator'
+    CORE_SYSTEM_AUTHORIZATION = 'authorization'
 

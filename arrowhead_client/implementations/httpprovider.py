@@ -18,8 +18,8 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
 
     def add_provided_service(self, rule: RegistrationRule) -> None:
         """ Add provided_service to provider system"""
-        # Register provided_service with Flask app
         def func_with_access_policy(request):
+            """Register provided_service with Flask app."""
             auth_string = request.headers.get('authorization')
             consumer_cert_str = request.headers.environ.get('SSL_CLIENT_CERT')
             try:
@@ -31,9 +31,10 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
                 is_authorized = False
 
             if not is_authorized:
-                return {'errorMessage': f'Not authorized to consume service '
-                                        f'{rule.service_definition}@{rule.authority}/'
-                                        f'{rule.service_uri}'}, 403
+                return {'errorMessage':
+                            f'Not authorized to consume service '
+                            f'{rule.service_definition}@{rule.authority}/'
+                            f'{rule.service_uri}'}, 403
 
             return rule.func(request)
 

@@ -47,6 +47,8 @@ class AccessToken:
             bearer, token_string = auth_string.split()
         except ValueError as e:
             raise errors.InvalidTokenError('Malformed authorization header')
+        except AttributeError as e:
+            raise errors.InvalidTokenError
 
         if bearer != 'Bearer':
             raise errors.InvalidTokenError('Malformed authorization header')

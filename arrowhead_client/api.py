@@ -43,7 +43,7 @@ class ArrowheadHttpClient(ArrowheadClient):
         )
         super().__init__(
                 system,
-                HttpConsumer(cafile),
+                HttpConsumer(keyfile, certfile, cafile),
                 HttpProvider(cafile),
                 logger,
                 config=config,

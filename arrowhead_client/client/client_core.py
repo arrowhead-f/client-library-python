@@ -89,12 +89,7 @@ class ArrowheadClient:
                     f' service \'{service_definition}\''
             )
 
-        # TODO: these should be normal arguments to consumer.consume, not a part of **kwargs
-        if rule.secure == Constants.SECURITY_SECURE:
-            # Add certificate files if provided_service is secure
-            kwargs['cert'] = self.cert
-
-        return self.consumer.consume_service(rule, **kwargs, )
+        return self.consumer.consume_service(rule, **kwargs,)
 
     def add_orchestration_rule(self,
                                service_definition: str,
