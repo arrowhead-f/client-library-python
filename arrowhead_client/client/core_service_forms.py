@@ -1,7 +1,7 @@
 """ Core Service Forms Module """
 
 from dataclasses import dataclass
-from typing import Optional, Union, Sequence, Mapping, List
+from typing import Optional, Sequence, Mapping
 
 from arrowhead_client.dto import DTOMixin
 from arrowhead_client.system import ArrowheadSystem

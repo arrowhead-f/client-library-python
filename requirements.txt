@@ -1,9 +1,4 @@
 Flask>=1.0.2
 requests>=2.21
-gevent>=20.5.0
 cryptography==3.2
-python-jose==3.2
-PyJWT==1.7.1
 jwcrypto==0.8
-authlib==0.15.2
-typing-extensions>=3.7

@@ -12,7 +12,7 @@ from arrowhead_client.system import ArrowheadSystem
 @pytest.fixture
 def error_response(request) -> Response:
     error_code = request.param
-    return Response(b'{"errorMessage": "test"}', '', error_code, '')
+    return Response(b'{"errorMessage": "test"}', '', error_code,)
 
 
 class TestErrorHandler:
@@ -58,7 +58,7 @@ class TestServiceRegistry:
         assert test_system == true_system
 
     def test_bad_query_response(self):
-        bad_response = Response(b'{"errorMessage": "Could not query Service Registry"}', 'JSON', 400, '')
+        bad_response = Response(b'{"errorMessage": "Could not query Service Registry"}', 'JSON', 400,)
 
         with pytest.raises(errors.CoreServiceInputError):
             csr.process_service_query(bad_response)
@@ -80,7 +80,7 @@ class TestServiceRegistry:
 
 class TestOrchstrator:
     def test_orchestration_response(self, orchestration_data):
-        orchestrator_response = Response(json.dumps(orchestration_data).encode(), 'JSON', 200, '')
+        orchestrator_response = Response(json.dumps(orchestration_data).encode(), 'JSON', 200,)
 
         orchestration_rules = csr.process_orchestration(orchestrator_response, 'GET')
         assert len(orchestration_rules) == len(orchestration_data['response'])
@@ -94,13 +94,13 @@ class TestOrchstrator:
         assert first_rule.access_policy == 'TOKEN'
 
     def test_bad_orchestration_response(self):
-        orchestrator_response = Response(b'{"errorMessage": ""}', 'JSON', 400, '')
+        orchestrator_response = Response(b'{"errorMessage": ""}', 'JSON', 400)
 
         with pytest.raises(errors.OrchestrationError):
             orchestration_rules = csr.process_orchestration(orchestrator_response, 'GET')
 
     def test_empty_orchestration_response(self):
-        orchestration_response = Response(b'{"response": []}', 'JSON', 200, '')
+        orchestration_response = Response(b'{"response": []}', 'JSON', 200,)
 
         handled_responses = csr.process_orchestration(orchestration_response)
 
@@ -152,7 +152,6 @@ def query_response():
             ], 'unfilteredHits': 1}).encode(),
             'JSON',
             200,
-            ''
     )
 
 @pytest.fixture
@@ -233,4 +232,4 @@ def publickey_true(der_publickey):
 
 @pytest.fixture
 def publickey_response(der_publickey) -> Response:
-    return Response(der_publickey, 'JSON', 200, '')
+    return Response(der_publickey, 'JSON', 200,)
