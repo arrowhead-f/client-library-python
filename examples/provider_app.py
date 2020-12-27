@@ -23,5 +23,17 @@ provider_app = ar.ArrowheadHttpClient(
 def hello_arrowhead(request):
     return {"msg": "Hello, Arrowhead!"}
 
+@provider_app.provided_service(
+        service_definition='echo',
+        service_uri='echo',
+        protocol='HTTP',
+        method='PUT',
+        payload_format='JSON',
+        access_policy='CERTIFICATE', )
+def echo(request):
+    body = request.read_json()
+
+    return body
+
 if __name__ == '__main__':
     provider_app.run_forever()
