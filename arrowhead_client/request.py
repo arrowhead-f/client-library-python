@@ -1,8 +1,9 @@
-from typing import Any, Dict, Union
+from typing import Dict, Union
 from dataclasses import dataclass, field
 import json
 
 from arrowhead_client.common import Constants
+
 
 @dataclass
 class Request:
@@ -10,6 +11,7 @@ class Request:
     payload_type: str
     status: Union[str, int] = ''
     query: Dict = field(default_factory=dict)
+
     # _request_object: Any
 
     def read_json(self):

@@ -12,7 +12,7 @@ from arrowhead_client.common import Constants
 class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     """ Class for provided_service provision """
 
-    def __init__(self, cafile: str, app_name: str='') -> None:
+    def __init__(self, cafile: str, app_name: str = '') -> None:
         self.app_name = __name__ or app_name
         self.app = Flask(app_name)
         self.cafile = cafile
@@ -23,6 +23,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
 
     def add_provided_service(self, rule: RegistrationRule) -> None:
         """ Add provided_service to provider system"""
+
         def func_with_access_policy(request):
             """Register provided_service with Flask app."""
             auth_string = request.headers.get('authorization')
@@ -33,7 +34,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
                         consumer_cert_str=consumer_cert_str,
                         auth_str=auth_string,
                 )
-            except errors.AuthorizationError as e:
+            except errors.AuthorizationError:
                 is_authorized = False
 
             if not is_authorized:
@@ -44,7 +45,6 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
 
             ar_request = make_arrowhead_request(request, rule._provided_service.interface.payload)
             return rule.func(ar_request)
-
 
         self.app.add_url_rule(
                 rule=f'/{rule.service_uri}',
@@ -60,7 +60,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
             port: int,
             keyfile: str,
             certfile: str,
-            ):
+    ):
 
         if keyfile and certfile and self.cafile:
             ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
@@ -68,12 +68,14 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
             ssl_context.load_verify_locations(self.cafile)
             ssl_context.load_cert_chain(certfile, keyfile)
         else:
-            ssl_context = None
+            ssl_context = None  # type: ignore
 
-        self.app.run(host=address,
-                     port=port,
-                     ssl_context=ssl_context,
+        self.app.run(
+                host=address,
+                port=port,
+                ssl_context=ssl_context,
         )
+
 
 def make_arrowhead_request(request, payload_type) -> Request:
     if request.method == 'GET':

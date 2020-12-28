@@ -1,9 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Union, Dict, Optional
+from typing import Dict, Optional
 
 from arrowhead_client.dto import DTOMixin
-from arrowhead_client.common import Constants, Constants
+from arrowhead_client.common import Constants
 
 
 @dataclass()
@@ -98,27 +98,19 @@ class Service:
     def __init__(self,
                  service_definition: str,
                  service_uri: str = '',
-                 interface: Union[str, ServiceInterface] = '',
+                 interface: ServiceInterface = None,
                  access_policy: str = Constants.POLICY_CERTIFICATE,
                  metadata: Dict = None,
                  version: Optional[int] = None) -> None:
         self.service_definition = service_definition
         self.service_uri = service_uri
-        if interface and isinstance(interface, str):
-            # TODO: Why did I put this try except block here? It doesn't seem to have much use.
-            try:
-                self.interface = ServiceInterface.from_str(interface)
-            except TypeError:
-                # TODO: This should error should just be left uncaught?
-                self.interface = ''
-        else:
-            self.interface = interface
+        self.interface = interface or ServiceInterface('<>', '<>', '<>')
         self.access_policy = access_policy
         self.metadata = metadata
         self.version = version
 
     # TODO: Write good repr
-    #def __repr__(self) -> str:
+    # def __repr__(self) -> str:
     #    variable_string = ', '.join([f'{str(key)}={str(value)}'
     #                                 for key, value in vars(self).items()])
     #    return f'{self.__class__.__name__}({variable_string})'

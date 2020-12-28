@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Constants(str, Enum):
     # Security modes
     SECURITY_INSECURE = 'INSECURE'
@@ -26,4 +27,3 @@ class Constants(str, Enum):
     CORE_SYSTEM_EVENT_HANDLER = 'event_handler'
     # Auxilliary constants
     ERROR_MESSAGE = 'errorMessage'
-

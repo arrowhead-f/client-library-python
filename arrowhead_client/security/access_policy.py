@@ -53,7 +53,7 @@ class TokenAccessPolicy(AccessPolicy):
             provided_service: Service,
             provider_keyfile: str,
             auth_info: str,
-            ) -> None:
+    ) -> None:
         self.provided_service = provided_service
         self.provider_keyfile = provider_keyfile
         self.auth_info = auth_info
@@ -72,7 +72,7 @@ class TokenAccessPolicy(AccessPolicy):
                     self.provider_keyfile,
                     self.auth_info
             )
-        except errors.InvalidTokenError as e:
+        except errors.InvalidTokenError:
             # TODO: Log failure
             return False
 

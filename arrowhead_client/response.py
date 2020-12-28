@@ -18,8 +18,13 @@ class Response:
         if self.payload_type != Constants.PAYLOAD_JSON:
             raise RuntimeError(f'Payload type must be \'{Constants.PAYLOAD_JSON}\' to use read_json(), '
                                f'current type is {self.payload_type}')
-        return json.loads(self.payload)
+
+        try:
+            return json.loads(self.payload)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f'Payload of type \'{Constants.PAYLOAD_JSON}\' '
+                               f'is unable to be decoded. Current payload is:\n'
+                               f' {self.payload.decode()}') from e
 
     def read_string(self) -> str:
         return self.payload.decode()
-

@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional, Iterator, Callable, Dict
 from collections.abc import MutableMapping
 
@@ -14,7 +13,7 @@ class OrchestrationRule:
             provider_system: ArrowheadSystem,
             method: str,
             authorization_token: str = '',
-            ):
+    ):
         self._consumed_service = consumed_service
         self._provider_system = provider_system
         self._method = method
@@ -136,7 +135,7 @@ class OrchestrationRuleContainer(MutableMapping):
             self,
             key: str,
             item: OrchestrationRule
-            ) -> None:
+    ) -> None:
         self._rulecontainer[key] = item
 
     def __delitem__(self, key: str) -> None:

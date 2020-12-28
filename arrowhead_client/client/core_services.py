@@ -18,6 +18,7 @@ CoreConfig = namedtuple(
          ]
 )
 
+
 class CoreServices(CoreConfig, Enum):
     # Core services
     SERVICE_REGISTER = (
@@ -51,6 +52,7 @@ class CoreServices(CoreConfig, Enum):
         Constants.CORE_SYSTEM_AUTHORIZATION.value,
     )
 
+
 def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
     """
     Get orchestration rules for core services.
@@ -67,6 +69,7 @@ def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
 
     return rules
 
+
 def _extract_rule(core_service_tuple, config, secure) -> OrchestrationRule:
     secure = Constants.SECURITY_SECURE if secure else Constants.SECURITY_INSECURE
     access_policy = Constants.POLICY_CERTIFICATE if secure else Constants.POLICY_UNRESTRICTED
@@ -82,4 +85,3 @@ def _extract_rule(core_service_tuple, config, secure) -> OrchestrationRule:
             core_system,
             core_service_tuple.method,
     )
-

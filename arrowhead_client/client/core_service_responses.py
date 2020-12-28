@@ -46,7 +46,7 @@ def process_service_query(query_response: Response) -> List[Tuple[Service, Arrow
     service_and_system = [
         (
             _extract_service(query_result),
-            ArrowheadSystem.from_dto(query_result)
+            ArrowheadSystem.from_dto(query_result['provider'])
         )
         for query_result in query_data
     ]

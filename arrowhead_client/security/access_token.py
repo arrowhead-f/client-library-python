@@ -1,7 +1,7 @@
 import json
 import time
 
-from jwcrypto import jwk, jwt # type: ignore
+from jwcrypto import jwk, jwt  # type: ignore
 
 from arrowhead_client import errors
 
@@ -29,7 +29,7 @@ class AccessToken:
             auth_string: str,
             provider_keyfile: str,
             auth_authorization_info: str,
-        ) -> 'AccessToken':
+    ) -> 'AccessToken':
         """
         Creates an AccessToken from the given authorization header.
 
@@ -46,15 +46,15 @@ class AccessToken:
         try:
             bearer, token_string = auth_string.split()
         except ValueError as e:
-            raise errors.InvalidTokenError('Malformed authorization header')
+            raise errors.InvalidTokenError('Malformed authorization header') from e
         except AttributeError as e:
-            raise errors.InvalidTokenError
+            raise errors.InvalidTokenError from e
 
         if bearer != 'Bearer':
             raise errors.InvalidTokenError('Malformed authorization header')
 
         # Generate jwk for provider private key
-        with open(provider_keyfile,'rb') as keyfile:
+        with open(provider_keyfile, 'rb') as keyfile:
             jwk_privatekey = jwk.JWK.from_pem(keyfile.read())
 
         # Generate jwk for authorization public key

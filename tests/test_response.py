@@ -20,7 +20,8 @@ def test_good_json():
 def test_bad_json():
     response = Response(b'nthoenutheou', 'JSON', 200,)
 
-    assert response.read_json() is None
+    with pytest.raises(RuntimeError):
+        assert response.read_json() is None
 
 def test_string():
     response = Response(true_string, 'JSON', 200,)

@@ -53,7 +53,7 @@ def generate_keys():
 
 
 @pytest.fixture
-def provider_variables(request, tmp_path):
+def provider_variables(request, tmp_path_factory):
     private_key, public_key = generate_keys()
 
     if hasattr(request, 'param'):
@@ -63,8 +63,9 @@ def provider_variables(request, tmp_path):
 
     cert = generate_cert(common_names, private_key, public_key)
 
-    keyfile = tmp_path / 'cert.key'
-    certfile = tmp_path / 'cert.crt'
+    tmp_dir = tmp_path_factory.mktemp('temp')
+    keyfile = tmp_dir / 'cert.key'
+    certfile = tmp_dir / 'cert.crt'
 
     with open(keyfile, 'wb') as kf:
         kf.write(

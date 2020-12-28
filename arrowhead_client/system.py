@@ -41,7 +41,7 @@ class ArrowheadSystem(DTOMixin):
             address: str,
             port: int,
             certfile: str,
-            ) -> 'ArrowheadSystem':
+    ) -> 'ArrowheadSystem':
         authentication_info = cert_to_authentication_info(certfile)
 
         return cls(system_name, address, port, authentication_info)

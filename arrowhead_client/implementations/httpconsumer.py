@@ -8,6 +8,7 @@ from arrowhead_client.common import Constants
 
 class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
     """ Interface for consumer code """
+
     def __init__(
             self,
             keyfile: str,
@@ -33,10 +34,12 @@ class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
 
         return Response(service_response.content, rule.payload_type, service_response.status_code)
 
+
 def http(secure: str) -> str:
     if secure == Constants.SECURITY_INSECURE:
         return 'http://'
     return 'https://'
+
 
 class ArrowheadTokenAuth(requests.auth.AuthBase):
     def __init__(self, token: str):
@@ -47,4 +50,3 @@ class ArrowheadTokenAuth(requests.auth.AuthBase):
             r.headers['Authorization'] = f'Bearer {self.token}'
 
         return r
-

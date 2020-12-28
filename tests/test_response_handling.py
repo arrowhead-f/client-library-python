@@ -12,7 +12,7 @@ from arrowhead_client.system import ArrowheadSystem
 @pytest.fixture
 def error_response(request) -> Response:
     error_code = request.param
-    return Response(b'{"errorMessage": "test"}', '', error_code,)
+    return Response(b'{"errorMessage": "test"}', 'JSON', error_code,)
 
 
 class TestErrorHandler:
