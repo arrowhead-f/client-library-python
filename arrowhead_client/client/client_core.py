@@ -94,7 +94,9 @@ class ArrowheadClient:
     def add_orchestration_rule(self,
                                service_definition: str,
                                method: str,
+                               protocol: str = '',
                                access_policy: str = '',
+                               format: str = '',
                                # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
                                **kwargs, ) -> None:
         """
@@ -106,7 +108,15 @@ class ArrowheadClient:
             access_policy: Service access policy.
         """
 
-        requested_service = Service(service_definition, access_policy=access_policy)
+        requested_service = Service(
+                service_definition,
+                interface=ServiceInterface.with_access_policy(
+                        protocol,
+                        access_policy,
+                        format,
+                ),
+                access_policy=access_policy
+        )
 
         orchestration_form = forms.OrchestrationForm(
                 self.system,

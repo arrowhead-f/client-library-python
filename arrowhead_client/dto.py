@@ -1,5 +1,6 @@
 import re
 from abc import ABC
+from collections.abc import Sequence
 from typing import Dict, Set, Iterable
 
 
@@ -21,7 +22,8 @@ class DTOMixin(ABC):
         from_vars = {to_camel_case(variable): value for
                      variable, value in vars(self).items()
                      if variable not in self._dto_excludes
-                     and variable not in exclude}
+                     and variable not in exclude
+                     and value}  # Ignore all values that evaluate to False
         # Get properties and property values
         from_properties = {to_camel_case(property): getattr(self, property) for
                            property in self._dto_property

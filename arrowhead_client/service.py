@@ -56,12 +56,17 @@ class ServiceInterface:
         Returns:
             ServiceInterface from string description.
         """
-        if access_policy == Constants.POLICY_UNRESTRICTED:
+        if access_policy == '':
+            return cls('', '', '')
+        elif access_policy == Constants.POLICY_UNRESTRICTED:
             return cls(protocol, Constants.SECURITY_INSECURE, payload)
         return cls(protocol, Constants.SECURITY_SECURE, payload)
 
     def dto(self) -> str:
         return '-'.join(vars(self).values())
+
+    def __bool__(self):
+        return any(vars(self).values())
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str):
@@ -104,7 +109,7 @@ class Service:
                  version: Optional[int] = None) -> None:
         self.service_definition = service_definition
         self.service_uri = service_uri
-        self.interface = interface or ServiceInterface('<>', '<>', '<>')
+        self.interface = interface or ServiceInterface('', '', '')
         self.access_policy = access_policy
         self.metadata = metadata
         self.version = version

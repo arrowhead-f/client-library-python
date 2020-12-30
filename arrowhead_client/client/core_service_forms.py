@@ -20,16 +20,23 @@ class ServiceQueryForm(DTOMixin):
     min_version_requirement: Optional[int] = None
     ping_providers: bool = True
 
+    @property
+    def _dto_excludes(self):
+        return {attribute
+                for attribute, value in vars(self).items()
+                if isinstance(value, list) and len(value) == 1 and not value[0]}
+
     @classmethod
     def make(cls,
              service: Service,
              max_version_requirement: Optional[int] = None,
              min_version_requirement: Optional[int] = None,
              ping_providers: bool = True) -> 'ServiceQueryForm':
+
         return cls(
                 service.service_definition,
-                [service.interface.dto()] if service.interface else [''],
-                [service.access_policy],
+                [service.interface.dto() if service.interface else ''],
+                [service.access_policy or None],
                 service.metadata,
                 service.version,
                 max_version_requirement,
@@ -67,10 +74,6 @@ class OrchestrationFlags(DTOMixin):
     override_store: bool = True
     enable_inter_cloud: bool = False
     trigger_inter_cloud: bool = False
-
-    @property
-    def _dto_excludes(self):
-        return {var for var, val in vars(self).items() if not val}
 
 
 class OrchestrationForm(DTOMixin):

@@ -2,7 +2,7 @@ from typing import Mapping, Tuple, List, Callable
 from functools import wraps
 
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.service import Service
+from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.common import Constants
@@ -141,7 +141,7 @@ def _extract_service(query_data: Mapping) -> Service:
     service = Service(
             query_data[service_definition_base]['serviceDefinition'],
             query_data['serviceUri'],
-            query_data['interfaces'][0]['interfaceName'],
+            ServiceInterface.from_str(query_data['interfaces'][0]['interfaceName']),
             query_data['secure'],
             query_data['metadata'],
             query_data['version'],
