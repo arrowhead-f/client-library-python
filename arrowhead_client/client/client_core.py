@@ -72,7 +72,11 @@ class ArrowheadClient:
         # Setup methods
         self._core_service_setup()
 
-    def consume_service(self, service_definition: str, **kwargs):
+    def consume_service(
+            self,
+            service_definition: str,
+            **kwargs
+    ):
         """
         Consumes the given provided_service definition
 
@@ -89,16 +93,18 @@ class ArrowheadClient:
                     f' service \'{service_definition}\''
             )
 
-        return self.consumer.consume_service(rule, **kwargs,)
+        return self.consumer.consume_service(rule, **kwargs, )
 
-    def add_orchestration_rule(self,
-                               service_definition: str,
-                               method: str,
-                               protocol: str = '',
-                               access_policy: str = '',
-                               format: str = '',
-                               # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
-                               **kwargs, ) -> None:
+    def add_orchestration_rule(
+            self,
+            service_definition: str,
+            method: str,
+            protocol: str = '',
+            access_policy: str = '',
+            format: str = '',
+            # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+            **kwargs,
+    ) -> None:
         """
         Add orchestration rule for provided_service definition
 
@@ -185,7 +191,7 @@ class ArrowheadClient:
 
         try:
             self.setup()
-            # TODO: These three should go into self.setup()
+            # TODO: These three could go into a provider_setup() method
             self.auth_authentication_info = responses.process_publickey(
                     self.consume_service(CoreServices.PUBLICKEY.service_definition))
             self._initialize_provided_services()
@@ -209,10 +215,10 @@ class ArrowheadClient:
     def _initialize_provided_services(self) -> None:
         for rule in self.registration_rules:
             rule.access_policy = get_access_policy(
-                            policy_name=rule.provided_service.access_policy,
-                            provided_service=rule.provided_service,
-                            privatekey=self.keyfile,
-                            authorization_key=self.auth_authentication_info
+                    policy_name=rule.provided_service.access_policy,
+                    provided_service=rule.provided_service,
+                    privatekey=self.keyfile,
+                    authorization_key=self.auth_authentication_info
             )
             self.provider.add_provided_service(rule)
 

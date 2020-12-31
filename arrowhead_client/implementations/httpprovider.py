@@ -50,7 +50,6 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
                 rule=f'/{rule.service_uri}',
                 endpoint=rule.service_definition,
                 methods=[rule.method],
-                # TODO: Create Request class similar to Response
                 view_func=partial(func_with_access_policy, request)
         )
 
