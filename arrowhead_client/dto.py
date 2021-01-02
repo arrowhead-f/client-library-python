@@ -1,6 +1,5 @@
 import re
 from abc import ABC
-from collections.abc import Sequence
 from typing import Dict, Set, Iterable
 
 

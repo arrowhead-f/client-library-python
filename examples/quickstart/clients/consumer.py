@@ -20,6 +20,6 @@ if __name__ == '__main__':
     response = consumer.consume_service('hello-arrowhead')
     print(response.read_json()['msg'])
 
-    consumer.add_orchestration_rule('echo', 'PUT', 'HTTP', 'CERTIFICATE', 'JSON')
+    consumer.add_orchestration_rule('echo', 'PUT')
     echo_response = consumer.consume_service('echo', json={'msg': 'ECHO'})
     print(echo_response.read_json()['msg'])

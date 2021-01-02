@@ -32,6 +32,7 @@ class ArrowheadSystem(DTOMixin):
                 system_name=str(system_dto['systemName']),
                 address=str(system_dto['address']),
                 port=int(system_dto['port']),
+                authentication_info=str(system_dto.get('authenticationInfo', '')),
         )
 
     @classmethod
