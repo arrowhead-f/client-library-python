@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import Any, Dict, Tuple, Callable
 
 from arrowhead_client.system import ArrowheadSystem
@@ -76,7 +77,7 @@ def provided_service(
                     provided_service=self.service_instance,
                     provider_system=instance.system,
                     method=self.method,
-                    func=self.func,
+                    func=partial(self.func, instance),
             )
 
     return ServiceDescriptor
@@ -255,8 +256,9 @@ class ArrowheadClient:
         try:
             self.setup()
             # TODO: These three could go into a provider_setup() method
-            self.auth_authentication_info = responses.process_publickey(
-                    self.consume_service(CoreServices.PUBLICKEY.service_definition))
+            if self.secure:
+                authorization_response = self.consume_service(CoreServices.PUBLICKEY.service_definition)
+                self.auth_authentication_info = responses.process_publickey(authorization_response)
             self._initialize_provided_services()
             self._register_all_services()
             self._logger.info('Starting server')

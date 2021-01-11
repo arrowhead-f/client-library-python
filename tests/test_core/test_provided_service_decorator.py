@@ -11,9 +11,9 @@ class CustomClient(ar.ArrowheadHttpClient):
             protocol='HTTP',
             method='GET',
             payload_format='JSON',
-            access_policy='TOKEN',
+            access_policy='NOT_SECURE',
     )
-    def service_function(self):
+    def service_function(self, request):
         return {'fmt': self.format}
 
 test_client = CustomClient('custom_client', '127.0.0.1', 1337, format='1Ab')
@@ -22,4 +22,6 @@ test_client.setup()
 print(dir(test_client))
 for rule in test_client.registration_rules:
     print(rule.service_definition)
+
+test_client.run_forever()
 
