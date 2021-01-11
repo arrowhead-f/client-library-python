@@ -20,8 +20,66 @@ from arrowhead_client.rules import (
 )
 import arrowhead_client.errors as errors
 
-StoredProvidedService = Dict[str, Tuple[Service, Callable, str]]
+def provided_service(
+            service_definition: str,
+            service_uri: str,
+            protocol: str,
+            method: str,
+            payload_format: str,
+            access_policy: str,
+    ):
+    """
+    Decorator that can be used in custom client subclasses to define services.
 
+    Args:
+        service_definition:
+        service_uri:
+        protocol:
+        method:
+        payload_format:
+        access_policy:
+
+    Returns:
+        A ServiceDescriptor object
+    """
+
+    class ServiceDescriptor:
+        def __init__(self, func):
+            self.service_instance = Service(
+                    service_definition,
+                    service_uri,
+                    ServiceInterface.with_access_policy(
+                            protocol,
+                            access_policy,
+                            payload_format,
+                    ),
+                    access_policy,
+            )
+            self.method = method
+            self.service_definition = service_definition
+            self.func = func
+
+        def __set_name__(self, owner: ArrowheadClient, name: str):
+            if not '__arrowhead_services__' in dir(owner):
+                raise AttributeError(f'provided_service should only be used with subclasses of ArrowheadClient.')
+
+            owner.__arrowhead_services__.append(name)
+
+        def __call__(self, *args, **kwargs):
+            return self.func(*args, **kwargs)
+
+        def __get__(self, instance, owner):
+            if instance is None:
+                return self
+
+            return RegistrationRule(
+                    provided_service=self.service_instance,
+                    provider_system=instance.system,
+                    method=self.method,
+                    func=self.func,
+            )
+
+    return ServiceDescriptor
 
 class ArrowheadClient:
     """
@@ -63,6 +121,8 @@ class ArrowheadClient:
         # Maybe it should be it's own method?
         self.add_provided_service = self.provider.add_provided_service
 
+    __arrowhead_services__ = []
+
     @property
     def cert(self) -> Tuple[str, str]:
         """ Tuple of the keyfile and certfile """
@@ -71,6 +131,9 @@ class ArrowheadClient:
     def setup(self):
         # Setup methods
         self._core_service_setup()
+
+        for class_service_rule in self.__arrowhead_services__:
+            self.registration_rules.store(getattr(self, class_service_rule))
 
     def consume_service(
             self,
