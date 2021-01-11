@@ -62,12 +62,9 @@ def provided_service(
 
         def __set_name__(self, owner: ArrowheadClient, name: str):
             if not '__arrowhead_services__' in dir(owner):
-                raise AttributeError(f'provided_service should only be used with subclasses of ArrowheadClient.')
+                raise AttributeError(f'provided_service can only be used within arrowhead clients.')
 
             owner.__arrowhead_services__.append(name)
-
-        def __call__(self, *args, **kwargs):
-            return self.func(*args, **kwargs)
 
         def __get__(self, instance, owner):
             if instance is None:
