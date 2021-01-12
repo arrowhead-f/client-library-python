@@ -1,34 +1,8 @@
 import re
 from abc import ABC
-from typing import Dict, Set, Iterable
+from functools import partialmethod
 
-
-class DTOMixin(ABC):
-    """ Mixin to create data-transfer objects from class """
-
-    # TODO: Make sure these two cannot be set to invalid values
-    # Members to be excluded from the dto
-    _dto_excludes: Set[str] = set()
-    # Properties to be included in the dto
-    _dto_property: Set[str] = set()
-
-    def dto(self, exclude: Iterable[str] = None) -> Dict:
-        exclude = set(exclude) if exclude else set()
-        # Check that all names in exclude are members of self
-        if not exclude <= set(dir(self)):
-            raise ValueError(f'Name in {exclude} is not a member of {self}')
-        # Get variables and values
-        from_vars = {to_camel_case(variable): value for
-                     variable, value in vars(self).items()
-                     if variable not in self._dto_excludes
-                     and variable not in exclude
-                     and value}  # Ignore all values that evaluate to False
-        # Get properties and property values
-        from_properties = {to_camel_case(property): getattr(self, property) for
-                           property in self._dto_property
-                           if property not in exclude}
-
-        return {**from_vars, **from_properties}
+from pydantic import BaseModel
 
 
 def to_camel_case(variable_name: str) -> str:
@@ -38,7 +12,7 @@ def to_camel_case(variable_name: str) -> str:
     trailing_underscore = '_' if variable_name.endswith('_') else ''
 
     return initial_underscore + first_split + \
-        ''.join([split.capitalize() for split in split_name]) + trailing_underscore
+           ''.join([split.capitalize() for split in split_name]) + trailing_underscore
 
 
 def to_snake_case(variable_name: str) -> str:
@@ -48,4 +22,21 @@ def to_snake_case(variable_name: str) -> str:
     trailing_underscore = '_' if variable_name.endswith('_') else ''
 
     return initial_underscore + \
-        '_'.join([camel.lower() for camel in split_camel]) + trailing_underscore
+           '_'.join([camel.lower() for camel in split_camel]) + trailing_underscore
+
+
+class DTOMixin(ABC, BaseModel):
+    """ Mixin to create data-transfer objects from class """
+
+    class Config:
+        alias_generator = to_camel_case
+        allow_population_by_field_name = True
+        use_enum_values = True
+
+    def dto(self, **kwargs):
+        return self.dict(
+                exclude_defaults=True,
+                exclude_none=True,
+                by_alias=True,
+                **kwargs,
+        )

@@ -185,7 +185,7 @@ class ArrowheadClient:
                 access_policy=access_policy
         )
 
-        orchestration_form = forms.OrchestrationForm(
+        orchestration_form = forms.OrchestrationForm.make(
                 self.system,
                 requested_service,
                 **kwargs
@@ -304,7 +304,7 @@ class ArrowheadClient:
             service: Service to register with the Service registry.
         """
 
-        service_registration_form = forms.ServiceRegistrationForm(
+        service_registration_form = forms.ServiceRegistrationForm.make(
                 provided_service=service,
                 provider_system=self.system,
         )

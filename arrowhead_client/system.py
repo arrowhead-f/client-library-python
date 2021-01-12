@@ -1,11 +1,9 @@
 from typing import Dict
-from dataclasses import dataclass
 
 from arrowhead_client.dto import DTOMixin
 from arrowhead_client.security.utils import cert_to_authentication_info
 
 
-@dataclass
 class ArrowheadSystem(DTOMixin):
     """
     ArrowheadSystem class.
@@ -45,4 +43,9 @@ class ArrowheadSystem(DTOMixin):
     ) -> 'ArrowheadSystem':
         authentication_info = cert_to_authentication_info(certfile)
 
-        return cls(system_name, address, port, authentication_info)
+        return cls(
+                system_name=system_name,
+                address=address,
+                port=port,
+                authentication_info=authentication_info
+        )
