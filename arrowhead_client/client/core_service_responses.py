@@ -1,78 +1,150 @@
-from typing import Mapping, Dict, Tuple, List
+from typing import Mapping, Tuple, List, Callable
+from functools import wraps
+
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.service import Service
-
-system_keys = ('systemName', 'address', 'port', 'authenticationInfo')
-service_keys = ('serviceDefinition', 'serviceUri', 'interfaces', 'secure')
-
-
-def extract_system_data(system_data: Mapping) -> Dict:
-    """ Extracts system data from core service response """
-
-    system_data = {key: system_data[key] for key in system_keys}
-
-    return system_data
+from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.response import Response
+from arrowhead_client.rules import OrchestrationRule
+from arrowhead_client.common import Constants
+from arrowhead_client.security.utils import der_to_pem
+from arrowhead_client import errors
 
 
-def extract_service_data(data: Mapping) -> Dict:
-    """ Extracts service data from core service response """
+def core_service_error_handler(func) -> Callable:
+    """
+    Decorator that raises the appropriate exception with a
+    standard message when the core service returns an error.
 
-    service_data = {key: data[key] for key in service_keys}
+    Raises:
+        # TODO: errors.CoreServiceInputError: If return status is 400.
+        # or not, this might be core-service specific whether that is good or not
+        errors.NotAuthorizedError: If return status is 401.
+        errors.CoreServiceNotAvailableError: If return status is 500.
+    """
 
-    service_data['serviceDefinition'] = service_data['serviceDefinition']['serviceDefinition']
+    @wraps(func)
+    def error_handling_wrapper(core_service_response: Response, *args, **kwargs):
+        if core_service_response.status_code == 401:
+            raise errors.NotAuthorizedError(core_service_response.read_json()[Constants.ERROR_MESSAGE])
+        elif core_service_response.status_code == 500:
+            raise errors.CoreServiceNotAvailableError(core_service_response.read_json()[Constants.ERROR_MESSAGE])
 
-    return service_data
+        return func(core_service_response, *args, **kwargs)
+
+    return error_handling_wrapper
 
 
-def handle_service_query_response(service_query_response: Mapping) -> List[Tuple[Dict, Dict]]:
-    """ Handles service query responses and returns a lists of services and systems """
+@core_service_error_handler
+def process_service_query(query_response: Response) -> List[Tuple[Service, ArrowheadSystem]]:
+    """ Handles provided_service query responses and returns a lists of services and systems """
+    # TODO: Status 400 is general for all core systems and should be put in the handler.
+    if query_response.status_code == 400:
+        raise errors.CoreServiceInputError(query_response.read_json()[Constants.ERROR_MESSAGE])
 
-    service_query_data = service_query_response['serviceQueryData']
+    query_data = query_response.read_json()['serviceQueryData']
 
-    service_and_system_list = [
-        (extract_service_data(data), extract_system_data(data))
-        for data in service_query_data
+    service_and_system = [
+        (
+            _extract_service(query_result),
+            ArrowheadSystem.from_dto(query_result['provider'])
+        )
+        for query_result in query_data
     ]
 
-    return service_and_system_list
+    return service_and_system
 
 
-def handle_service_register_response(service_register_response: Mapping) -> None:
-    """ Handles service register responses """
-    # TODO: Implement this
-    raise NotImplementedError
-
-
-def handle_orchestration_response(service_orchestration_response: Mapping) \
-        -> List[Tuple[Service, ArrowheadSystem]]:
-    """ Turns orchestration response into list of services """
-    orchestration_response_list = service_orchestration_response['response']
-
-    extracted_data = []
-    for orchestration_response in orchestration_response_list:
-        service_dto = orchestration_response
-        provider_dto = service_dto['provider']
-
-        service_definition = service_dto['service']['serviceDefinition']
-        service_uri = service_dto['serviceUri']
-        interface = service_dto['interfaces'][0]['interfaceName']
-        system_name = provider_dto['systemName']
-        address = provider_dto['address']
-        port = provider_dto['port']
-
-        service = Service(
-                service_definition,
-                service_uri,
-                interface,
+@core_service_error_handler
+def process_service_register(service_register_response: Response) -> None:
+    """ Handles service registration responses """
+    if service_register_response.status_code == 400:
+        raise errors.CoreServiceInputError(
+                service_register_response.read_json()[Constants.ERROR_MESSAGE],
         )
+    # TODO: Should return a string representing the successfully registered service for logging?
 
-        system = ArrowheadSystem(
-                system_name,
-                address,
-                port,
-                ''
+
+@core_service_error_handler
+def process_service_unregister(service_unregister_response: Response) -> None:
+    """ Handles service unregistration responses """
+    if service_unregister_response.status_code == 400:
+        raise errors.CoreServiceInputError(
+                service_unregister_response.read_json()[Constants.ERROR_MESSAGE]
         )
+    # TODO: Should return a string representing the successfully unregistered service for logging?
 
-        extracted_data.append((service, system))
 
-    return extracted_data
+@core_service_error_handler
+def process_orchestration(orchestration_response: Response, method='') \
+        -> List[OrchestrationRule]:
+    """
+    Turns orchestration response into list of services.
+
+    Args:
+        orchestration_response: Response object from orchestration.
+        method: Method
+    Returns:
+        List of OrchestrationRules found in the orchestration response.
+    """
+    if orchestration_response.status_code == 400:
+        raise errors.OrchestrationError(orchestration_response.read_json()[Constants.ERROR_MESSAGE])
+
+    orchestration_results = orchestration_response.read_json().get('response', [])
+
+    extracted_rules = [
+        _extract_orchestration_rules(orchestration_result, method)
+        for orchestration_result in orchestration_results
+    ]
+
+    return extracted_rules
+
+
+@core_service_error_handler
+def process_publickey(publickey_response: Response) -> str:
+    encoded_key = publickey_response.payload.decode()
+
+    return der_to_pem(encoded_key)
+
+
+def _extract_orchestration_rules(orchestration_result, method) -> OrchestrationRule:
+    """
+    Helper function to extract orchestration rules from an orchestration result.
+
+    Args:
+        orchestration_result: An orchestration result.
+    Returns:
+        Orchestration rule extracted from the orchestration result.
+    """
+    service_dto = orchestration_result
+    provider_dto = service_dto['provider']
+
+    service = _extract_service(service_dto)
+
+    system = ArrowheadSystem.from_dto(provider_dto)
+
+    interface = service_dto['interfaces'][0]['interfaceName']
+    auth_tokens = service_dto['authorizationTokens']
+    auth_token = auth_tokens.get(interface, '') if auth_tokens else ''
+
+    return OrchestrationRule(service, system, method, auth_token)
+
+
+def _extract_service(query_data: Mapping) -> Service:
+    """ Extracts provided_service data from test_core provided_service response """
+    if 'serviceDefinition' in query_data:
+        service_definition_base = 'serviceDefinition'
+    elif 'service' in query_data:
+        service_definition_base = 'service'
+    else:
+        raise ValueError
+
+    service = Service(
+            query_data[service_definition_base]['serviceDefinition'],
+            query_data['serviceUri'],
+            ServiceInterface.from_str(query_data['interfaces'][0]['interfaceName']),
+            query_data['secure'],
+            query_data['metadata'],
+            query_data['version'],
+    )
+
+    return service

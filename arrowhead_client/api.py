@@ -2,24 +2,22 @@
 Arrowhead Client API module
 ===========================
 
-This module contains the api of the :code:`arrowhead_client` module.
+This module contains the public api of the :code:`arrowhead_client` module.
 """
-from arrowhead_client.configuration import config
-from arrowhead_client.client import ArrowheadClient
+from typing import Dict
+from arrowhead_client.client import ArrowheadClient, provided_service
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.httpconsumer import HttpConsumer
-from arrowhead_client.httpprovider import HttpProvider
+from arrowhead_client.implementations.httpconsumer import HttpConsumer
+from arrowhead_client.implementations.httpprovider import HttpProvider
 from arrowhead_client.service import Service  # noqa: F401
 from arrowhead_client.logs import get_logger
-
-from gevent import pywsgi  # type: ignore
 
 
 class ArrowheadHttpClient(ArrowheadClient):
     """
     Arrowhead client using HTTP.
 
-    Args:
+    Attributes:
         system_name: A string to assign the system name
         address: A string to assign the system address
         port: An int to assign the system port
@@ -32,25 +30,24 @@ class ArrowheadHttpClient(ArrowheadClient):
                  system_name: str,
                  address: str,
                  port: int,
-                 authentication_info: str = '',
+                 config: Dict = None,
                  keyfile: str = '',
-                 certfile: str = ''):
+                 certfile: str = '',
+                 cafile: str = ''):
         logger = get_logger(system_name, 'debug')
-        wsgi_server = pywsgi.WSGIServer(
-                (address, port),
-                None,
-                keyfile=keyfile,
-                certfile=certfile,
-                log=logger,
+        system = ArrowheadSystem.with_certfile(
+                system_name,
+                address,
+                port,
+                certfile,
         )
         super().__init__(
-                ArrowheadSystem(system_name, address, port, authentication_info),
-                HttpConsumer(),
-                HttpProvider(wsgi_server),
+                system,
+                HttpConsumer(keyfile, certfile, cafile),
+                HttpProvider(cafile),
                 logger,
-                config,
+                config=config,
                 keyfile=keyfile,
                 certfile=certfile
         )
         self._logger.info(f'{self.__class__.__name__} initialized at {self.system.address}:{self.system.port}')
-        # TODO: This line is a hack and needs to be fixed

@@ -8,8 +8,8 @@ time_consumer = ArrowheadHttpClient(
         keyfile='certificates/consumer_test.key',
         certfile='certificates/consumer_test.crt')
 
-time_consumer.add_consumed_service('echo', method='GET')
-time_consumer.add_consumed_service('hej', method='POST')
+time_consumer.add_orchestration_rule('echo', method='GET')
+time_consumer.add_orchestration_rule('hej', method='POST')
 
 if __name__ == '__main__':
     echo_response = time_consumer.consume_service('echo')
@@ -19,13 +19,13 @@ if __name__ == '__main__':
     print('Done')
     '''
     
-    # Consume service provided by the 'get_time' rule
+    # Consume provided_service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)
     input()
-    # Consume service provided by the 'change_format' rule
+    # Consume provided_service provided by the 'change_format' rule
     time_consumer.consume('change_format', payload='%S:%M:%H')
-    # Consume service provided by the 'get_time' rule
+    # Consume provided_service provided by the 'get_time' rule
     time = time_consumer.consume('get_time')
     print(time.text)
     '''

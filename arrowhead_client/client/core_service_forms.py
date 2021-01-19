@@ -1,101 +1,109 @@
 """ Core Service Forms Module """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Optional, Dict, Union, Sequence, Mapping
+from typing import Optional, Sequence, Mapping
 
-from arrowhead_client import utils
+from arrowhead_client.dto import DTOMixin
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 
 
-class BaseServiceForm(ABC):
-    """ Abstract base class for forms """
-
-    @property
-    @abstractmethod
-    def dto(self) -> Dict[str, Dict[str, Union[str, bool]]]:
-        """ Compiles form into dictionary """
-
-    def __str__(self) -> str:
-        return str(self.dto)
-
-
-class CoreSystemServiceForm(BaseServiceForm, ABC):
-    """ Abstract base class for core system service forms """
-
-    @property
-    def dto(self) -> Dict[str, Dict[str, Union[str, bool]]]:
-        return {utils.to_camel_case(variable_name): variable for
-                variable_name, variable in vars(self).items()}
-
-
-@dataclass
-class ServiceQueryForm(CoreSystemServiceForm):
+class ServiceQueryForm(DTOMixin):
     """ Service Query Form """
     service_definition_requirement: str
-    interface_requirements: Union[Sequence[str], str]
-    security_requirements: Union[Sequence[str], str]
+    interface_requirements: Sequence[Optional[str]] = [None]
+    security_requirements: Sequence[Optional[str]] = [None]
     metadata_requirements: Optional[Mapping[str, str]] = None
-    version_requirement: Optional[int] = None
-    max_version_requirement: Optional[int] = None
-    min_version_requirement: Optional[int] = None
-    ping_providers: bool = True
+    version_requirement: Optional[str] = None
+    max_version_requirement: Optional[str] = None
+    min_version_requirement: Optional[str] = None
+    ping_providers: Optional[bool] = True
 
-    def __post_init__(self):
-        self.interface_requirements = utils.uppercase_strings_in_list(self.interface_requirements)
-        self.security_requirements = utils.uppercase_strings_in_list(self.security_requirements)
+    @classmethod
+    def make(cls,
+             service: Service,
+             max_version_requirement: Optional[str] = None,
+             min_version_requirement: Optional[str] = None,
+             ping_providers: Optional[bool] = True) -> 'ServiceQueryForm':
+
+        return cls(
+                service_definition_requirement=service.service_definition,
+                interface_requirements=[service.interface.dto() if service.interface else None],
+                security_requirements=[service.access_policy or None],
+                metadata_requirements=service.metadata,
+                version_requirement=service.version,
+                max_version_requirement=max_version_requirement,
+                min_version_requirement=min_version_requirement,
+                ping_providers=ping_providers,
+        )
 
 
-@dataclass
-class ServiceRegistrationForm(CoreSystemServiceForm):
+class ServiceRegistrationForm(DTOMixin):
     """ Service Registration Form """
+    service_definition: str
+    service_uri: str
+    interfaces: Sequence[str] = [None]
+    provider_system: ArrowheadSystem
+    secure: str = ''
+    metadata: Mapping = None
+    version: Optional[str] = None
+    end_of_validity: str = None
 
-    def __init__(
-            self,
+    @classmethod
+    def make(
+            # TODO: add more options that overrides the values in provided_service
+            cls,
             provided_service: Service,
             provider_system: ArrowheadSystem,
-            secure: str,
-            metadata: Optional[Mapping[str, str]] = None,
             end_of_validity: Optional[str] = None,
-            version: Optional[int] = None, ):
-        self.service_definition = provided_service.service_definition
-        self.service_uri = provided_service.service_uri
-        self.interfaces = [provided_service.interface.dto]
-        self.provider_system = provider_system.dto
-        self.secure = secure
-        self.metadata = metadata
-        self.version = version
-        self.end_of_validity = end_of_validity
+    ):
+
+        return cls(
+                service_definition = provided_service.service_definition,
+                service_uri = provided_service.service_uri,
+                interfaces = [provided_service.interface.dto()],
+                provider_system = provider_system,
+                secure = provided_service.access_policy,
+                metadata = provided_service.metadata,
+                version = provided_service.version,
+                end_of_validity = end_of_validity,
+        )
+                # TODO: How to do end_of_validity?
 
 
-class OrchestrationForm(CoreSystemServiceForm):
+# TODO: Let this class use boolean operators?
+class OrchestrationFlags(DTOMixin):
+    matchmaking: bool = False
+    metadata_search: bool = False
+    only_preferred: bool = False
+    ping_providers: bool = False
+    override_store: bool = False
+    enable_inter_cloud: bool = False
+    trigger_inter_cloud: bool = False
+
+default_flags = OrchestrationFlags(override_store=True)
+
+class OrchestrationForm(DTOMixin):
     """ Orchestration Form """
+    requester_system: ArrowheadSystem
+    requested_service: ServiceQueryForm
+    orchestration_flags: OrchestrationFlags
+    preferred_providers: Optional[Mapping] = None
 
-    def __init__(self,
-                 requester_system: BaseServiceForm,
-                 service_definition_requirement: str,
-                 interface_requirements: Union[Sequence[str], str] = None,
-                 security_requirements: Optional[Union[Sequence[str], str]] = None,
-                 metadata_requirements: Optional[Mapping[str, str]] = None,
-                 version_requirement: Optional[int] = None,
-                 max_version_requirement: Optional[int] = None,
-                 min_version_requirement: Optional[int] = None,
-                 ping_providers: bool = True,
-                 orchestration_flags: Optional[Mapping[str, bool]] = None, ) -> None:
-        self.requester_system = requester_system
-        self.requested_service = ServiceQueryForm(
-                service_definition_requirement,
-                interface_requirements if interface_requirements else [],
-                security_requirements if security_requirements else [],
-                metadata_requirements,
-                version_requirement,
-                max_version_requirement,
-                min_version_requirement,
-                ping_providers).dto
-        # TODO: Implement preferred_providers
-        self.preferred_providers = None
-        if orchestration_flags:
-            self.orchestration_flags = orchestration_flags
-        else:
-            self.orchestration_flags = {'overrideStore': True}
+    @classmethod
+    def make(
+            cls,
+            requester_system: ArrowheadSystem,
+            requested_service: Service,
+            orchestration_flags: OrchestrationFlags = None,
+            preferred_providers: Mapping = None,
+    ):
+
+        return cls(
+                requester_system=requester_system,
+                requested_service=ServiceQueryForm.make(
+                        requested_service,
+                        ping_providers=None
+                ),
+                orchestration_flags=orchestration_flags or default_flags,
+                preferred_providers=preferred_providers,
+        )
