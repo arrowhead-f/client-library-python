@@ -1,5 +1,5 @@
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.service import Service
+from arrowhead_client.service import Service, ServiceInterface
 import arrowhead_client.client.core_service_forms as forms
 
 requester_system = ArrowheadSystem('test_system', 'localhost', 0)
@@ -7,7 +7,7 @@ provider_system = ArrowheadSystem('test_system', 'localhost', 0)
 provided_service = Service(
         service_definition='test_service',
         service_uri='/test/test/test',
-        interface='HTTP-SECURE-JSON',
+        interface=ServiceInterface('HTTP', 'SECURE', 'JSON'),
         access_policy='CERTIFICATE',
         metadata={'dummy': 'data'},
         version=0,

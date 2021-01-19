@@ -1,46 +1,87 @@
-from typing import Dict
+from typing import Dict, List
 from enum import Enum
+from collections import namedtuple
 
-from arrowhead_client.service import Service
+from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.rules import OrchestrationRule
+from arrowhead_client.common import Constants
 
-
-class CoreServiceConfig(str, Enum):
-    CORE_SERVICE_SERVICE_REGISTRY_REGISTER = 'register'
-    CORE_SERVICE_SERVICE_REGISTRY_UNREGISTER = 'unregister'
-    SERVICE_REGISTRY_REGISTER_URI = 'serviceregistry/register'
-    SERVICE_REGISTRY_REGISTER_METHOD = 'POST'
-    SERVICE_REGISTRY_UNREGISTER_URI = 'serviceregistry/unregister'
-    SERVICE_REGISTRY_UNREGISTER_METHOD = 'DELETE'
-
-_http_core_services: Dict[str, Service] = {
-    'register': Service(
-            service_definition='register',
-            service_uri='serviceregistry/register',
-            interface='HTTP-SECURE-JSON', ),
-    'query': Service(
-            service_definition='query',
-            service_uri='serviceregistry/query',
-            interface='HTTP-SECURE-JSON', ),
-    'unregister': Service(
-            service_definition='unregister',
-            service_uri='serviceregistry/unregister',
-            interface='HTTP-SECURE-TEXT', ),
-    'orchestration-provided_service': Service(
-            service_definition='orchestration-provided_service',
-            service_uri='orchestrator/orchestration',
-            interface='HTTP-SECURE-JSON', ),
-    'publickey': Service(
-            service_definition='publickey',
-            service_uri='authorization/publickey',
-            interface='HTTP-SECURE-JSON', ),
-}
+CoreConfig = namedtuple(
+        'CoreConfig',
+        ['service_definition',
+         'uri',
+         'method',
+         'protocol',
+         'payload',
+         'system',
+         ]
+)
 
 
-def core_service(service_defintion: str) -> Service:
-    core_service_instance = _http_core_services.get(service_defintion, None)
+class CoreServices(CoreConfig, Enum):
+    # Core services
+    SERVICE_REGISTER = (
+        'service-register',
+        'serviceregistry/register',
+        'POST', 'HTTP', 'JSON',
+        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
+    )
+    SERVICE_UNREGISTER = (
+        'service-unregister',
+        'serviceregistry/unregister',
+        'DELETE', 'HTTP', 'JSON',
+        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
+    )
+    SERVICE_QUERY = (
+        'service-query',
+        'serviceregistry/query',
+        'POST', 'HTTP', 'JSON',
+        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
+    )
+    ORCHESTRATION = (
+        'orchestration-service',
+        'orchestrator/orchestration',
+        'POST', 'HTTP', 'JSON',
+        Constants.CORE_SYSTEM_ORCHESTRATOR.value,
+    )
+    PUBLICKEY = (
+        'auth-public-key',
+        'authorization/publickey',
+        'GET', 'HTTP', 'JSON',
+        Constants.CORE_SYSTEM_AUTHORIZATION.value,
+    )
 
-    if not core_service_instance:
-        raise ValueError(f'Core provided_service \'{service_defintion}\' not found, '
-                         f'available core services are {list(_http_core_services.keys())}')
 
-    return core_service_instance
+def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
+    """
+    Get orchestration rules for core services.
+
+    Args:
+        config: Configuration dictionary.
+        secure: True if ssl is enabled, False otherwise.
+    Returns:
+        List of Orchestration rules.
+    """
+
+    rules = [_extract_rule(core_service, config, secure)
+             for core_service in CoreServices]
+
+    return rules
+
+
+def _extract_rule(core_service_tuple, config, secure) -> OrchestrationRule:
+    secure = Constants.SECURITY_SECURE if secure else Constants.SECURITY_INSECURE
+    access_policy = Constants.POLICY_CERTIFICATE if secure else Constants.POLICY_UNRESTRICTED
+    interface = ServiceInterface(core_service_tuple.protocol, secure, core_service_tuple.payload)
+    core_system = ArrowheadSystem(**config[core_service_tuple.system])
+    return OrchestrationRule(
+            Service(
+                    core_service_tuple.service_definition,
+                    core_service_tuple.uri,
+                    interface,
+                    access_policy,
+            ),
+            core_system,
+            core_service_tuple.method,
+    )

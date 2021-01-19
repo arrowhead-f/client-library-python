@@ -4,7 +4,7 @@ from contextlib import nullcontext
 
 import arrowhead_client.security.access_policy as ap
 from arrowhead_client.service import Service
-from arrowhead_client.common_constants import AccessPolicies
+from arrowhead_client.common import Constants
 from tests.test_security.test_access_token import generate_claims
 from tests.test_security import conftest
 
@@ -192,7 +192,7 @@ class TestGetAccessPolicy:
 
     @pytest.mark.parametrize('input_name, true_class, expectation',
         list(zip(
-                [AccessPolicies.UNRESTRICTED, AccessPolicies.CERTIFICATE, AccessPolicies.TOKEN, 'WRONG_NAME', 1234],
+                [Constants.POLICY_UNRESTRICTED, Constants.POLICY_CERTIFICATE, Constants.POLICY_TOKEN, 'WRONG_NAME', 1234],
                 [ap.UnrestrictedAccessPolicy, ap.CertificateAccessPolicy, ap.TokenAccessPolicy, None, None],
                 [nullcontext()]*3 + [pytest.raises(ValueError)]*2,
         ))

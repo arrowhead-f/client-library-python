@@ -7,9 +7,9 @@ from arrowhead_client.rules import OrchestrationRule, RegistrationRule
 class ProtocolMixin(ABC):
     def __init_subclass__(cls, protocol='', **kwargs):
         if protocol == '':
-            raise ValueError(f'No protocol specified.')
+            raise ValueError('No protocol specified.')
         elif not isinstance(protocol, str):
-            raise TypeError(f'Protocol must be of type str.')
+            raise TypeError('Protocol must be of type str.')
         cls._protocol = protocol.upper()
 
 
@@ -48,7 +48,7 @@ class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             port: int,
             keyfile: str,
             certfile: str,
-        ) -> None:
+    ) -> None:
         """
         Starts the provider and runs until interrupted.
 
@@ -59,5 +59,3 @@ class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             certfile: client certfile.
             cafile: certificate authority file
         """
-
-

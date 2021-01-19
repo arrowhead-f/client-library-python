@@ -48,7 +48,7 @@ def extract_publickey(certfile: str) -> Optional[RSAPublicKey]:
     # Extract RSA public key
     publickey = cert.public_key()
 
-    return publickey
+    return publickey  # type: ignore
 
 
 def create_authentication_info(publickey: Optional[RSAPublicKey]) -> str:

@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  mysql.quickstart:
+    container_name: mysql.quickstart
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - mysql.quickstart:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d/
+    ports:
+      - 3306:3306
+
+  serviceregistry:
+    container_name: serviceregistry.quickstart
+    image: svetlint/serviceregistry:latest
+    depends_on:
+      - mysql.quickstart
+    volumes:
+      # dont forget to change the route of the locally available config file
+      # format is <file on your local machine, (change this!!!)>:<file location inside the container (don't change this part!!!)>
+      - ./core_system_config/serviceregistry.properties:/serviceregistry/application.properties
+      - ./certificates/crypto/service_registry.p12:/serviceregistry/service_registry.p12
+      - ./certificates/crypto/truststore.p12:/serviceregistry/truststore.p12
+    ports:
+      - 8443:8443
+
+  authorization:
+    container_name: authorization.quickstart
+    image: svetlint/authorization:latest
+    depends_on:
+      - mysql.quickstart
+    volumes:
+      - ./core_system_config/authorization.properties:/authorization/application.properties
+      - ./certificates/crypto/authorization.p12:/authorization/authorization.p12
+      - ./certificates/crypto/truststore.p12:/authorization/truststore.p12
+    ports:
+      - 8445:8445
+
+  orchestrator:
+    container_name: orchestrator.quickstart
+    image: svetlint/orchestrator:latest
+    depends_on:
+      - mysql.quickstart
+    volumes:
+      - ./core_system_config/orchestrator.properties:/orchestrator/application.properties
+      - ./certificates/crypto/orchestrator.p12:/orchestrator/orchestrator.p12
+      - ./certificates/crypto/truststore.p12:/orchestrator/truststore.p12
+    ports:
+      - 8441:8441
+
+volumes:
+  mysql.quickstart:
+    external: true  

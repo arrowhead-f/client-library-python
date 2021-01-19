@@ -1,52 +1,55 @@
 from functools import partial
 from flask import Flask, request
-import flask
 import ssl
 
 from arrowhead_client.abc import BaseProvider
 from arrowhead_client.rules import RegistrationRule
+from arrowhead_client.request import Request
 from arrowhead_client import errors
+from arrowhead_client.common import Constants
 
 
-class HttpProvider(BaseProvider, protocol='HTTP'):
+class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     """ Class for provided_service provision """
 
-    def __init__(self, cafile: str, app_name='') -> None:
+    def __init__(self, cafile: str, app_name: str = '') -> None:
         self.app_name = __name__ or app_name
         self.app = Flask(app_name)
         self.cafile = cafile
 
+        @self.app.errorhandler(500)
+        def internal_error(error):
+            return {Constants.ERROR_MESSAGE: 'Internal issue'}, 500
+
     def add_provided_service(self, rule: RegistrationRule) -> None:
         """ Add provided_service to provider system"""
-        # Register provided_service with Flask app
+
         def func_with_access_policy(request):
+            """Register provided_service with Flask app."""
             auth_string = request.headers.get('authorization')
             consumer_cert_str = request.headers.environ.get('SSL_CLIENT_CERT')
+
             try:
-                is_authorized = rule.access_policy.is_authorized(
+                is_authorized = rule.is_authorized(
                         consumer_cert_str=consumer_cert_str,
-                        auth_header=auth_string,
+                        auth_str=auth_string,
                 )
-            except errors.AuthorizationError as e:
+            except errors.AuthorizationError:
                 is_authorized = False
 
-            if is_authorized:
-                return rule.func(request)
-            else:
-                flask.abort(
-                        403,
-                        f'Not authorized to consume service'
-                        f'{rule.provided_service.service_definition}@'
-                        f'{rule.provider_system.authority}: '
-                        #f'{auth_message}.'
-                )
+            if not is_authorized:
+                return {Constants.ERROR_MESSAGE:
+                            f'Not authorized to consume service '
+                            f'{rule.service_definition}@{rule.authority}/'
+                            f'{rule.service_uri}'}, 403
 
+            ar_request = make_arrowhead_request(request, rule._provided_service.interface.payload)
+            return rule.func(ar_request)
 
         self.app.add_url_rule(
-                rule=f'/{rule.provided_service.service_uri}',
-                endpoint=rule.provided_service.service_definition,
+                rule=f'/{rule.service_uri}',
+                endpoint=rule.service_definition,
                 methods=[rule.method],
-                # TODO: Create Request class similar to Response
                 view_func=partial(func_with_access_policy, request)
         )
 
@@ -56,7 +59,7 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
             port: int,
             keyfile: str,
             certfile: str,
-            ):
+    ):
 
         if keyfile and certfile and self.cafile:
             ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
@@ -64,9 +67,17 @@ class HttpProvider(BaseProvider, protocol='HTTP'):
             ssl_context.load_verify_locations(self.cafile)
             ssl_context.load_cert_chain(certfile, keyfile)
         else:
-            ssl_context = None
+            ssl_context = None  # type: ignore
 
-        self.app.run(host=address,
-                     port=port,
-                     ssl_context=ssl_context,
+        self.app.run(
+                host=address,
+                port=port,
+                ssl_context=ssl_context,
         )
+
+
+def make_arrowhead_request(request, payload_type) -> Request:
+    if request.method == 'GET':
+        return Request(b'{}', payload_type)
+
+    return Request(request.data, payload_type)
