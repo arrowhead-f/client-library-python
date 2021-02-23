@@ -93,10 +93,13 @@ class CertificateAccessPolicy(AccessPolicy):
                       *args,
                       **kwargs, ) -> bool:
         try:
-            cert = x509.load_pem_x509_certificate(
-                    consumer_cert_str.encode(),
-                    default_backend()
-            )
+            # TODO: This code is disabled because the certificate is not retrievable when using FastAPI
+            # without a reverse proxy, due to the ASGI standard.
+            #cert = x509.load_pem_x509_certificate(
+            #        consumer_cert_str.encode(),
+            #        default_backend()
+            #)
+            pass
         except ValueError:
             return False
 
