@@ -4,6 +4,7 @@ Access Policy module
 from abc import ABC, abstractmethod
 from typing import Any
 
+# Not used because the CertificateAccessPolicy is disabled, see comment there.
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
