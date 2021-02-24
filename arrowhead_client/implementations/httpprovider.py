@@ -43,6 +43,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
                             f'{rule.service_definition}@{rule.authority}/'
                             f'{rule.service_uri}'}, 403
 
+            # TODO: Make the payload easily accessible from the RegistrationRule, so it doesn't rely on the _provided_service member
             ar_request = make_arrowhead_request(request, rule._provided_service.interface.payload)
             return rule.func(ar_request)
 
@@ -77,6 +78,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
 
 
 def make_arrowhead_request(request, payload_type) -> Request:
+    # Makes sure that the body of a get request is ignored
     if request.method == 'GET':
         return Request(b'{}', payload_type)
 

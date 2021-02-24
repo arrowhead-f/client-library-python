@@ -65,7 +65,10 @@ class TokenAccessPolicy(AccessPolicy):
             auth_header: str,
             **kwargs, ) -> bool:
 
-        consumer_cn = cert_cn(consumer_cert_str)
+        try:
+            consumer_cn = cert_cn(consumer_cert_str)
+        except ValueError:
+            return False
 
         try:
             token = AccessToken.from_string(
