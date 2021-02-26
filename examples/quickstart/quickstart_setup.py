@@ -5,10 +5,12 @@ import time
 from arrowhead_client.dto import DTOMixin
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.service import ServiceInterface
+from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.client.core_system_defaults import default_config
 from arrowhead_client.client.core_service_forms import ServiceRegistrationForm
 import arrowhead_client.api as ar
 
+subprocess.run(['docker-compose', 'down'])
 subprocess.run(['docker', 'volume', 'rm', 'mysql.quickstart'])
 subprocess.run(['docker', 'volume', 'create', '--name', 'mysql.quickstart'])
 subprocess.run(['docker-compose', 'up', '-d'])
@@ -122,15 +124,15 @@ setup_client.orchestration_rules.store(
 setup_client.setup()
 
 consumer_system = ar.ArrowheadSystem(
-        'quickstart-consumer',
-        '127.0.0.1',
-        7656
+        system_name='quickstart-consumer',
+        address='127.0.0.1',
+        port=7656
 )
 provider_system = ar.ArrowheadSystem(
-        'quickstart-provider',
-        '127.0.0.1',
-        7655,
-        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhv0G6H'
+        system_name='quickstart-provider',
+        address='127.0.0.1',
+        port=7655,
+        authentication_info='MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhv0G6H'
         'Cst8lQlAXuevgoZpozM6XKT7ihtrWGfrN4vYG+e0f1b2Q88glW'
         'G+VjrD++dnjSmoU4f/7CTSvwcDtjsW4UFHWJNIkHF8WvugPT7Q'
         '5HaWr80uO0P+JNfbMD9e2FzMLRt9SBrTUKIMSXV/pQSGWQNQg5'
@@ -152,7 +154,7 @@ systems = {
     'provider': (ar.ArrowheadSystem.from_dto(provider_data), provider_data['id']),
 }
 
-hello_form = ServiceRegistrationForm(
+hello_form = ServiceRegistrationForm.make(
         ar.Service(
                 'hello-arrowhead',
                 'hello',
@@ -161,7 +163,7 @@ hello_form = ServiceRegistrationForm(
         ),
         systems['provider'][0],
 )
-echo_form = ServiceRegistrationForm(
+echo_form = ServiceRegistrationForm.make(
         ar.Service(
                 'echo',
                 'echo',
@@ -183,31 +185,23 @@ hello_id = hello_res['serviceDefinition']['id']
 echo_id = echo_res['serviceDefinition']['id']
 
 class OrchestrationMgmtStoreForm(DTOMixin):
-    def __init__(
-            self,
-            service_definition_name: str,
-            consumer_system_id: str,
-            provider_system_dto: str,
-            service_interface_name: str,
-            priority: int = 1
-    ):
-        self.service_definition_name = service_definition_name
-        self.consumer_system_id = consumer_system_id
-        self.provider_system = provider_system_dto
-        self.service_interface_name = service_interface_name
-        self.priority = priority
+    service_definition_name: str
+    consumer_system_id: str
+    provider_system: ArrowheadSystem
+    service_interface_name: str
+    priority: int = 1
 
 hello_orch_form = OrchestrationMgmtStoreForm(
-        'hello-arrowhead',
-        systems['consumer'][1],
-        systems['provider'][0].dto(),
-        'HTTP-SECURE-JSON',
+        service_definition_name='hello-arrowhead',
+        consumer_system_id=systems['consumer'][1],
+        provider_system=systems['provider'][0],
+        service_interface_name='HTTP-SECURE-JSON',
 )
 echo_orch_form = OrchestrationMgmtStoreForm(
-        'echo',
-        systems['consumer'][1],
-        systems['provider'][0].dto(),
-        'HTTP-SECURE-JSON',
+        service_definition_name='echo',
+        consumer_system_id=systems['consumer'][1],
+        provider_system=systems['provider'][0].dto(),
+        service_interface_name='HTTP-SECURE-JSON',
 )
 
 res = setup_client.consume_service(
@@ -215,30 +209,25 @@ res = setup_client.consume_service(
         json=[hello_orch_form.dto(), echo_orch_form.dto()]
 )
 
+from typing import List
+
 class AuthorizationIntracloudForm(DTOMixin):
-    def __init__(
-            self,
-            consumer_id: int,
-            provider_ids,
-            interface_ids,
-            service_definition_ids,
-    ):
-        self.consumer_id = consumer_id
-        self.provider_ids = provider_ids
-        self.interface_ids = interface_ids
-        self.service_definition_ids = service_definition_ids
+    consumer_id: int
+    provider_ids: List[int]
+    interface_ids: List[int]
+    service_definition_ids: List[int]
 
 hello_auth_form = AuthorizationIntracloudForm(
-        systems['consumer'][1],
-        [systems['provider'][1]],
-        [1],
-        [hello_id],
+        consumer_id=systems['consumer'][1],
+        provider_ids=[systems['provider'][1]],
+        interface_ids=[1],
+        service_definition_ids=[hello_id],
 )
 echo_auth_form = AuthorizationIntracloudForm(
-        systems['consumer'][1],
-        [systems['provider'][1]],
-        [1],
-        [echo_id],
+        consumer_id=systems['consumer'][1],
+        provider_ids=[systems['provider'][1]],
+        interface_ids=[1],
+        service_definition_ids=[echo_id],
 )
 
 setup_client.consume_service(
