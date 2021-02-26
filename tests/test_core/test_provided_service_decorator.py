@@ -1,7 +1,7 @@
 import arrowhead_client.api as ar
 
 def test_provided_service():
-    class CustomClient(ar.ArrowheadHttpClient):
+    class CustomClient(ar.ArrowheadHttpClientSync):
         def __init__(self, *args, format='', **kwargs):
             super().__init__(*args, **kwargs)
             self.format = format

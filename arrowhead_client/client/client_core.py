@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 from typing import Any, Dict, Tuple, Callable
+from abc import ABC, ABCMeta, abstractmethod
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.abc import BaseConsumer, BaseProvider
@@ -13,22 +14,21 @@ from arrowhead_client.client import (
 )
 from arrowhead_client.client.core_system_defaults import config as ar_config
 from arrowhead_client.security.access_policy import get_access_policy
-from arrowhead_client.common import Constants
 from arrowhead_client.rules import (
     OrchestrationRuleContainer,
     RegistrationRuleContainer,
     RegistrationRule,
 )
-import arrowhead_client.errors as errors
+
 
 def provided_service(
-            service_definition: str,
-            service_uri: str,
-            protocol: str,
-            method: str,
-            payload_format: str,
-            access_policy: str,
-    ):
+        service_definition: str,
+        service_uri: str,
+        protocol: str,
+        method: str,
+        payload_format: str,
+        access_policy: str,
+):
     """
     Decorator that can be used in custom client subclasses to define services.
 
@@ -60,7 +60,7 @@ def provided_service(
             self.service_definition = service_definition
             self.func = func
 
-        def __set_name__(self, owner: ArrowheadClient, name: str):
+        def __set_name__(self, owner: ArrowheadClientBase, name: str):
             if not '__arrowhead_services__' in dir(owner):
                 raise AttributeError(f'provided_service can only be used within arrowhead clients.')
 
@@ -79,11 +79,15 @@ def provided_service(
 
     return ServiceDescriptor
 
-class ArrowheadClient:
+
+class ArrowheadClientBase(ABC, metaclass=ABCMeta):
     """
-    Application class for Arrowhead Systems.
+    Base class for Arrowhead Clients.
 
     This class serves as a bridge that connects systems, consumers, and providers to the user.
+
+    ArrowheadClientBase should not be used or subclassed directly,
+    use ArrowheadClientSync or ArrowheadClientAsync for those needs instead.
 
     Attributes:
         system: ArrowheadSystem
@@ -94,14 +98,16 @@ class ArrowheadClient:
         certfile: PEM certfile
     """
 
-    def __init__(self,
-                 system: ArrowheadSystem,
-                 consumer: BaseConsumer,
-                 provider: BaseProvider,
-                 logger: Any,
-                 config: Dict = None,
-                 keyfile: str = '',
-                 certfile: str = '', ):
+    def __init__(
+            self,
+            system: ArrowheadSystem,
+            consumer: BaseConsumer,
+            provider: BaseProvider,
+            logger: Any,
+            config: Dict = None,
+            keyfile: str = '',
+            certfile: str = '',
+    ):
         self.system = system
         self.consumer = consumer
         self.provider = provider
@@ -132,75 +138,6 @@ class ArrowheadClient:
 
         for class_service_rule in self.__arrowhead_services__:
             self.registration_rules.store(getattr(self, class_service_rule))
-
-    def consume_service(
-            self,
-            service_definition: str,
-            **kwargs
-    ):
-        """
-        Consumes the given provided_service definition
-
-        Args:
-            service_definition: The provided_service definition of a consumable provided_service
-            **kwargs: Collection of keyword arguments passed to the consumer.
-        """
-
-        rule = self.orchestration_rules.get(service_definition)
-        if rule is None:
-            # TODO: Not sure if this should raise an error or just log?
-            raise errors.NoAvailableServicesError(
-                    f'No services available for'
-                    f' service \'{service_definition}\''
-            )
-
-        return self.consumer.consume_service(rule, **kwargs, )
-
-    def add_orchestration_rule(
-            self,
-            service_definition: str,
-            method: str,
-            protocol: str = '',
-            access_policy: str = '',
-            format: str = '',
-            # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
-            **kwargs,
-    ) -> None:
-        """
-        Add orchestration rule for provided_service definition
-
-        Args:
-            service_definition: Service definition that is looked up from the orchestrator.
-            method: The HTTP method given in uppercase that is used to consume the provided_service.
-            access_policy: Service access policy.
-        """
-
-        requested_service = Service(
-                service_definition,
-                interface=ServiceInterface.with_access_policy(
-                        protocol,
-                        access_policy,
-                        format,
-                ),
-                access_policy=access_policy
-        )
-
-        orchestration_form = forms.OrchestrationForm.make(
-                self.system,
-                requested_service,
-                **kwargs
-        )
-
-        orchestration_response = self.consume_service(
-                CoreServices.ORCHESTRATION.service_definition,
-                json=orchestration_form.dto(),
-                cert=self.cert,
-        )
-
-        rules = responses.process_orchestration(orchestration_response, method)
-
-        for rule in rules:
-            self.orchestration_rules.store(rule)
 
     def provided_service(
             self,
@@ -244,35 +181,52 @@ class ArrowheadClient:
 
         return wrapped_func
 
-    def run_forever(self) -> None:
+    def add_orchestration_rule(
+            self,
+            service_definition: str,
+            method: str,
+            protocol: str = '',
+            access_policy: str = '',
+            format: str = '',
+            # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+            **kwargs,
+    ) -> None:
         """
-        Start the server, publish all provided_service, and run until interrupted.
-        Then, unregister all services.
+        Add orchestration rule for provided_service definition
+
+        Args:
+            service_definition: Service definition that is looked up from the orchestrator.
+            method: The HTTP method given in uppercase that is used to consume the provided_service.
+            access_policy: Service access policy.
         """
 
-        try:
-            self.setup()
-            # TODO: These three could go into a provider_setup() method
-            if self.secure:
-                authorization_response = self.consume_service(CoreServices.PUBLICKEY.service_definition)
-                self.auth_authentication_info = responses.process_publickey(authorization_response)
-            self._initialize_provided_services()
-            self._register_all_services()
-            self._logger.info('Starting server')
-            print('Started Arrowhead ArrowheadSystem')
-            self.provider.run_forever(
-                    address=self.system.address,
-                    port=self.system.port,
-                    # TODO: keyfile and certfile should be given in provider.__init__
-                    keyfile=self.keyfile,
-                    certfile=self.certfile,
-            )
-        except KeyboardInterrupt:
-            self._logger.info('Shutting down server')
-        finally:
-            print('Shutting down Arrowhead system')
-            self._unregister_all_services()
-            self._logger.info('Server shut down')
+        requested_service = Service(
+                service_definition,
+                interface=ServiceInterface.with_access_policy(
+                        protocol,
+                        access_policy,
+                        format,
+                ),
+                access_policy=access_policy
+        )
+
+        orchestration_form = forms.OrchestrationForm.make(
+                self.system,
+                requested_service,
+                **kwargs
+        )
+
+        # TODO: Add an argument for arrowhead forms in consume_service, and one for the ssl-files
+        orchestration_response = self.consume_service(
+                CoreServices.ORCHESTRATION.service_definition,
+                json=orchestration_form.dto(),
+                cert=self.cert,
+        )
+
+        rules = responses.process_orchestration(orchestration_response, method)
+
+        for rule in rules:
+            self.orchestration_rules.store(rule)
 
     def _initialize_provided_services(self) -> None:
         for rule in self.registration_rules:
@@ -296,79 +250,57 @@ class ArrowheadClient:
         for rule in core_rules:
             self.orchestration_rules.store(rule)
 
-    def _register_service(self, service: Service):
+    @abstractmethod
+    def consume_service(self, service_definition, **kwargs):
+        """
+        Consumes the given provided_service definition
+
+        Args:
+            service_definition: The provided_service definition of a consumable provided_service
+            **kwargs: Collection of keyword arguments passed to the consumer.
+        """
+        pass
+
+    @abstractmethod
+    def run_forever(self):
+        """
+        Start the server, publish all provided_service, and run until interrupted.
+        Then, unregister all services.
+        """
+        pass
+
+    @abstractmethod
+    def _register_service(self, service):
         """
         Registers the given provided_service with provided_service registry
 
         Args:
             service: Service to register with the Service registry.
         """
+        pass
 
-        service_registration_form = forms.ServiceRegistrationForm.make(
-                provided_service=service,
-                provider_system=self.system,
-        )
-
-        service_registration_response = self.consume_service(
-                CoreServices.SERVICE_REGISTER.service_definition,
-                json=service_registration_form.dto(),
-                cert=self.cert
-        )
-
-        responses.process_service_register(
-                service_registration_response,
-        )
-
-    def _register_all_services(self) -> None:
+    @abstractmethod
+    def _register_all_services(self):
         """
         Registers all provided services of the system with the system registry.
         """
-        for rule in self.registration_rules:
-            try:
-                self._register_service(rule.provided_service)
-            except errors.CoreServiceInputError as e:
-                # TODO: Do logging
-                print(e)
-            else:
-                rule.is_provided = True
+        pass
 
-    def _unregister_service(self, service: Service) -> None:
+    @abstractmethod
+    def _unregister_service(self, service):
         """
         Unregisters the given provided_service with provided_service registry
 
         Args:
             service: Service to unregister with the Service registry.
         """
+        pass
 
-        service_definition = service.service_definition
-
-        # TODO: Should be a "form"?
-        unregistration_payload = {
-            'service_definition': service_definition,
-            'system_name': self.system.system_name,
-            'address': self.system.address,
-            'port': self.system.port
-        }
-
-        service_unregistration_response = self.consume_service(
-                CoreServices.SERVICE_UNREGISTER.service_definition,
-                params=unregistration_payload,
-                cert=self.cert
-        )
-
-        responses.process_service_unregister(service_unregistration_response)
-
-    def _unregister_all_services(self) -> None:
+    @abstractmethod
+    def _unregister_all_services(self):
         """
         Unregisters all provided services of the system with the system registry.
         """
+        pass
 
-        for rule in self.registration_rules:
-            if not rule.is_provided:
-                continue
-            try:
-                self._unregister_service(rule.provided_service)
-            except errors.CoreServiceInputError as e:
-                print(e)
-            else:
-                rule.is_provided = False
+

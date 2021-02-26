@@ -3,7 +3,7 @@ HttpProvider example app
 """
 import arrowhead_client.api as ar
 
-provider = ar.ArrowheadHttpClient(
+provider = ar.ArrowheadHttpClientSync(
         system_name='quickstart-provider',
         address='127.0.0.1',
         port=7655,

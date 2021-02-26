@@ -38,7 +38,7 @@ with requests.Session() as session:
             print('All core systems are online\n')
             break
 
-setup_client = ar.ArrowheadHttpClient(
+setup_client = ar.ArrowheadHttpClientSync(
         system_name='sysop',
         address='127.0.0.1',
         port=1337,

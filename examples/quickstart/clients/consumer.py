@@ -3,7 +3,7 @@ HttpConsumer example app
 """
 import arrowhead_client.api as ar
 
-consumer = ar.ArrowheadHttpClient(
+consumer = ar.ArrowheadHttpClientSync(
         system_name='quickstart-consumer',
         address='127.0.0.1',
         port=7656,
