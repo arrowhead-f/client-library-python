@@ -20,9 +20,11 @@ class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
         self.session.verify = certificate_authority
         self.session.cert = (certfile, keyfile)
 
-    def consume_service(self,
-                        rule: OrchestrationRule,
-                        **kwargs) -> Response:
+    def consume_service(
+            self,
+            rule: OrchestrationRule,
+            **kwargs,
+    ) -> Response:
         """ Consume registered provided_service """
 
         service_response = self.session.request(
