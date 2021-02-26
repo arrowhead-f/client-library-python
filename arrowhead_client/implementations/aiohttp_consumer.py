@@ -23,7 +23,7 @@ class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
 
         self.http_session = aiohttp.ClientSession()
 
-    def consume_service(
+    async def consume_service(
             self,
             rule: OrchestrationRule,
             **kwargs,
@@ -32,6 +32,7 @@ class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
         if rule.secure:
             auth_header = {'Authorization': f'Bearer {rule.authorization_token}'}
             headers = {**kwargs['headers'], **auth_header}
+
         async with self.http_session.request(
                 rule.method,
                 f'{http(rule.secure)}{rule.endpoint}',

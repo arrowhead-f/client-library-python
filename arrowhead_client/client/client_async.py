@@ -70,3 +70,6 @@ class ArrowheadClientAsync(ArrowheadClientBase):
                 print(e)
             else:
                 rule.is_provided = False
+
+    async def run_forever(self):
+        pass
