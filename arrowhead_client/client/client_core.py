@@ -181,6 +181,7 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
 
         return wrapped_func
 
+    @abstractmethod
     def add_orchestration_rule(
             self,
             service_definition: str,
@@ -199,34 +200,6 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
             method: The HTTP method given in uppercase that is used to consume the provided_service.
             access_policy: Service access policy.
         """
-
-        requested_service = Service(
-                service_definition,
-                interface=ServiceInterface.with_access_policy(
-                        protocol,
-                        access_policy,
-                        format,
-                ),
-                access_policy=access_policy
-        )
-
-        orchestration_form = forms.OrchestrationForm.make(
-                self.system,
-                requested_service,
-                **kwargs
-        )
-
-        # TODO: Add an argument for arrowhead forms in consume_service, and one for the ssl-files
-        orchestration_response = self.consume_service(
-                CoreServices.ORCHESTRATION.service_definition,
-                json=orchestration_form.dto(),
-                cert=self.cert,
-        )
-
-        rules = responses.process_orchestration(orchestration_response, method)
-
-        for rule in rules:
-            self.orchestration_rules.store(rule)
 
     def _initialize_provided_services(self) -> None:
         for rule in self.registration_rules:
@@ -302,5 +275,4 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
         Unregisters all provided services of the system with the system registry.
         """
         pass
-
 

@@ -29,6 +29,11 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             A Response object.
         """
 
+    async def async_startup(self):
+        raise NotImplementedError
+
+    def async_shutdown(self):
+        raise NotImplementedError
 
 class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
     """Abstract base class for providers"""

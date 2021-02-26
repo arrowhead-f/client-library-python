@@ -2,7 +2,7 @@ from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
 from arrowhead_client.client.client_core import ArrowheadClientBase
 from arrowhead_client.client.core_services import CoreServices
-from arrowhead_client.service import Service
+from arrowhead_client.service import Service, ServiceInterface
 
 
 class ArrowheadClientSync(ArrowheadClientBase):
@@ -31,6 +31,53 @@ class ArrowheadClientSync(ArrowheadClientBase):
             )
 
         return self.consumer.consume_service(rule, **kwargs, )
+
+    def add_orchestration_rule(
+            self,
+            service_definition: str,
+            method: str,
+            protocol: str = '',
+            access_policy: str = '',
+            format: str = '',
+            # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+            **kwargs,
+    ) -> None:
+        """
+        Add orchestration rule for provided_service definition
+
+        Args:
+            service_definition: Service definition that is looked up from the orchestrator.
+            method: The HTTP method given in uppercase that is used to consume the provided_service.
+            access_policy: Service access policy.
+        """
+
+        requested_service = Service(
+                service_definition,
+                interface=ServiceInterface.with_access_policy(
+                        protocol,
+                        access_policy,
+                        format,
+                ),
+                access_policy=access_policy
+        )
+
+        orchestration_form = forms.OrchestrationForm.make(
+                self.system,
+                requested_service,
+                **kwargs
+        )
+
+        # TODO: Add an argument for arrowhead forms in consume_service, and one for the ssl-files
+        orchestration_response = self.consume_service(
+                CoreServices.ORCHESTRATION.service_definition,
+                json=orchestration_form.dto(),
+                cert=self.cert,
+        )
+
+        rules = responses.process_orchestration(orchestration_response, method)
+
+        for rule in rules:
+            self.orchestration_rules.store(rule)
 
     def run_forever(self) -> None:
         """

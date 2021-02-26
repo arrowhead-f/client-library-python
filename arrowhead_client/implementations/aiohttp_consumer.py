@@ -1,4 +1,5 @@
 import ssl
+from typing import Optional
 
 import aiohttp
 
@@ -21,17 +22,23 @@ class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
         else:
             self.ssl_context = ssl.create_default_context()
 
+        self.http_session: Optional[aiohttp.ClientSession] = None
+
+    async def async_startup(self):
         self.http_session = aiohttp.ClientSession()
+
+    async def async_shutdown(self):
+        await self.http_session.close()
 
     async def consume_service(
             self,
             rule: OrchestrationRule,
             **kwargs,
     ) -> Response:
-        headers = kwargs['headers']
+        headers = kwargs.get('headers', {})
         if rule.secure:
             auth_header = {'Authorization': f'Bearer {rule.authorization_token}'}
-            headers = {**kwargs['headers'], **auth_header}
+            headers = {**headers, **auth_header}
 
         async with self.http_session.request(
                 rule.method,
