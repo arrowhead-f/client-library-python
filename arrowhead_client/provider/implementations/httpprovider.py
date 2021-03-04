@@ -2,7 +2,7 @@ from functools import partial
 from flask import Flask, request
 import ssl
 
-from arrowhead_client.abc import BaseProvider
+from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client.request import Request
 from arrowhead_client import errors

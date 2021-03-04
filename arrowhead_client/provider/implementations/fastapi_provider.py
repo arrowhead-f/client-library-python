@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 
-from arrowhead_client.abc import BaseProvider
+from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.common import Constants
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client.security.access_policy import TokenAccessPolicy

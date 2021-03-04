@@ -5,7 +5,8 @@ from typing import Any, Dict, Tuple, Callable, Type
 from abc import ABC, ABCMeta, abstractmethod
 
 from arrowhead_client.system import ArrowheadSystem
-from arrowhead_client.abc import BaseConsumer, BaseProvider
+from arrowhead_client.provider.base import BaseProvider
+from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.client.core_services import get_core_rules, CoreServices
 from arrowhead_client.client import (

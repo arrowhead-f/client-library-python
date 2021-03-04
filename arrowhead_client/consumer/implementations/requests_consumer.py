@@ -1,6 +1,6 @@
 import requests
 
-from arrowhead_client.abc import BaseConsumer
+from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.common import Constants
