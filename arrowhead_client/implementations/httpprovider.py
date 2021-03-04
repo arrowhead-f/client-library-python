@@ -13,9 +13,9 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     """ Class for provided_service provision """
 
     def __init__(self, cafile: str, app_name: str = '') -> None:
+        super().__init__(cafile)
         self.app_name = __name__ or app_name
         self.app = Flask(app_name)
-        self.cafile = cafile
 
         @self.app.errorhandler(500)
         def internal_error(error):

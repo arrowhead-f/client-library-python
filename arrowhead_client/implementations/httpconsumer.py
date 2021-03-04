@@ -13,11 +13,11 @@ class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
             self,
             keyfile: str,
             certfile: str,
-            certificate_authority: str,
+            cafile: str,
     ):
-        self.certificate_authority = certificate_authority
+        super().__init__(keyfile, certfile, cafile)
         self.session = requests.Session()
-        self.session.verify = certificate_authority
+        self.session.verify = cafile
         self.session.cert = (certfile, keyfile)
 
     def consume_service(

@@ -41,8 +41,8 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
             cafile: str,
             app_name: str = '',
     ):
+        super().__init__(cafile)
         self.app = FastAPI()
-        self.cafile = cafile
         self.policy_map = {}
 
     def add_provided_service(self, rule: RegistrationRule, ) -> None:

@@ -14,10 +14,11 @@ class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
             self,
             keyfile: str,
             certfile: str,
-            certificate_authority: str,
+            cafile: str,
     ):
-        if keyfile and certfile and certificate_authority:
-            self.ssl_context = ssl.create_default_context(cafile=certificate_authority)
+        super().__init__(keyfile, certfile, cafile)
+        if keyfile and certfile and cafile:
+            self.ssl_context = ssl.create_default_context(cafile=cafile)
             self.ssl_context.load_cert_chain(certfile, keyfile)
         else:
             self.ssl_context = ssl.create_default_context()
