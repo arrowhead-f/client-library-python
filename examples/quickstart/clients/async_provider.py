@@ -1,15 +1,13 @@
 """
 HttpProvider example app
 """
-from typing import Dict, Optional
-import asyncio
+from typing import Dict
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 
-import arrowhead_client.api as ar
-from arrowhead_client.request import Request
+from arrowhead_client.client.implementations import AsyncClient
 
-provider = ar.ArrowheadHttpClientAsync(
+provider = AsyncClient.create(
         system_name='quickstart-provider',
         address='127.0.0.1',
         port=7655,

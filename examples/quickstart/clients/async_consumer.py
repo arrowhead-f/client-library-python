@@ -3,9 +3,9 @@ HttpConsumer example app
 """
 import asyncio
 
-import arrowhead_client.api as ar
+from arrowhead_client.client.implementations import AsyncClient
 
-consumer = ar.ArrowheadHttpClientAsync(
+consumer = AsyncClient.create(
                 system_name='quickstart-consumer',
                 address='127.0.0.1',
                 port=7656,
