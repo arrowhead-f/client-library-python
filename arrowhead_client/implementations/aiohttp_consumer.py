@@ -4,7 +4,7 @@ from typing import Optional
 import aiohttp
 
 from arrowhead_client.abc import BaseConsumer
-from arrowhead_client.response import Response
+from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.common import Constants
 
@@ -52,8 +52,74 @@ class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
 
         return Response(raw_response, rule.payload_type, status_code)
 
+    async def connect(
+            self,
+            rule: OrchestrationRule,
+            **kwargs,
+    ) -> "WebSocketResponse":
+        headers = kwargs.get('headers', {})
+        if rule.secure:
+            auth_header = {'Authorization': f'Bearer {rule.authorization_token}'}
+            headers = {**headers, **auth_header}
+
+        connection = await self.http_session.ws_connect(
+                f'{ws(rule.secure)}{rule.endpoint}',
+                ssl=self.ssl_context,
+                headers=headers,
+                **kwargs,
+        )
+
+        return WebSocketResponse(connection, rule.payload_type)
+
+
+class WebSocketResponse(ConnectionResponse):
+    def __init__(
+            self,
+            connector: aiohttp.ClientWebSocketResponse,
+            payload_type,
+    ):
+        super().__init__(connector)
+        self.payload_type = payload_type
+
+    async def send(self, data):
+        if self.payload_type == Constants.PAYLOAD_JSON:
+            return await self._connector.send_json(data)
+        elif self.payload_type == Constants.PAYLOAD_TEXT:
+            return await self._connector.send_str(data)
+        else:
+            return await self._connector.send_bytes(data)
+
+    async def receive(self):
+        # TODO: This try clause is a janky solution to fix an error that occurs when connection is closed
+        # while a message is awaited that is not of the correct type. There is definetly a better solution
+        # to this but it is unclear at the moment.
+        try:
+            if self.payload_type == Constants.PAYLOAD_JSON:
+                res = await self._connector.receive_json()
+            elif self.payload_type == Constants.PAYLOAD_TEXT:
+                res = await self._connector.receive_str()
+            else:
+                res = await self._connector.receive_bytes()
+        except TypeError as e:
+            if str(e) == 'Received message 8:1000 is not str':
+                return
+            raise e
+        else:
+            return res
+
+    async def close(self):
+        return await self._connector.close()
+
+    def closed(self):
+        return self._connector.closed
+
 
 def http(secure: str) -> str:
     if secure == Constants.SECURITY_INSECURE:
         return 'http://'
     return 'https://'
+
+def ws(secure: str) -> str:
+    if secure == Constants.SECURITY_INSECURE:
+        return 'ws://'
+    return 'wss://'

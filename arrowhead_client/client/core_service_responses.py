@@ -75,8 +75,7 @@ def process_service_unregister(service_unregister_response: Response) -> None:
 
 
 @core_service_error_handler
-def process_orchestration(orchestration_response: Response, method='') \
-        -> List[OrchestrationRule]:
+def process_orchestration(orchestration_response: Response, method='') -> List[OrchestrationRule]:
     """
     Turns orchestration response into list of services.
 

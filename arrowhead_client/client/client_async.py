@@ -1,15 +1,23 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
 from arrowhead_client.client.client_core import ArrowheadClientBase
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.implementations.fastapi_provider import HttpProvider
+from arrowhead_client.response import Response, ConnectionResponse
 
 
 class ArrowheadClientAsync(ArrowheadClientBase):
+    provider: HttpProvider
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.provider.app.add_event_handler('startup', self.client_setup)
+        self.provider.app.add_event_handler('shutdown', self.client_cleanup)
 
-    async def consume_service(self, service_definition, **kwargs):
+    async def consume_service(self, service_definition, **kwargs) -> Response:
         rule = self.orchestration_rules.get(service_definition)
         if rule is None:
             # TODO: Not sure if this should raise an error or just log?
@@ -19,6 +27,20 @@ class ArrowheadClientAsync(ArrowheadClientBase):
             )
 
         return await self.consumer.consume_service(rule, **kwargs)
+
+    async def connect(self, service_definition, **kwargs) -> ConnectionResponse:
+        rule = self.orchestration_rules.get(service_definition)
+        if rule is None:
+            # TODO: Not sure if this should raise an error or just log?
+            raise errors.NoAvailableServicesError(
+                    f'No services available for'
+                    f' service \'{service_definition}\''
+            )
+
+        connector = await self.consumer.connect(rule, **kwargs)
+
+        return connector
+
 
     async def setup(self):
         super().setup()
@@ -81,7 +103,6 @@ class ArrowheadClientAsync(ArrowheadClientBase):
         service_registration_response = await self.consume_service(
                 CoreServices.SERVICE_REGISTER.service_definition,
                 json=service_registration_form.dto(),
-                cert=self.cert
         )
 
         responses.process_service_register(service_registration_response)
@@ -90,9 +111,12 @@ class ArrowheadClientAsync(ArrowheadClientBase):
         for rule in self.registration_rules:
             try:
                 await self._register_service(rule.provided_service)
+            # TODO: Is this _really_ an error?
             except errors.CoreServiceInputError as e:
                 # TODO: Do logging
                 print(e)
+                if str(e).endswith('already exists.'):
+                    rule.is_provided = True
             else:
                 rule.is_provided = True
 
@@ -107,7 +131,6 @@ class ArrowheadClientAsync(ArrowheadClientBase):
         service_unregistration_response = await self.consume_service(
                 CoreServices.SERVICE_UNREGISTER.service_definition,
                 params=unregistration_payload,
-                cert=self.cert
         )
 
         responses.process_service_unregister(service_unregistration_response)
@@ -117,14 +140,34 @@ class ArrowheadClientAsync(ArrowheadClientBase):
             if not rule.is_provided:
                 continue
             try:
-                await self._unregister_service(rule.provided_service)
+                res = await self._unregister_service(rule.provided_service)
             except errors.CoreServiceInputError as e:
                 print(e)
             else:
                 rule.is_provided = False
 
-    async def run_forever(self):
-        pass
+    def run_forever(self):
+        self.provider.run_forever(
+                address=self.system.address,
+                port=self.system.port,
+                # TODO: keyfile and certfile should be given in provider.__init__
+                keyfile=self.keyfile,
+                certfile=self.certfile,
+        )
+
+    async def client_setup(self):
+        await self.setup()
+        if self.secure:
+            authorization_response = await self.consume_service(CoreServices.PUBLICKEY.service_definition)
+            self.auth_authentication_info = responses.process_publickey(authorization_response)
+        self._initialize_provided_services()
+        await self._register_all_services()
+
+    async def client_cleanup(self):
+        print('Shutting down Arrowhead Client')
+        await self._unregister_all_services()
+        await self.consumer.async_shutdown()
+        self._logger.info('Server shut down')
 
     async def __aenter__(self):
         await self.setup()

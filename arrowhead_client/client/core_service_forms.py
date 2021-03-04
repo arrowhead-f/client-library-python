@@ -19,11 +19,13 @@ class ServiceQueryForm(DTOMixin):
     ping_providers: Optional[bool] = True
 
     @classmethod
-    def make(cls,
-             service: Service,
-             max_version_requirement: Optional[str] = None,
-             min_version_requirement: Optional[str] = None,
-             ping_providers: Optional[bool] = True) -> 'ServiceQueryForm':
+    def make(
+            cls,
+            service: Service,
+            max_version_requirement: Optional[str] = None,
+            min_version_requirement: Optional[str] = None,
+            ping_providers: Optional[bool] = True
+    ) -> 'ServiceQueryForm':
 
         return cls(
                 service_definition_requirement=service.service_definition,

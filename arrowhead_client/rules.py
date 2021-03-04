@@ -117,6 +117,10 @@ class RegistrationRule:
     def access_policy(self):
         return self._access_policy
 
+    @property
+    def protocol(self):
+        return self._provided_service.interface.protocol
+
     @access_policy.setter
     def access_policy(self, new_policy: AccessPolicy):
         self._access_policy = new_policy

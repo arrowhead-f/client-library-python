@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable
+from typing import Any, Dict, Tuple, Callable, Type
 from abc import ABC, ABCMeta, abstractmethod
 
 from arrowhead_client.system import ArrowheadSystem
@@ -12,6 +12,7 @@ from arrowhead_client.client import (
     core_service_responses as responses,
     core_service_forms as forms
 )
+from arrowhead_client.logs import get_logger
 from arrowhead_client.client.core_system_defaults import config as ar_config
 from arrowhead_client.security.access_policy import get_access_policy
 from arrowhead_client.rules import (
@@ -126,6 +127,8 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
         self.add_provided_service = self.provider.add_provided_service
 
     __arrowhead_services__ = []
+    __arrowhead_consumer__: Type[BaseConsumer]
+    __arrowhead_provider__: Type[BaseProvider]
 
     @property
     def cert(self) -> Tuple[str, str]:
@@ -201,28 +204,6 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
             access_policy: Service access policy.
         """
 
-    def _initialize_provided_services(self) -> None:
-        for rule in self.registration_rules:
-            rule.access_policy = get_access_policy(
-                    policy_name=rule.provided_service.access_policy,
-                    provided_service=rule.provided_service,
-                    privatekey=self.keyfile,
-                    authorization_key=self.auth_authentication_info
-            )
-            self.provider.add_provided_service(rule)
-
-    def _core_service_setup(self) -> None:
-        """
-        Method that sets up the test_core services.
-
-        Runs when the client is created and should not be run manually.
-        """
-
-        core_rules = get_core_rules(self.config, self.secure)
-
-        for rule in core_rules:
-            self.orchestration_rules.store(rule)
-
     @abstractmethod
     def consume_service(self, service_definition, **kwargs):
         """
@@ -241,6 +222,52 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
         Then, unregister all services.
         """
         pass
+
+    @classmethod
+    def create(
+            cls,
+            system_name: str,
+            address: str,
+            port: int,
+            config: Dict = None,
+            keyfile: str = '',
+            certfile: str = '',
+            cafile: str = '',
+            log_mode: str = 'debug',
+    ) -> ArrowheadClientBase:
+        """
+        Factory method for client instances
+
+        Args:
+            system_name:
+            address:
+            port:
+            config:
+            keyfile:
+            certfile:
+            cafile:
+        Returns:
+            A new instance with base class ArrowheadClientBase
+        """
+        logger = get_logger(system_name, log_mode)
+        system = ArrowheadSystem.with_certfile(
+                system_name,
+                address,
+                port,
+                certfile,
+        )
+        new_instance = cls(
+                system,
+                cls.__arrowhead_consumer__(keyfile, certfile, cafile),
+                cls.__arrowhead_provider__(cafile),
+                logger,
+                config=config,
+                keyfile=keyfile,
+                certfile=certfile,
+        )
+
+        return new_instance
+
 
     @abstractmethod
     def _register_service(self, service):
@@ -275,4 +302,26 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
         Unregisters all provided services of the system with the system registry.
         """
         pass
+
+    def _initialize_provided_services(self) -> None:
+        for rule in self.registration_rules:
+            rule.access_policy = get_access_policy(
+                    policy_name=rule.provided_service.access_policy,
+                    provided_service=rule.provided_service,
+                    privatekey=self.keyfile,
+                    authorization_key=self.auth_authentication_info
+            )
+            self.provider.add_provided_service(rule)
+
+    def _core_service_setup(self) -> None:
+        """
+        Method that sets up the test_core services.
+
+        Runs when the client is created and should not be run manually.
+        """
+
+        core_rules = get_core_rules(self.config, self.secure)
+
+        for rule in core_rules:
+            self.orchestration_rules.store(rule)
 

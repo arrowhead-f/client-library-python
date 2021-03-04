@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 
-from arrowhead_client.response import Response
+from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.rules import OrchestrationRule, RegistrationRule
 
 
@@ -15,11 +15,22 @@ class ProtocolMixin(ABC):
 
 class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
     """Abstract base class for consumers"""
+    def __init__(
+            self,
+            keyfile,
+            certfile,
+            cafile,
+    ):
+        self.keyfile = keyfile
+        self.certfile = certfile
+        self.cafile = cafile
+
     @abstractmethod
     def consume_service(
             self,
             rule: OrchestrationRule,
-            **kwargs) -> Response:
+            **kwargs
+    ) -> Response:
         """
         Consume service according to the consumation rule and return the response.
 
@@ -29,6 +40,21 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             A Response object.
         """
 
+    async def connect(
+            self,
+            rule: OrchestrationRule,
+            **kwargs,
+    ) -> ConnectionResponse:
+        """
+        Connect to a service with a persistent connection, for example with WebSockets
+
+        Args:
+            rule: Orchestration rule.
+        Returns:
+            A connection object, currently implementation specific.
+        """
+        raise NotImplementedError
+
     async def async_startup(self):
         raise NotImplementedError
 
@@ -37,6 +63,9 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
 
 class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
     """Abstract base class for providers"""
+    def __init__(self, cafile: str):
+        self.cafile = cafile
+
     @abstractmethod
     def add_provided_service(self, rule: RegistrationRule, ) -> None:
         """

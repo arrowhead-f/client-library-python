@@ -77,7 +77,6 @@ class TokenAccessPolicy(AccessPolicy):
                     self.auth_info
             )
         except errors.InvalidTokenError:
-            # TODO: Log failure
             return False
 
         is_valid = consumer_cn.startswith(token.consumer_id) and \
