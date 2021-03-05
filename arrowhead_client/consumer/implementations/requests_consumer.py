@@ -1,6 +1,6 @@
 import requests
 
-from arrowhead_client.abc import BaseConsumer
+from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.common import Constants
@@ -13,16 +13,18 @@ class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
             self,
             keyfile: str,
             certfile: str,
-            certificate_authority: str,
+            cafile: str,
     ):
-        self.certificate_authority = certificate_authority
+        super().__init__(keyfile, certfile, cafile)
         self.session = requests.Session()
-        self.session.verify = certificate_authority
+        self.session.verify = cafile
         self.session.cert = (certfile, keyfile)
 
-    def consume_service(self,
-                        rule: OrchestrationRule,
-                        **kwargs) -> Response:
+    def consume_service(
+            self,
+            rule: OrchestrationRule,
+            **kwargs,
+    ) -> Response:
         """ Consume registered provided_service """
 
         service_response = self.session.request(

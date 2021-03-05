@@ -1,6 +1,7 @@
 from typing import Union, Dict
 from dataclasses import dataclass
 import json
+from abc import ABC, abstractmethod
 
 from arrowhead_client.common import Constants
 
@@ -28,3 +29,32 @@ class Response:
 
     def read_string(self) -> str:
         return self.payload.decode()
+
+
+class ConnectionResponse(ABC):
+    """
+    Adapter for websockets
+    """
+    def __init__(
+            self,
+            connector,
+    ):
+        self._connector = connector
+
+    @abstractmethod
+    async def send(self, data):
+        pass
+
+    @abstractmethod
+    async def receive(self):
+        pass
+
+    @abstractmethod
+    async def close(self):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()

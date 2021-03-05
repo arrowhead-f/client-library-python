@@ -32,10 +32,7 @@ class TestServiceInterface:
             )
     )
     def test_interface_from_str(self, interface_string, expectation):
-        try:
-            protocol, secure, payload = interface_string.split('-')
-        except Exception:
-            pass
+        protocol, secure, payload = interface_string.split('-')
 
         with expectation:
             test_interface = service.ServiceInterface.from_str(interface_string)

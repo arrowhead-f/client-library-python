@@ -4,6 +4,7 @@ Access Policy module
 from abc import ABC, abstractmethod
 from typing import Any
 
+# Not used because the CertificateAccessPolicy is disabled, see comment there.
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
@@ -64,7 +65,10 @@ class TokenAccessPolicy(AccessPolicy):
             auth_header: str,
             **kwargs, ) -> bool:
 
-        consumer_cn = cert_cn(consumer_cert_str)
+        try:
+            consumer_cn = cert_cn(consumer_cert_str)
+        except ValueError:
+            return False
 
         try:
             token = AccessToken.from_string(
@@ -73,7 +77,6 @@ class TokenAccessPolicy(AccessPolicy):
                     self.auth_info
             )
         except errors.InvalidTokenError:
-            # TODO: Log failure
             return False
 
         is_valid = consumer_cn.startswith(token.consumer_id) and \
@@ -93,10 +96,13 @@ class CertificateAccessPolicy(AccessPolicy):
                       *args,
                       **kwargs, ) -> bool:
         try:
-            cert = x509.load_pem_x509_certificate(
-                    consumer_cert_str.encode(),
-                    default_backend()
-            )
+            # TODO: This code is disabled because the certificate is not retrievable when using FastAPI
+            # without a reverse proxy, due to the ASGI standard.
+            # cert = x509.load_pem_x509_certificate(
+            #        consumer_cert_str.encode(),
+            #        default_backend()
+            # )
+            pass
         except ValueError:
             return False
 

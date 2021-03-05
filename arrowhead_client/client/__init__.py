@@ -1,3 +1,3 @@
-from .client_core import ArrowheadClient, provided_service
-
-__all__ = ['ArrowheadClient', 'provided_service']
+from .client_core import provided_service, ArrowheadClient
+from .client_sync import ArrowheadClientSync
+from .client_async import ArrowheadClientAsync
