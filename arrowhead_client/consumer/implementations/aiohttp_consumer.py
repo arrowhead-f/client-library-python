@@ -23,7 +23,7 @@ class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
         else:
             self.ssl_context = ssl.create_default_context()
 
-        self.http_session: Optional[aiohttp.ClientSession] = None
+        self.http_session: aiohttp.ClientSession
 
     async def async_startup(self):
         self.http_session = aiohttp.ClientSession()
@@ -119,6 +119,7 @@ def http(secure: str) -> str:
     if secure == Constants.SECURITY_INSECURE:
         return 'http://'
     return 'https://'
+
 
 def ws(secure: str) -> str:
     if secure == Constants.SECURITY_INSECURE:

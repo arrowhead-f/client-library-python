@@ -24,7 +24,7 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             **kwargs
     ) -> Response:
         """
-        Consume service according to the consumation rule and return the response.
+        Consumes service according.
 
         Args:
            rule: Orchestration rule.

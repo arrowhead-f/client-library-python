@@ -1,14 +1,15 @@
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
-from arrowhead_client.client.client_core import ArrowheadClientBase
+from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.provider.implementations.fastapi_provider import HttpProvider
 from arrowhead_client.response import Response, ConnectionResponse
 
 
-class ArrowheadClientAsync(ArrowheadClientBase):
+class ArrowheadClientAsync(ArrowheadClient):
     provider: HttpProvider
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.provider.app.add_event_handler('startup', self.client_setup)
@@ -22,8 +23,8 @@ class ArrowheadClientAsync(ArrowheadClientBase):
                     f'No services available for'
                     f' service \'{service_definition}\''
             )
-
-        return await self.consumer.consume_service(rule, **kwargs)
+        res = await self.consumer.consume_service(rule, **kwargs)
+        return res
 
     async def connect(self, service_definition, **kwargs) -> ConnectionResponse:
         rule = self.orchestration_rules.get(service_definition)
@@ -37,7 +38,6 @@ class ArrowheadClientAsync(ArrowheadClientBase):
         connector = await self.consumer.connect(rule, **kwargs)
 
         return connector
-
 
     async def setup(self):
         super().setup()
@@ -83,7 +83,7 @@ class ArrowheadClientAsync(ArrowheadClientBase):
         orchestration_response = await self.consume_service(
                 CoreServices.ORCHESTRATION.service_definition,
                 json=orchestration_form.dto(),
-                #cert=self.cert,
+                # cert=self.cert,
         )
 
         rules = responses.process_orchestration(orchestration_response, method)
@@ -137,7 +137,7 @@ class ArrowheadClientAsync(ArrowheadClientBase):
             if not rule.is_provided:
                 continue
             try:
-                res = await self._unregister_service(rule.provided_service)
+                await self._unregister_service(rule.provided_service)
             except errors.CoreServiceInputError as e:
                 print(e)
             else:

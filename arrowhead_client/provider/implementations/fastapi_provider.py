@@ -1,4 +1,4 @@
-from typing import Mapping, Callable
+from typing import Mapping, Dict
 import json
 
 from fastapi import FastAPI, Request, Response
@@ -10,6 +10,7 @@ from arrowhead_client.common import Constants
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client.security.access_policy import TokenAccessPolicy
 from arrowhead_client import errors
+
 
 class ArrowheadAccessPolicyMiddleware(BaseHTTPMiddleware):
     def __init__(
@@ -29,11 +30,13 @@ class ArrowheadAccessPolicyMiddleware(BaseHTTPMiddleware):
         auth_str = 'auth_str'
 
         if isinstance(self.policy_map[path].access_policy, TokenAccessPolicy):
-            return Response(content=json.dumps({Constants.ERROR_MESSAGE: 'Token access policy not supported'}), status_code=501)
+            return Response(content=json.dumps({Constants.ERROR_MESSAGE: 'Token access policy not supported'}),
+                            status_code=501)
         if not self.policy_map[path].is_authorized(consumer_cert, auth_str):
             return Response(content=f'{{"{Constants.ERROR_MESSAGE}": "WIP"}}', status_code=403)
 
         return await call_next(request)
+
 
 class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     def __init__(
@@ -43,7 +46,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     ):
         super().__init__(cafile)
         self.app = FastAPI()
-        self.policy_map = {}
+        self.policy_map: Dict[str, RegistrationRule] = {}
 
     def add_provided_service(self, rule: RegistrationRule, ) -> None:
         self.policy_map[rule.service_uri] = rule

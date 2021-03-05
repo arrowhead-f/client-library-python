@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type
-from abc import ABC, ABCMeta, abstractmethod
+from typing import Any, Dict, Tuple, Callable, Type, List
+from abc import ABC, abstractmethod
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.provider.base import BaseProvider
@@ -62,13 +62,13 @@ def provided_service(
             self.service_definition = service_definition
             self.func = func
 
-        def __set_name__(self, owner: ArrowheadClientBase, name: str):
-            if not '__arrowhead_services__' in dir(owner):
+        def __set_name__(self, owner: Type[ArrowheadClient], name: str):
+            if '__arrowhead_services__' not in dir(owner):
                 raise AttributeError(f'provided_service can only be used within arrowhead clients.')
 
             owner.__arrowhead_services__.append(name)
 
-        def __get__(self, instance, owner):
+        def __get__(self, instance: ArrowheadClient, owner: Type[ArrowheadClient]):
             if instance is None:
                 return self
 
@@ -82,13 +82,13 @@ def provided_service(
     return ServiceDescriptor
 
 
-class ArrowheadClientBase(ABC, metaclass=ABCMeta):
+class ArrowheadClient(ABC):
     """
     Base class for Arrowhead Clients.
 
     This class serves as a bridge that connects systems, consumers, and providers to the user.
 
-    ArrowheadClientBase should not be used or subclassed directly,
+    ArrowheadClient should not be used or subclassed directly,
     use ArrowheadClientSync or ArrowheadClientAsync for those needs instead.
 
     Attributes:
@@ -127,7 +127,7 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
         # Maybe it should be it's own method?
         self.add_provided_service = self.provider.add_provided_service
 
-    __arrowhead_services__ = []
+    __arrowhead_services__: List[str] = []
     __arrowhead_consumer__: Type[BaseConsumer]
     __arrowhead_provider__: Type[BaseProvider]
 
@@ -235,7 +235,7 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
             certfile: str = '',
             cafile: str = '',
             log_mode: str = 'debug',
-    ) -> ArrowheadClientBase:
+    ) -> ArrowheadClient:
         """
         Factory method for client instances
 
@@ -248,7 +248,7 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
             certfile:
             cafile:
         Returns:
-            A new instance with base class ArrowheadClientBase
+            A new instance with base class ArrowheadClient
         """
         logger = get_logger(system_name, log_mode)
         system = ArrowheadSystem.with_certfile(
@@ -268,7 +268,6 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
         )
 
         return new_instance
-
 
     @abstractmethod
     def _register_service(self, service):
@@ -325,4 +324,3 @@ class ArrowheadClientBase(ABC, metaclass=ABCMeta):
 
         for rule in core_rules:
             self.orchestration_rules.store(rule)
-

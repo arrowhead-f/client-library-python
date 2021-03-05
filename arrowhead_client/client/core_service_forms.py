@@ -26,7 +26,6 @@ class ServiceQueryForm(DTOMixin):
             min_version_requirement: Optional[str] = None,
             ping_providers: Optional[bool] = True
     ) -> 'ServiceQueryForm':
-
         return cls(
                 service_definition_requirement=service.service_definition,
                 interface_requirements=[service.interface.dto() if service.interface else None],
@@ -58,18 +57,17 @@ class ServiceRegistrationForm(DTOMixin):
             provider_system: ArrowheadSystem,
             end_of_validity: Optional[str] = None,
     ):
-
         return cls(
-                service_definition = provided_service.service_definition,
-                service_uri = provided_service.service_uri,
-                interfaces = [provided_service.interface.dto()],
-                provider_system = provider_system,
-                secure = provided_service.access_policy,
-                metadata = provided_service.metadata,
-                version = provided_service.version,
-                end_of_validity = end_of_validity,
+                service_definition=provided_service.service_definition,
+                service_uri=provided_service.service_uri,
+                interfaces=[provided_service.interface.dto()],
+                provider_system=provider_system,
+                secure=provided_service.access_policy,
+                metadata=provided_service.metadata,
+                version=provided_service.version,
+                end_of_validity=end_of_validity,
         )
-                # TODO: How to do end_of_validity?
+        # TODO: How to do end_of_validity?
 
 
 # TODO: Let this class use boolean operators?
@@ -82,7 +80,9 @@ class OrchestrationFlags(DTOMixin):
     enable_inter_cloud: bool = False
     trigger_inter_cloud: bool = False
 
+
 default_flags = OrchestrationFlags(override_store=True)
+
 
 class OrchestrationForm(DTOMixin):
     """ Orchestration Form """
@@ -99,7 +99,6 @@ class OrchestrationForm(DTOMixin):
             orchestration_flags: OrchestrationFlags = None,
             preferred_providers: Mapping = None,
     ):
-
         return cls(
                 requester_system=requester_system,
                 requested_service=ServiceQueryForm.make(

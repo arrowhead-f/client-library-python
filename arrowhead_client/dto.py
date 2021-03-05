@@ -1,6 +1,5 @@
 import re
 from abc import ABC
-from functools import partialmethod
 
 from pydantic import BaseModel
 

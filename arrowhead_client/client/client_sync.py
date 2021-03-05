@@ -1,11 +1,11 @@
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
-from arrowhead_client.client.client_core import ArrowheadClientBase
+from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service, ServiceInterface
 
 
-class ArrowheadClientSync(ArrowheadClientBase):
+class ArrowheadClientSync(ArrowheadClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

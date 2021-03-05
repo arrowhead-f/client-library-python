@@ -8,5 +8,3 @@ class ProtocolMixin(ABC):
         elif not isinstance(protocol, str):
             raise TypeError('Protocol must be of type str.')
         cls._protocol = protocol.upper()
-
-
