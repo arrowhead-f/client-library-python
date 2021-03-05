@@ -2,11 +2,13 @@
 HttpProvider example app
 """
 from typing import Dict
+from dataclasses import dataclass
 
 from fastapi import WebSocket
 
 from arrowhead_client.client import provided_service
 from arrowhead_client.client.implementations import AsyncClient
+
 
 class TestClient(AsyncClient):
     def __init__(self, *args, format:str='A', **kwargs):
