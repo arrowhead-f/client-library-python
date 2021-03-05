@@ -6,9 +6,10 @@ from arrowhead_client.dto import DTOMixin
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.service import ServiceInterface
 from arrowhead_client.system import ArrowheadSystem
+from arrowhead_client.service import Service
 from arrowhead_client.client.core_system_defaults import default_config
-from arrowhead_client.client.core_service_forms import ServiceRegistrationForm
-import arrowhead_client.api as ar
+from arrowhead_client.client.core_service_forms.client import ServiceRegistrationForm
+from arrowhead_client.client.implementations import SyncClient
 
 subprocess.run(['docker-compose', 'down'])
 subprocess.run(['docker', 'volume', 'rm', 'mysql.quickstart'])
@@ -40,7 +41,7 @@ with requests.Session() as session:
             print('All core systems are online\n')
             break
 
-setup_client = ar.ArrowheadHttpClientSync(
+setup_client = SyncClient.create(
         system_name='sysop',
         address='127.0.0.1',
         port=1337,
@@ -53,12 +54,12 @@ print('Setting up local cloud')
 
 setup_client.orchestration_rules.store(
         OrchestrationRule(
-                ar.Service(
+                Service(
                         'mgmt_register_service',
                         'serviceregistry/mgmt',
                         ServiceInterface.from_str('HTTP-SECURE-JSON'),
                 ),
-                ar.ArrowheadSystem(
+                ArrowheadSystem(
                         **default_config['service_registry']
                 ),
                 'POST',
@@ -67,12 +68,12 @@ setup_client.orchestration_rules.store(
 
 setup_client.orchestration_rules.store(
         OrchestrationRule(
-                ar.Service(
+                Service(
                         'mgmt_get_systems',
                         'serviceregistry/mgmt/systems',
                         ServiceInterface('HTTP', 'SECURE', 'JSON'),
                 ),
-                ar.ArrowheadSystem(
+                ArrowheadSystem(
                         **default_config['service_registry']
                 ),
                 'GET',
@@ -81,12 +82,12 @@ setup_client.orchestration_rules.store(
 
 setup_client.orchestration_rules.store(
         OrchestrationRule(
-                ar.Service(
+                Service(
                         'mgmt_register_system',
                         'serviceregistry/mgmt/systems',
                         ServiceInterface('HTTP', 'SECURE', 'JSON'),
                 ),
-                ar.ArrowheadSystem(
+                ArrowheadSystem(
                         **default_config['service_registry']
                 ),
                 'POST',
@@ -95,12 +96,12 @@ setup_client.orchestration_rules.store(
 
 setup_client.orchestration_rules.store(
         OrchestrationRule(
-                ar.Service(
+                Service(
                         'mgmt_orchestration_store',
                         'orchestrator/mgmt/store',
                         ServiceInterface('HTTP', 'SECURE', 'JSON'),
                 ),
-                ar.ArrowheadSystem(
+                ArrowheadSystem(
                         **default_config['orchestrator']
                 ),
                 'POST',
@@ -109,12 +110,12 @@ setup_client.orchestration_rules.store(
 
 setup_client.orchestration_rules.store(
         OrchestrationRule(
-                ar.Service(
+                Service(
                         'mgmt_authorization_store',
                         'authorization/mgmt/intracloud',
                         ServiceInterface('HTTP', 'SECURE', 'JSON'),
                 ),
-                ar.ArrowheadSystem(
+                ArrowheadSystem(
                         **default_config['authorization']
                 ),
                 'POST',
@@ -123,12 +124,12 @@ setup_client.orchestration_rules.store(
 
 setup_client.setup()
 
-consumer_system = ar.ArrowheadSystem(
+consumer_system = ArrowheadSystem(
         system_name='quickstart-consumer',
         address='127.0.0.1',
         port=7656
 )
-provider_system = ar.ArrowheadSystem(
+provider_system = ArrowheadSystem(
         system_name='quickstart-provider',
         address='127.0.0.1',
         port=7655,
@@ -150,12 +151,12 @@ provider_data = setup_client.consume_service(
 ).read_json()
 
 systems = {
-    'consumer': (ar.ArrowheadSystem.from_dto(consumer_data), consumer_data['id']),
-    'provider': (ar.ArrowheadSystem.from_dto(provider_data), provider_data['id']),
+    'consumer': (ArrowheadSystem.from_dto(consumer_data), consumer_data['id']),
+    'provider': (ArrowheadSystem.from_dto(provider_data), provider_data['id']),
 }
 
 hello_form = ServiceRegistrationForm.make(
-        ar.Service(
+        Service(
                 'hello-arrowhead',
                 'hello',
                 ServiceInterface.from_str('HTTP-SECURE-JSON'),
@@ -164,7 +165,7 @@ hello_form = ServiceRegistrationForm.make(
         systems['provider'][0],
 )
 echo_form = ServiceRegistrationForm.make(
-        ar.Service(
+        Service(
                 'echo',
                 'echo',
                 ServiceInterface.from_str('HTTP-SECURE-JSON'),

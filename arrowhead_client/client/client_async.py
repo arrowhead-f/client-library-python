@@ -1,3 +1,4 @@
+import arrowhead_client.client.core_service_forms.client
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
 from arrowhead_client.client.client_core import ArrowheadClient
@@ -12,6 +13,7 @@ class ArrowheadClientAsync(ArrowheadClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # TODO: replace call to provider.app with a startup and shutdown handler on the provider itself
         self.provider.app.add_event_handler('startup', self.client_setup)
         self.provider.app.add_event_handler('shutdown', self.client_cleanup)
 
@@ -73,7 +75,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                 access_policy=access_policy
         )
 
-        orchestration_form = forms.OrchestrationForm.make(
+        orchestration_form = arrowhead_client.client.core_service_forms.client.OrchestrationForm.make(
                 self.system,
                 requested_service,
                 **kwargs
@@ -92,7 +94,7 @@ class ArrowheadClientAsync(ArrowheadClient):
             self.orchestration_rules.store(rule)
 
     async def _register_service(self, service: Service):
-        service_registration_form = forms.ServiceRegistrationForm.make(
+        service_registration_form = arrowhead_client.client.core_service_forms.client.ServiceRegistrationForm.make(
                 provided_service=service,
                 provider_system=self.system,
         )
@@ -102,16 +104,16 @@ class ArrowheadClientAsync(ArrowheadClient):
                 json=service_registration_form.dto(),
         )
 
-        responses.process_service_register(service_registration_response)
+        service_registry_response = responses.process_service_register(service_registration_response)
 
     async def _register_all_services(self):
         for rule in self.registration_rules:
+            if rule.is_provided:
+                continue
             try:
                 await self._register_service(rule.provided_service)
-            # TODO: Is this _really_ an error?
             except errors.CoreServiceInputError as e:
-                # TODO: Do logging
-                print(e)
+                # TODO: logging
                 if str(e).endswith('already exists.'):
                     rule.is_provided = True
             else:

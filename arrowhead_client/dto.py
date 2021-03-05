@@ -1,7 +1,9 @@
 import re
 from abc import ABC
+from datetime import datetime, timedelta
 
 from pydantic import BaseModel
+from pydantic.json import timedelta_isoformat, isoformat
 
 
 def to_camel_case(variable_name: str) -> str:
@@ -31,6 +33,10 @@ class DTOMixin(ABC, BaseModel):
         alias_generator = to_camel_case
         allow_population_by_field_name = True
         use_enum_values = True
+        json_encoders = {
+            datetime: isoformat,
+            timedelta: timedelta_isoformat,
+        }
 
     def dto(self, **kwargs):
         return self.dict(

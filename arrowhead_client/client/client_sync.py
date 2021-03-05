@@ -1,3 +1,4 @@
+import arrowhead_client.client.core_service_forms.client
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
 from arrowhead_client.client.client_core import ArrowheadClient
@@ -61,7 +62,7 @@ class ArrowheadClientSync(ArrowheadClient):
                 access_policy=access_policy
         )
 
-        orchestration_form = forms.OrchestrationForm.make(
+        orchestration_form = arrowhead_client.client.core_service_forms.client.OrchestrationForm.make(
                 self.system,
                 requested_service,
                 **kwargs
@@ -117,7 +118,7 @@ class ArrowheadClientSync(ArrowheadClient):
             service: Service to register with the Service registry.
         """
 
-        service_registration_form = forms.ServiceRegistrationForm.make(
+        service_registration_form = arrowhead_client.client.core_service_forms.client.ServiceRegistrationForm.make(
                 provided_service=service,
                 provider_system=self.system,
         )
