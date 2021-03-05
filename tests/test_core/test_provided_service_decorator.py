@@ -1,12 +1,13 @@
-import arrowhead_client.api as ar
+from arrowhead_client.client.implementations import SyncClient
+from arrowhead_client.client import provided_service
 
 def test_provided_service():
-    class CustomClient(ar.ArrowheadHttpClient):
+    class CustomClient(SyncClient):
         def __init__(self, *args, format='', **kwargs):
             super().__init__(*args, **kwargs)
             self.format = format
 
-        @ar.provided_service(
+        @provided_service(
                 service_definition='hello-arrowhead',
                 service_uri='hello',
                 protocol='HTTP',
@@ -17,7 +18,7 @@ def test_provided_service():
         def service_function(self, request):
             return {'fmt': self.format}
 
-    test_client = CustomClient('custom_client', '127.0.0.1', 1337, format='1Ab')
+    test_client = CustomClient('custom_client', '127.0.0.1', 1337, logger='a', format='1Ab')
 
     test_client.setup()
 

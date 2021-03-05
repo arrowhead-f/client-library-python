@@ -2,7 +2,7 @@ from functools import partial
 from flask import Flask, request
 import ssl
 
-from arrowhead_client.abc import BaseProvider
+from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client.request import Request
 from arrowhead_client import errors
@@ -13,9 +13,9 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
     """ Class for provided_service provision """
 
     def __init__(self, cafile: str, app_name: str = '') -> None:
+        super().__init__(cafile)
         self.app_name = __name__ or app_name
         self.app = Flask(app_name)
-        self.cafile = cafile
 
         @self.app.errorhandler(500)
         def internal_error(error):
@@ -43,6 +43,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
                             f'{rule.service_definition}@{rule.authority}/'
                             f'{rule.service_uri}'}, 403
 
+            # TODO: Make the payload easily accessible from the RegistrationRule, so it doesn't rely on the _provided_service member
             ar_request = make_arrowhead_request(request, rule._provided_service.interface.payload)
             return rule.func(ar_request)
 
@@ -77,6 +78,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
 
 
 def make_arrowhead_request(request, payload_type) -> Request:
+    # Makes sure that the body of a get request is ignored
     if request.method == 'GET':
         return Request(b'{}', payload_type)
 

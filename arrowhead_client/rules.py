@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.security.access_policy import AccessPolicy
+from arrowhead_client import errors
 
 
 class OrchestrationRule:
@@ -120,8 +121,17 @@ class RegistrationRule:
     def access_policy(self, new_policy: AccessPolicy):
         self._access_policy = new_policy
 
+    @property
+    def protocol(self):
+        return self._provided_service.interface.protocol
+
     def is_authorized(self, consumer_cert_str: str, auth_str: str):
-        return self._access_policy.is_authorized(consumer_cert_str, auth_str)  # type: ignore
+        try:
+            result = self._access_policy.is_authorized(consumer_cert_str, auth_str)  # type: ignore
+        except errors.AuthorizationError:
+            result = False
+
+        return result
 
 
 class OrchestrationRuleContainer(MutableMapping):
