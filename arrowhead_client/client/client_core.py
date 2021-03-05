@@ -64,7 +64,7 @@ def provided_service(
 
         def __set_name__(self, owner: Type[ArrowheadClient], name: str):
             if '__arrowhead_services__' not in dir(owner):
-                raise AttributeError(f'provided_service can only be used within arrowhead clients.')
+                raise AttributeError(f'provided_service can decorate ArrowheadClient methods.')
 
             owner.__arrowhead_services__.append(name)
 
@@ -109,6 +109,7 @@ class ArrowheadClient(ABC):
             config: Dict = None,
             keyfile: str = '',
             certfile: str = '',
+            **kwargs,
     ):
         self.system = system
         self.consumer = consumer
@@ -235,6 +236,7 @@ class ArrowheadClient(ABC):
             certfile: str = '',
             cafile: str = '',
             log_mode: str = 'debug',
+            **kwargs,
     ) -> ArrowheadClient:
         """
         Factory method for client instances
@@ -265,6 +267,7 @@ class ArrowheadClient(ABC):
                 config=config,
                 keyfile=keyfile,
                 certfile=certfile,
+                **kwargs
         )
 
         return new_instance

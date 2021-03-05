@@ -25,6 +25,21 @@ class ArrowheadSystem(DTOMixin):
         return f'{self.address}:{self.port}'
 
     @classmethod
+    def make(
+            cls,
+            system_name: str,
+            address: str,
+            port: int,
+            authentication_info: str = '',
+    ):
+        return cls(
+                system_name=system_name,
+                address=address,
+                port=port,
+                authentication_info=authentication_info
+        )
+
+    @classmethod
     def from_dto(cls, system_dto: Dict):
         return cls(
                 system_name=str(system_dto['systemName']),

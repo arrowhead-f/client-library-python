@@ -131,6 +131,27 @@ class OrchestrationFlags(DTOMixin):
     enable_inter_cloud: bool = False
     trigger_inter_cloud: bool = False
 
+    @classmethod
+    def make(
+            cls,
+            matchmaking: bool = False,
+            metadata_search: bool = False,
+            only_preferred: bool = False,
+            ping_providers: bool = False,
+            override_store: bool = False,
+            enable_inter_cloud: bool = False,
+            trigger_inter_cloud: bool = False,
+    ):
+        return cls(
+                matchmaking=matchmaking,
+                metadata_search=metadata_search,
+                only_preferred=only_preferred,
+                ping_providers=ping_providers,
+                override_store=override_store,
+                enable_inter_cloud=enable_inter_cloud,
+                trigger_inter_cloud=trigger_inter_cloud,
+        )
+
 
 default_flags = OrchestrationFlags(override_store=True)
 

@@ -78,7 +78,7 @@ class TestServiceRegistry:
             csr.process_service_unregister(error_response)
 
 
-class TestOrchstrator:
+class TestOrchestrator:
     def test_orchestration_response(self, orchestration_data):
         orchestrator_response = Response(json.dumps(orchestration_data).encode(), 'JSON', 200,)
 
