@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Sequence, Optional, Mapping, Union
 
 from arrowhead_client.dto import DTOMixin
@@ -121,7 +123,6 @@ class ServiceRegistrationForm(DTOMixin):
 ################
 # ORCHESTRATOR #
 ################
-# TODO: Let this class use boolean operators?
 class OrchestrationFlags(DTOMixin):
     matchmaking: bool = False
     metadata_search: bool = False
@@ -151,6 +152,24 @@ class OrchestrationFlags(DTOMixin):
                 enable_inter_cloud=enable_inter_cloud,
                 trigger_inter_cloud=trigger_inter_cloud,
         )
+
+    def __and__(self, other: OrchestrationFlags) -> OrchestrationFlags:
+        new_flags = {
+            key: flag1 & flag2
+            for (key, flag1), flag2
+            in zip(vars(self).items(), vars(other).values())
+        }
+
+        return OrchestrationFlags(**new_flags)
+
+    def __or__(self, other: OrchestrationFlags) -> OrchestrationFlags:
+        new_flags = {
+            key: flag1 | flag2
+            for (key, flag1), flag2
+            in zip(vars(self).items(), vars(other).values())
+        }
+
+        return OrchestrationFlags(**new_flags)
 
 
 default_flags = OrchestrationFlags(override_store=True)
