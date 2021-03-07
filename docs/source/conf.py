@@ -36,7 +36,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
+    'sphinx_rtd_theme',
 ]
+
+autodoc_typehints = 'description'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -52,8 +55,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#import sphinx_theme
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'show_relbars': 'true',
 }

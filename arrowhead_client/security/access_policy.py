@@ -1,5 +1,7 @@
 """
-Access Policy module
+Access Policy module.
+
+
 """
 from abc import ABC, abstractmethod
 from typing import Any
@@ -17,7 +19,7 @@ from arrowhead_client import errors
 
 class AccessPolicy(ABC):
     """
-    Abstract class that describes the interface for access policies.
+    Abstract class for access policies.
     """
 
     @abstractmethod
@@ -28,16 +30,8 @@ class AccessPolicy(ABC):
         """
         Check if consumer is authorized to consume the provided service.
 
-        Args:
-            consumer_cert_str: Common name of consumer extracted from the consumer certificate.
-            token: Token used with the token access policy.
-            kwargs: Possible extra arguments.
         Returns:
-            A tuple with a bool value and message string.
-            If authorization is successful, the value will be :code:`(True, '')`,
-            but if the authorization is unsuccessful value will be :code:`(False, <message>)`,
-            where the message will contain information about what went wrong in the
-            authorization process.
+            :code:`True` if authorized, :code:`False` if not authorized or an error occurs.
 
         """
 
@@ -47,6 +41,8 @@ class TokenAccessPolicy(AccessPolicy):
     Access policy used when :code:`POLICY_TOKEN` is specified.
 
     Attributes:
+        provided_service: Service instance.
+        provider_keyfile: Provider keyfile path.
         authorization_key: Public key of the Authorization system in the local cloud.
     """
     def __init__(
@@ -55,6 +51,7 @@ class TokenAccessPolicy(AccessPolicy):
             provider_keyfile: str,
             auth_info: str,
     ) -> None:
+        # TODO: don't store a reference to the provided_service, store only the interface and service definition
         self.provided_service = provided_service
         self.provider_keyfile = provider_keyfile
         self.auth_info = auth_info
@@ -63,8 +60,17 @@ class TokenAccessPolicy(AccessPolicy):
             self,
             consumer_cert_str: str,
             auth_header: str,
-            **kwargs, ) -> bool:
+            **kwargs,
+    ) -> bool:
+        """
+        Checks if given token is valid.
 
+        Args:
+            consumer_cert_str: PEM certificate string.
+            auth_header: String of format :code:`'Bearer <TOKEN>'`.
+        Returns:
+            :code:`True` if valid token, :code:`False` if invalid token or error occurs.
+        """
         try:
             consumer_cn = cert_cn(consumer_cert_str)
         except ValueError:
@@ -91,10 +97,20 @@ class CertificateAccessPolicy(AccessPolicy):
     Access policy used when :code:`POLICY_CERTIFICATE` is specified.
     """
 
-    def is_authorized(self,
-                      consumer_cert_str: str,
-                      *args,
-                      **kwargs, ) -> bool:
+    def is_authorized(
+            self,
+            consumer_cert_str: str,
+            *args,
+            **kwargs,
+    ) -> bool:
+        """
+        Check valid PEM certificate.
+
+        Args:
+            consumer_cert_str: PEM certificate string.
+        Returns:
+            :code:`True` if given a valid PEM certificate, False otherwise.
+        """
         try:
             # TODO: This code is disabled because the certificate is not retrievable when using FastAPI
             # without a reverse proxy, due to the ASGI standard.
@@ -116,9 +132,17 @@ class UnrestrictedAccessPolicy(AccessPolicy):
     This access policy should only be used in development.
     """
 
-    def is_authorized(self,
-                      *args,
-                      **kwargs, ) -> bool:
+    def is_authorized(
+            self,
+            *args,
+            **kwargs,
+    ) -> bool:
+        """
+        No checks, always returns :code:`True`
+
+        Returns:
+            :code:`True`
+        """
         return True
 
 
@@ -127,7 +151,17 @@ def get_access_policy(
         provided_service: Service,
         privatekey: Any,
         **kwargs) -> AccessPolicy:
-    """Factory function for access policies"""
+    """
+    Factory function for access policies.
+
+    Args:
+        policy_name: Either :code:`TOKEN`, :code:`CERTIFICATE`, or :code:`UNRESTRICTED`.
+        provided_service: Service instance.
+        privatekey: Provider keyfile path.
+        authorization_key: Authorization core system public key.
+    Returns:
+        Initialized AccessPolicy instance.
+    """
     if policy_name == Constants.POLICY_UNRESTRICTED:
         return UnrestrictedAccessPolicy()
     elif policy_name == Constants.POLICY_CERTIFICATE:

@@ -1,6 +1,6 @@
 Access
 ======
 
-.. automodule:: arrowhead_client.access
+.. automodule:: arrowhead_client.security.access_policy
     :members:
 
