@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from typing import Sequence, Optional, Mapping, Union
+from typing import Sequence, Optional, Mapping
 
 from arrowhead_client.dto import DTOMixin
 from arrowhead_client.service import Service
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.device import ArrowheadDevice
-from arrowhead_client.common import Constants
-
-Metadata = Mapping[str, str]
-Version = Union[int, str]
+from arrowhead_client.types import Metadata, Version
 
 
 ####################
@@ -21,17 +18,17 @@ class ServiceQueryForm(DTOMixin):
     interface_requirements: Sequence[Optional[str]] = [None]
     security_requirements: Sequence[Optional[str]] = [None]
     metadata_requirements: Optional[Metadata] = None
-    version_requirement: Optional[str] = None
-    max_version_requirement: Optional[str] = None
-    min_version_requirement: Optional[str] = None
+    version_requirement: Optional[Version] = None
+    max_version_requirement: Optional[Version] = None
+    min_version_requirement: Optional[Version] = None
     ping_providers: Optional[bool] = True
 
     @classmethod
     def make(
             cls,
             service: Service,
-            max_version_requirement: Optional[str] = None,
-            min_version_requirement: Optional[str] = None,
+            max_version_requirement: Optional[Version] = None,
+            min_version_requirement: Optional[Version] = None,
             ping_providers: Optional[bool] = True
     ) -> 'ServiceQueryForm':
         return cls(
@@ -77,7 +74,7 @@ class ServiceRegistryEntry(DTOMixin):
     service_uri: str
     end_of_validity: str = None
     metadata: Metadata = None
-    version: int = None
+    version: Version = None
     interfaces: Sequence[ServiceInterfaceResponse] = None
     created_at: str = None
     updated_at: str = None
@@ -95,8 +92,8 @@ class ServiceRegistrationForm(DTOMixin):
     interfaces: Sequence[str] = [None]
     provider_system: ArrowheadSystem
     secure: str = ''
-    metadata: Mapping = None
-    version: Optional[str] = None
+    metadata: Metadata = None
+    version: Optional[Version] = None
     end_of_validity: str = None
 
     @classmethod
@@ -123,7 +120,7 @@ class ServiceRegistrationForm(DTOMixin):
 ################
 # ORCHESTRATOR #
 ################
-class OrchestrationFlags(DTOMixin):
+class OrchestrationFlagsForm(DTOMixin):
     matchmaking: bool = False
     metadata_search: bool = False
     only_preferred: bool = False
@@ -153,33 +150,33 @@ class OrchestrationFlags(DTOMixin):
                 trigger_inter_cloud=trigger_inter_cloud,
         )
 
-    def __and__(self, other: OrchestrationFlags) -> OrchestrationFlags:
+    def __and__(self, other: OrchestrationFlagsForm) -> OrchestrationFlagsForm:
         new_flags = {
             key: flag1 & flag2
             for (key, flag1), flag2
             in zip(vars(self).items(), vars(other).values())
         }
 
-        return OrchestrationFlags(**new_flags)
+        return OrchestrationFlagsForm(**new_flags)
 
-    def __or__(self, other: OrchestrationFlags) -> OrchestrationFlags:
+    def __or__(self, other: OrchestrationFlagsForm) -> OrchestrationFlagsForm:
         new_flags = {
             key: flag1 | flag2
             for (key, flag1), flag2
             in zip(vars(self).items(), vars(other).values())
         }
 
-        return OrchestrationFlags(**new_flags)
+        return OrchestrationFlagsForm(**new_flags)
 
 
-default_flags = OrchestrationFlags(override_store=True)
+default_flags = OrchestrationFlagsForm(override_store=True)
 
 
 class OrchestrationForm(DTOMixin):
     """ Orchestration Form """
     requester_system: ArrowheadSystem
     requested_service: ServiceQueryForm
-    orchestration_flags: OrchestrationFlags
+    orchestration_flags: OrchestrationFlagsForm
     preferred_providers: Optional[Mapping] = None
 
     @classmethod
@@ -187,7 +184,7 @@ class OrchestrationForm(DTOMixin):
             cls,
             requester_system: ArrowheadSystem,
             requested_service: Service,
-            orchestration_flags: OrchestrationFlags = None,
+            orchestration_flags: OrchestrationFlagsForm = None,
             preferred_providers: Mapping = None,
     ):
         return cls(
@@ -222,7 +219,7 @@ class OrchestrationResponseList(DTOMixin):
 
 class EventPublishForm(DTOMixin):
     event_type: str
-    meta_data: Mapping[str, str]
+    meta_data: Metadata
     payload: str
     source: ArrowheadSystem
     time_stamp: str
@@ -230,7 +227,7 @@ class EventPublishForm(DTOMixin):
 
 class EventSubscribeForm(DTOMixin):
     event_type: str
-    filter_meta_data: Mapping[str, str]
+    filter_meta_data: Metadata
     match_meta_data: bool
     notify_uri: str
     sources: Sequence[ArrowheadSystem]
@@ -246,18 +243,18 @@ class EventSubscribeForm(DTOMixin):
 class SystemQueryForm(DTOMixin):
     device_name_requirements: str
     system_name_requirements: str
-    metadata_requirements: Mapping[str, str]
-    version_requirement: Union[int, str]
-    max_version_requirement: Union[int, str]
-    min_version_requirement: Union[int, str]
+    metadata_requirements: Metadata
+    version_requirement: Version
+    max_version_requirement: Version
+    min_version_requirement: Version
     ping_providers: bool
 
 
 class SystemRegisterForm(DTOMixin):
     system: ArrowheadSystem
     provider: ArrowheadDevice
-    metadata: Mapping[str, str]
-    version: Union[int, str]
+    metadata: Metadata
+    version: Version
     end_of_validity: str
 
 
@@ -269,16 +266,16 @@ class DeviceQueryForm(DTOMixin):
     address_requirement: str
     device_name_requirements: str
     mac_address_requirement: str
-    metadata_requirements: Mapping[str, str]
-    version_requirement: Union[int, str]
-    max_version_requirement: Union[int, str]
-    min_version_requirement: Union[int, str]
+    metadata_requirements: Metadata
+    version_requirement: Version
+    max_version_requirement: Version
+    min_version_requirement: Version
 
 
 class DeviceRegisterForm(DTOMixin):
     device: ArrowheadDevice
-    metadata: Mapping[str, str]
-    version: Union[int, str]
+    metadata: Metadata
+    version: Version
     end_of_validity: str
 
 
@@ -287,7 +284,7 @@ class DeviceRegisterForm(DTOMixin):
 ##############
 
 class OnboardingCsrForm(DTOMixin):
-    # TODO: This is probably a special kind of string
+    # TODO: this is probably a DER or PEM string or similar
     certificate_signing_request: str
 
 

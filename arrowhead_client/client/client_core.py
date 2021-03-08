@@ -159,6 +159,7 @@ class ArrowheadClient(ABC):
         Args:
             service_definition: Service definition to be stored in the provided_service registry
             service_uri: The path to the provided_service
+            protocol:
             method: HTTP method required to access the provided_service
         """
 

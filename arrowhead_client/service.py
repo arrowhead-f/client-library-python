@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 from arrowhead_client.dto import DTOMixin
 from arrowhead_client.common import Constants
+from arrowhead_client.types import Version, Metadata
 
 
 @dataclass()
@@ -105,8 +106,8 @@ class Service:
                  service_uri: str = '',
                  interface: ServiceInterface = None,
                  access_policy: str = Constants.POLICY_CERTIFICATE,
-                 metadata: Dict = None,
-                 version: Optional[int] = None) -> None:
+                 metadata: Metadata = None,
+                 version: Version = None) -> None:
         self.service_definition = service_definition
         self.service_uri = service_uri
         self.interface = interface or ServiceInterface('', '', '')

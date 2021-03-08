@@ -19,7 +19,10 @@ async def main(consumer):
         await consumer.add_orchestration_rule('hello-arrowhead', 'GET')
         await consumer.add_orchestration_rule('echo', 'PUT')
 
-        aws = [consumer.consume_service('hello-arrowhead'), consumer.consume_service('echo', json={'msg': 'echo'})] * 3
+        aws = [
+            consumer.consume_service('hello-arrowhead'),
+            consumer.consume_service('echo', json={'msg': 'echo'})
+        ]
 
         for i, aw in enumerate(asyncio.as_completed(aws)):
             print(i)

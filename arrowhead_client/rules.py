@@ -5,6 +5,7 @@ from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.security.access_policy import AccessPolicy
 from arrowhead_client import errors
+from arrowhead_client.types import Version, Metadata
 
 
 class OrchestrationRule:
@@ -41,11 +42,11 @@ class OrchestrationRule:
         return self._consumed_service.access_policy
 
     @property
-    def metadata(self) -> Optional[Dict]:
+    def metadata(self) -> Optional[Metadata]:
         return self._consumed_service.metadata
 
     @property
-    def version(self) -> Optional[int]:
+    def version(self) -> Optional[Version]:
         return self._consumed_service.version
 
     @property

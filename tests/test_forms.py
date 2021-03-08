@@ -46,14 +46,14 @@ def test_orchestration_flags():
         'triggerInterCloud',
     }
 
-    of = arrowhead_client.client.core_service_forms.client.OrchestrationFlags.make(*([True] * 7))
+    of = arrowhead_client.client.core_service_forms.client.OrchestrationFlagsForm.make(*([True] * 7))
 
     assert set(of.dto().keys()) == valid_keys
     assert of.override_store == True
 
 
 def test_orchestration_form():
-    orchestration_flags = forms.OrchestrationFlags(matchmaking=True)
+    orchestration_flags = forms.OrchestrationFlagsForm(matchmaking=True)
     orchestration_form = forms.OrchestrationForm.make(
             requester_system,
             provided_service,
