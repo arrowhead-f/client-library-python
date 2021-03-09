@@ -9,6 +9,9 @@ from arrowhead_client.response import Response, ConnectionResponse
 
 
 class ArrowheadClientAsync(ArrowheadClient):
+    """
+    Base class for asynchronous Arrowhead Clients.
+    """
     provider: HttpProvider
 
     def __init__(self, *args, **kwargs):

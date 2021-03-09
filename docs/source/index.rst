@@ -4,7 +4,7 @@ Welcome to arrowhead-client's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Arrowhead Client
 
    quickstart
    tut-trouble
@@ -17,9 +17,9 @@ API Reference
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: API Reference
 
-   api
+   client
    access
 
 ******************

@@ -32,31 +32,52 @@ def provided_service(
         access_policy: str,
 ):
     """
-    Decorator that can be used in custom client subclasses to define services.
+    Decorator to create services bound to subclasses of ArrowheadClient.
+    Should be used when the client needs to manage states, for example a counter of how many times a service has been accessed, see example below.
 
     Args:
-        service_definition:
-        service_uri:
-        protocol:
-        method:
-        payload_format:
-        access_policy:
+        service_definition: Service definition string registered in the service registry.
+        service_uri: Service identifier string, for example the path of a HTTP url.
+        protocol: Protocol used by this service (e.g. HTTP and WS).
+        method: Command used by the protocol (e.g. HTTP GET or POST). If the protocol does use a command (e.g. WS), this should be '*'.
+        payload_format: The format of the payload (e.g. JSON, XML, or TEXT).
+        access_policy: :code:`'UNRESTRICTED'` if system is in insecure mode, :code:`'CERTIFICATE'` or :code:`'TOKEN'` if system is in secure mode.
 
     Returns:
         A ServiceDescriptor object
+
+    Example::
+
+        class TestClient(AsyncClient):
+            def __init__(self):
+                self.counter = 0
+
+            '''
+            This service will be registered as 'list_reverser'
+            with uri 'https://127.0.0.1:5678/reverse/'. The
+            address and port are system specific.
+            '''
+            @provided_service(
+                    service_definition='list_reverser',
+                    service_uri='reverse',
+                    protocol='http',
+                    method='POST',
+                    payload_format='TEXT',
+                    access_policy='NOT_SECURE',
+            )
+            async def reverse(self, input: List[str]):
+                self.counter += 1
+                return list(reversed(input))
     """
 
     class ServiceDescriptor:
         def __init__(self, func):
-            self.service_instance = Service(
+            self.service_instance = Service.make(
                     service_definition,
                     service_uri,
-                    ServiceInterface.with_access_policy(
-                            protocol,
-                            access_policy,
-                            payload_format,
-                    ),
+                    protocol,
                     access_policy,
+                    payload_format,
             )
             self.method = method
             self.service_definition = service_definition
@@ -155,12 +176,28 @@ class ArrowheadClient(ABC):
     ) -> Callable:
         """
         Decorator to add a provided provided_service to the provider.
+        Useful during testing, because unlike the free :code:`provided_service` decorator this one does not require subclassing :code:`ArrowheadClient`.
 
         Args:
             service_definition: Service definition to be stored in the provided_service registry
             service_uri: The path to the provided_service
             protocol:
             method: HTTP method required to access the provided_service
+
+        Example::
+
+            provider = SomeClient.create(...)
+
+            @provider.provided_service(
+                    service_definition='list_reverser',
+                    service_uri='reverse',
+                    protocol='http',
+                    method='POST',
+                    payload_format='TEXT',
+                    access_policy='NOT_SECURE',
+            )
+            async def reverse(input: List[str]):
+                return list(reversed(input))
         """
 
         provided_service = Service(

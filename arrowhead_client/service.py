@@ -115,6 +115,30 @@ class Service:
         self.metadata = metadata
         self.version = version
 
+    @classmethod
+    def make(
+            cls,
+            service_definition: str,
+            service_uri: str='',
+            protocol: str='',
+            access_policy: str='',
+            payload_format: str='',
+            metadata: Metadata=None,
+            version: Version=None,
+    ):
+        return cls(
+                service_definition=service_definition,
+                service_uri=service_uri,
+                interface=ServiceInterface(
+                        protocol,
+                        access_policy,
+                        payload_format,
+                ),
+                access_policy=access_policy,
+                metadata=metadata,
+                version=version,
+        )
+
     # TODO: Write good repr
     # def __repr__(self) -> str:
     #    variable_string = ', '.join([f'{str(key)}={str(value)}'
