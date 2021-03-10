@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 from pydantic.json import timedelta_isoformat, isoformat
 
+from arrowhead_client.service import ServiceInterface
+
 
 def to_camel_case(variable_name: str) -> str:
     """ Turns snake_case string into camelCase """
@@ -36,6 +38,7 @@ class DTOMixin(ABC, BaseModel):
         json_encoders = {
             datetime: isoformat,
             timedelta: timedelta_isoformat,
+            ServiceInterface: lambda i: 'hello',
         }
 
     def dto(self, **kwargs):
@@ -43,5 +46,19 @@ class DTOMixin(ABC, BaseModel):
                 exclude_defaults=True,
                 exclude_none=True,
                 by_alias=True,
+                **kwargs,
+        )
+
+    def json(
+            self,
+            exclude_defaults=True,
+            exclude_none=True,
+            by_alias=True,
+            **kwargs
+    ) -> str:
+        return super().json(
+                exclude_defaults=exclude_defaults,
+                exclude_none=exclude_none,
+                by_alias=by_alias,
                 **kwargs,
         )

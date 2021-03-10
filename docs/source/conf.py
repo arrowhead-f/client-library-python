@@ -15,16 +15,18 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('..'))
 import _version
+import datetime
 
 
 # -- Project information -----------------------------------------------------
 
 project = _version.__lib_name__
-copyright = f'2020, {_version.__author__}'
+copyright = f'2020-{datetime.date.today().year}, {_version.__author__}'
 author = _version.__author__
 
 # The full version, including alpha/beta/rc tags
 release = _version.__version__
+version = release
 
 
 # -- General configuration ---------------------------------------------------
@@ -37,9 +39,11 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinx_autodoc_typehints',
 ]
 
 autodoc_typehints = 'description'
+autoclass_content = 'both'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,6 +61,8 @@ exclude_patterns = []
 #
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
+    'sticky_navigation': True,
+    'display_version': True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

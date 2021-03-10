@@ -3,7 +3,7 @@ from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
-from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.service import Service
 from arrowhead_client.provider.implementations.fastapi_provider import HttpProvider
 from arrowhead_client.response import Response, ConnectionResponse
 
@@ -55,7 +55,7 @@ class ArrowheadClientAsync(ArrowheadClient):
             method: str,
             protocol: str = '',
             access_policy: str = '',
-            format: str = '',
+            payload_format: str = '',
             # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
             **kwargs,
     ) -> None:
@@ -68,14 +68,11 @@ class ArrowheadClientAsync(ArrowheadClient):
             access_policy: Service access policy.
         """
 
-        requested_service = Service(
+        requested_service = Service.make(
                 service_definition,
-                interface=ServiceInterface.with_access_policy(
-                        protocol,
-                        access_policy,
-                        format,
-                ),
-                access_policy=access_policy
+                protocol=protocol,
+                access_policy=access_policy,
+                payload_format=payload_format,
         )
 
         orchestration_form = arrowhead_client.client.core_service_forms.client.OrchestrationForm.make(

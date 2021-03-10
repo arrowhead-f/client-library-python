@@ -1,8 +1,17 @@
+"""
+==============
+Service Module
+==============
+
+There is rarely a need to create a custom instance of any of the classes here.
+:py:
+"""
+
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Dict, Optional
 
-from arrowhead_client.dto import DTOMixin
+#from arrowhead_client.dto import DTOMixin
 from arrowhead_client.common import Constants
 from arrowhead_client.types import Version, Metadata
 
@@ -15,7 +24,7 @@ class ServiceInterface:
     Attributes:
         protocol: Protocol description.
         secure: Security information description.
-        payload: Payload format description.
+        payload: Payload payload_format description.
     """
 
     protocol: str
@@ -64,7 +73,13 @@ class ServiceInterface:
         return cls(protocol, Constants.SECURITY_SECURE, payload)
 
     def dto(self) -> str:
-        return '-'.join(vars(self).values())
+        return f'{self.protocol}-{self.secure}-{self.payload}'
+
+    def json(self) -> str:
+        return self.dto()
+
+    def dict(self, **kwargs) -> str:
+        return self.dto()
 
     def __bool__(self):
         return any(vars(self).values())
@@ -85,7 +100,7 @@ class ServiceInterface:
                self.payload == other.payload
 
 
-DTOMixin.register(ServiceInterface)
+#DTOMixin.register(ServiceInterface)
 
 
 class Service:

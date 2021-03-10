@@ -1,6 +1,6 @@
 """
 Access Policy module.
-
+=====================
 
 """
 from abc import ABC, abstractmethod
@@ -67,7 +67,7 @@ class TokenAccessPolicy(AccessPolicy):
 
         Args:
             consumer_cert_str: PEM certificate string.
-            auth_header: String of format :code:`'Bearer <TOKEN>'`.
+            auth_header: String of payload_format :code:`'Bearer <TOKEN>'`.
         Returns:
             :code:`True` if valid token, :code:`False` if invalid token or error occurs.
         """

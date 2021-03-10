@@ -7,6 +7,9 @@ from arrowhead_client.service import Service, ServiceInterface
 
 
 class ArrowheadClientSync(ArrowheadClient):
+    """
+    Base class for asynchronous Arrowhead Clients.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -39,7 +42,7 @@ class ArrowheadClientSync(ArrowheadClient):
             method: str,
             protocol: str = '',
             access_policy: str = '',
-            format: str = '',
+            payload_format: str = '',
             # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
             **kwargs,
     ) -> None:
@@ -57,7 +60,7 @@ class ArrowheadClientSync(ArrowheadClient):
                 interface=ServiceInterface.with_access_policy(
                         protocol,
                         access_policy,
-                        format,
+                        payload_format,
                 ),
                 access_policy=access_policy
         )

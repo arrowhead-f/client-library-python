@@ -1,3 +1,8 @@
+"""
+=============
+System Module
+=============
+"""
 from typing import Dict
 
 from arrowhead_client.dto import DTOMixin
@@ -7,6 +12,9 @@ from arrowhead_client.security.utils import cert_to_authentication_info
 class ArrowheadSystem(DTOMixin):
     """
     ArrowheadSystem class.
+
+    This class is a data container for data related to a system in an Arrowhead local cloud.
+    It should not be necessary to create instances of this class outside of sending data between systems.
 
     Attributes:
         system_name: System name.
@@ -32,6 +40,28 @@ class ArrowheadSystem(DTOMixin):
             port: int,
             authentication_info: str = '',
     ):
+        """
+        Creates a new instance of ArrowheadSystem without the need to specify keyword arguments in camelCase form.
+
+        Args:
+            system_name: Name of the system.
+            address: Address of the system.
+            port: Port of the system.
+            authentication_info: PEM string representing the certificate used by the client owning the system.
+        Return:
+            Instantiated ArrowheadSystem.
+
+        Example::
+
+            from arrowhead_client.system import ArrowheadSystem
+
+            # Create an ArrowheadSystem without an authentication info string.
+            example_system = ArrowheadSystem(
+                    'example_system',
+                    '127.0.0.1',
+                    5678,
+            )
+        """
         return cls(
                 system_name=system_name,
                 address=address,
@@ -56,6 +86,31 @@ class ArrowheadSystem(DTOMixin):
             port: int,
             certfile: str,
     ) -> 'ArrowheadSystem':
+        """
+        Creates a new ArrowheadSystem similarly to ArrowheadSystem.make(), but automatically constructs the
+        authentication info from a certificate file.
+
+        Args:
+            system_name: Name of the system.
+            address: Address of the system.
+            port: Port of the system.
+            certfile: PEM certificate file.
+        Return:
+            Instantiated ArrowheadSystem.
+
+        Example::
+
+            from arrowhead_client.system import ArrowheadSystem
+
+            # Create a new instance of ArrowheadSystem and automatically generate
+            # authentication string from a certificate.
+            example_system = ArrowheadSystem(
+                    'example_system',
+                    '127.0.0.1',
+                    5678,
+                    'certificates/example_system.crt',
+            )
+        """
         authentication_info = cert_to_authentication_info(certfile)
 
         return cls(

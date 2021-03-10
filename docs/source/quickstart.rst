@@ -1,3 +1,6 @@
+.. _quickstart:
+
+===================================
 Arrowhead Client library quickstart
 ===================================
 .. warning::
@@ -90,7 +93,7 @@ And that's it! In 30 lines of code (or 11 if you make the code hard to read)
 we have set up an Arrowhead provider with two services and are currently running it!
 Here is the full code listing for this example.
 
-:code:`examples/quickstart/clients/provider.py`
+``examples/quickstart/clients/provider.py``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. literalinclude:: ../../examples/quickstart/clients/provider.py
     :language: python

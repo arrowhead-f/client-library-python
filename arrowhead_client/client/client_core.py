@@ -40,7 +40,7 @@ def provided_service(
         service_uri: Service identifier string, for example the path of a HTTP url.
         protocol: Protocol used by this service (e.g. HTTP and WS).
         method: Command used by the protocol (e.g. HTTP GET or POST). If the protocol does use a command (e.g. WS), this should be '*'.
-        payload_format: The format of the payload (e.g. JSON, XML, or TEXT).
+        payload_format: The payload_format of the payload (e.g. JSON, XML, or TEXT).
         access_policy: :code:`'UNRESTRICTED'` if system is in insecure mode, :code:`'CERTIFICATE'` or :code:`'TOKEN'` if system is in secure mode.
 
     Returns:
@@ -110,13 +110,15 @@ class ArrowheadClient(ABC):
     This class serves as a bridge that connects systems, consumers, and providers to the user.
 
     ArrowheadClient should not be used or subclassed directly,
-    use ArrowheadClientSync or ArrowheadClientAsync for those needs instead.
+    use :py:class:`ArrowheadClientSync` or :py:class:`ArrowheadClientAsync` for those needs instead.
+
+    To instantiate an ArrowheadClient, use the :py:meth:`~ArrowheadClient.create` classmethod instead of :code:`ArrowheadClient()`.
 
     Attributes:
-        system: ArrowheadSystem
+        system: :py:class:`~arrowhead_client.system.ArrowheadSystem`
         consumer: Consumer
         provider: Provider
-        logger: Logger, will default to the logger found in logs.get_logger()
+        logger: Logger, will default to the logger found in :py:func:`logs.get_logger()`
         keyfile: PEM keyfile
         certfile: PEM certfile
     """
@@ -231,27 +233,55 @@ class ArrowheadClient(ABC):
             method: str,
             protocol: str = '',
             access_policy: str = '',
-            format: str = '',
+            payload_format: str = '',
             # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
             **kwargs,
     ) -> None:
         """
-        Add orchestration rule for provided_service definition
+        Looks up orchestration rules in the Orchestration system.
+
+        If one of :code:`method`, :code:`access_policy`, and :code:`payload` is given, the other two must be given as well.
 
         Args:
             service_definition: Service definition that is looked up from the orchestrator.
-            method: The HTTP method given in uppercase that is used to consume the provided_service.
-            access_policy: Service access policy.
+            method: Optional. The HTTP method given in uppercase that is used to consume the provided_service.
+            access_policy: Optional. Service access policy.
+            payload_format: Optional. Service payload format.
+
+        Example::
+
+            example_client = SyncClient(...)
+
+            ...
+
+            # Find orchestration rules for service :code:`echo` with
+            example_client.add_orchestration_rule('echo', 'GET')
+
+            ...
+
         """
 
     @abstractmethod
     def consume_service(self, service_definition, **kwargs):
         """
-        Consumes the given provided_service definition
+        Consumes the given provided_service definition.
+
+        Will raise an error if no orchestration rules exist for the given service definition.
 
         Args:
             service_definition: The provided_service definition of a consumable provided_service
             **kwargs: Collection of keyword arguments passed to the consumer.
+
+        Example::
+
+            example_client = SyncClient(...)
+
+            ...
+
+            response = example_client.consume('echo')
+            data = handle_echo_response(response)
+
+            ...
         """
         pass
 
@@ -259,7 +289,9 @@ class ArrowheadClient(ABC):
     def run_forever(self):
         """
         Start the server, publish all provided_service, and run until interrupted.
-        Then, unregister all services.
+
+        Note, this method only needs to be run when the client is providing a service or if the client intends
+        to use the Eventhandler core system.
         """
         pass
 
@@ -277,18 +309,38 @@ class ArrowheadClient(ABC):
             **kwargs,
     ) -> ArrowheadClient:
         """
-        Factory method for client instances
+        Factory method for client instances.
+        This is the preferred way of creating class instances because it takes care of instantiating producers,
+        consumers, and logging properly.
+
+        If you wish to use different producers or consumers, create a new class inheriting from either
+        :code:`client.ArrowheadClientAsync` or :code:`client.ArrowheadClientSync` and specify the
+        :code:`__arrowhead_provider__` and :code:`__arrowhead_consumer__` fields.
 
         Args:
-            system_name:
-            address:
-            port:
-            config:
-            keyfile:
-            certfile:
-            cafile:
+            system_name: Name for the system the client will register as in the service and system registries.
+            address: System address.
+            port: System port.
+            config: Config object, payload_format not yet specified. Optional.
+            keyfile: Path to a PEM keyfile. If you use pkcs#12 keystores, you need to convert them to PEM payload_format first.
+            certfile: Path to a PEM certfile. If you use pkcs#12 keystores, you need to convert them to PEM payload_format first.
+            cafile: Path to a PEM certificate authority file. If you use pkcs#12 keystores, you need to convert them to PEM payload_format first.
         Returns:
-            A new instance with base class ArrowheadClient
+            A new ArrowheadClient instance.
+
+        Example::
+
+            from arrowhead_client.implementations import AsyncClient
+
+            example_client = AsyncClient(
+                    system_name='example_client',
+                    address='127.0.0.1',
+                    port=5678,
+                    config=example_config,
+                    keyfile='certificates/example.key',
+                    certfile='certificates/example.pem',
+                    cafile='certificates/example_cloud.ca',
+            )
         """
         logger = get_logger(system_name, log_mode)
         system = ArrowheadSystem.with_certfile(
