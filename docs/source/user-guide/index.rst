@@ -8,5 +8,5 @@ The Arrowhead Client User Guide
    :maxdepth: 2
 
    quickstart
-   tut-trouble
    client
+   security

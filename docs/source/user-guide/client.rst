@@ -1,7 +1,7 @@
 .. _user-guide-client:
 
 ==========================
-ArrowheadClient User Guide
+The ArrowheadClient Class
 ==========================
 
 How to use Arrowhead clients.

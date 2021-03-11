@@ -21,10 +21,10 @@ Click :ref:`api-reference` for a detailed view of all modules, classes and funct
 
    user-guide/index
    internals
-   security
    todo
    arrowhead-framework/index
    api-reference/index
+   contribution
 
 ******************
 Indices and tables

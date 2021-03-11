@@ -4,7 +4,7 @@ from arrowhead_client.client import core_service_responses as responses, core_se
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service
-from arrowhead_client.provider.implementations.fastapi_provider import HttpProvider
+from arrowhead_client.provider.implementations.fastapi_provider import FastapiProvider
 from arrowhead_client.response import Response, ConnectionResponse
 
 
@@ -12,7 +12,7 @@ class ArrowheadClientAsync(ArrowheadClient):
     """
     Base class for asynchronous Arrowhead Clients.
     """
-    provider: HttpProvider
+    provider: FastapiProvider
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

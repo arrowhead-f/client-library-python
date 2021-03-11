@@ -1,5 +1,5 @@
 """
-HttpConsumer example app
+Async consumer example app
 """
 import asyncio
 

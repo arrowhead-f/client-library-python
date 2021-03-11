@@ -6,8 +6,10 @@ from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client import constants
 
 
-class HttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
-    """ Interface for consumer code """
+class RequestsConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
+    """
+    Consumer based on requests.
+    """
 
     def __init__(
             self,

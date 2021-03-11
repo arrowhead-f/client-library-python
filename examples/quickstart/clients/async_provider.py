@@ -1,5 +1,5 @@
 """
-HttpProvider example app
+Async provider example app
 """
 from typing import Dict
 from dataclasses import dataclass

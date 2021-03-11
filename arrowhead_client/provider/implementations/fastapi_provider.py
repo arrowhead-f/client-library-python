@@ -38,7 +38,7 @@ class ArrowheadAccessPolicyMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-class HttpProvider(BaseProvider, protocol=constants.Protocol.HTTP):
+class FastapiProvider(BaseProvider, protocol=constants.Protocol.HTTP):
     def __init__(
             self,
             cafile: str,

@@ -9,7 +9,7 @@ from arrowhead_client import errors
 from arrowhead_client import constants
 
 
-class HttpProvider(BaseProvider, protocol=constants.Protocol.HTTP):
+class FlaskProvider(BaseProvider, protocol=constants.Protocol.HTTP):
     """ Class for provided_service provision """
 
     def __init__(self, cafile: str, app_name: str = '') -> None:

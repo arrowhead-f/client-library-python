@@ -172,4 +172,7 @@ the service registry, orchestrator, and authorization systems.
 If you want to use more core services, you need to set up your own local cloud,
 which is outside the scope of this tutorial.
 
-If you had trouble getting these examples up and running, please look at :ref:`Tutorial Troubleshooting and FAQ <tutorial_trouble>`.
+Quickstart help
+---------------
+
+This section will be filled with the various questions and issues people have with the quickstart.

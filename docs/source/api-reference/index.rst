@@ -6,11 +6,7 @@ API Reference
 
 .. toctree::
    :maxdepth: 2
+   :glob:
 
-   client
-   system
-   service
-   access
-   rules
-   constants
-   types
+   *
+   security/index

@@ -1,5 +1,5 @@
 """
-HttpProvider example app
+Provider example app
 """
 from arrowhead_client.client.implementations import SyncClient
 

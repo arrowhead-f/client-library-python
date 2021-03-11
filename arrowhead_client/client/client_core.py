@@ -114,13 +114,24 @@ class ArrowheadClient(ABC):
 
     To instantiate an ArrowheadClient, use the :py:meth:`~ArrowheadClient.create` classmethod instead of :code:`ArrowheadClient()`.
 
+    The arguments given to ``__init__`` which are stored as-is:
+
+    Args:
+        system: System managed by the client.
+        consumer: Consumer used to consume services.
+        provider: Provider used to provide services.
+        logger: Logger object.
+        keyfile: PEM keyfile.
+        certfile: PEM certfile.
+        config: Config dictionary, format not yet decided.
+
+    In addition to the arguments mentioned above, ``__init__`` also generates the following attributes:
+
     Attributes:
-        system: :py:class:`~arrowhead_client.system.ArrowheadSystem`
-        consumer: Consumer
-        provider: Provider
-        logger: Logger, will default to the logger found in :py:func:`logs.get_logger()`
-        keyfile: PEM keyfile
-        certfile: PEM certfile
+        secure: ``True`` if keyfile and certfile are both given, which means the client will run in secure mode.
+        auth_authentication_info: Authorization system certificate string. It is attained when a connection to a secure local cloud is established.
+        orchestration_rules: Mapping containing the rules with the information necessary to perform service consumption.
+        registration_rules: Mapping containing the rules with the information necessary to perform service registration.
     """
 
     def __init__(

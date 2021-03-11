@@ -10,6 +10,9 @@ from arrowhead_client import constants
 
 
 class AiohttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
+    """
+    Asynchronous consumer based on AioHttp.
+    """
     def __init__(
             self,
             keyfile: str,
@@ -83,9 +86,9 @@ class WebSocketResponse(ConnectionResponse):
         self.payload_type = payload_type
 
     async def send(self, data):
-        if self.payload_type == Constants.PAYLOAD_JSON:
+        if self.payload_type == constants.Payload.JSON:
             return await self._connector.send_json(data)
-        elif self.payload_type == Constants.PAYLOAD_TEXT:
+        elif self.payload_type == constants.Payload.TEXT:
             return await self._connector.send_str(data)
         else:
             return await self._connector.send_bytes(data)
@@ -95,9 +98,9 @@ class WebSocketResponse(ConnectionResponse):
         # while a message is awaited that is not of the correct type. There is definetly a better solution
         # to this but it is unclear at the moment.
         try:
-            if self.payload_type == Constants.PAYLOAD_JSON:
+            if self.payload_type == constants.Payload.JSON:
                 res = await self._connector.receive_json()
-            elif self.payload_type == Constants.PAYLOAD_TEXT:
+            elif self.payload_type == constants.Payload.TEXT:
                 res = await self._connector.receive_str()
             else:
                 res = await self._connector.receive_bytes()

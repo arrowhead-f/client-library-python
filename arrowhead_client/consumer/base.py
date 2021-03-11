@@ -6,7 +6,14 @@ from arrowhead_client.rules import OrchestrationRule
 
 
 class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
-    """Abstract base class for consumers"""
+    """
+    Abstract base class for consumers.
+
+    Args:
+        keyfile: Certificate keyfile.
+        certfile: Certificate certfile.
+        cafile: Certificate authority file.
+    """
     def __init__(
             self,
             keyfile,
@@ -24,7 +31,7 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             **kwargs
     ) -> Response:
         """
-        Consumes service according.
+        Consumes service according to the orchestrationrule.
 
         Args:
            rule: Orchestration rule.
@@ -38,7 +45,7 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             **kwargs,
     ) -> ConnectionResponse:
         """
-        Connect to a service with a persistent connection, for example with WebSockets
+        Connect to a service with a persistent connection, for example with WebSockets, according to the orchestration rule.
 
         Args:
             rule: Orchestration rule.
