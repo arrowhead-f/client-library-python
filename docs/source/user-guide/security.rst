@@ -3,7 +3,7 @@ Security settings
 =================
 
 :py:class:`~arrowhead_client.client.ArrowheadClient` objects support the ``CERTIFICATE``, ``UNRESTRICTED``,
-and ``TOKEN``\* access policies.
+and ``TOKEN`` access policies.
 This document only explains what the policies do and how to use them.
 For an explanation on how they work, go read about the :ref:`authorization-system`.
 
@@ -30,7 +30,9 @@ Example:
 
 .. code-block:: python
 
-    ArrowheadHttpClient(
+    from arrowhead_client.client import SyncClient
+
+    SyncClient.create(
         system_name='Insecure',
         address='127.0.0.1',
         port=1338
@@ -62,7 +64,7 @@ Example:
         certfile='path/to/secure.crt',
     )
 
-    @example_client.provided_service(
+    @example_client.provided_service.create(
             service_definition='secure_echo',
             service_uri='secure/echo',
             protocol='HTTP',
@@ -99,7 +101,7 @@ the ``TOKEN`` access policy:
 
     from arrowhead_client.client import SyncClient
 
-    example_client = SyncClient(
+    example_client = SyncClient.create(
         system_name='Secure',
         address='127.0.0.1',
         port=1337,
@@ -117,3 +119,22 @@ the ``TOKEN`` access policy:
     )
     def secure_echo(request):
         return {"access policy": "TOKEN"}
+
+-------
+Summary
+-------
+
+What access policies can be used with what security mode is summarized in this table
+
+.. table:: Access Policy table
+
+    +------------------+---------------------------------------------------+
+    |                  |   Allowed access policy                           |
+    |  Client security |                                                   |
+    |  mode            +-------------------+-----------------+-------------+
+    |                  |  ``UNRESTRICTED`` | ``CERTIFICATE`` | ``TOKEN``   |
+    +------------------+-------------------+-----------------+-------------+
+    | ``INSECURE``     |     Yes           |     No          |   No        |
+    +------------------+-------------------+-----------------+-------------+
+    | ``SECURE``       |     No            |     Yes         |   Yes       |
+    +------------------+-------------------+-----------------+-------------+
