@@ -12,3 +12,5 @@ API Reference
    service
    access
    rules
+   constants
+   types

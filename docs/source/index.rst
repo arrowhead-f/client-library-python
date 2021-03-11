@@ -19,9 +19,7 @@ Click :ref:`api-reference` for a detailed view of all modules, classes and funct
    :caption: Arrowhead Client
    :hidden:
 
-   quickstart
    user-guide/index
-   tut-trouble
    internals
    security
    todo

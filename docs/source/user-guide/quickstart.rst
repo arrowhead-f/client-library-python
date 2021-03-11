@@ -35,13 +35,13 @@ Getting a provider running
 The provider provides services within a local cloud.
 To get a provider running start by importing the client library.
 
-.. literalinclude:: ../../examples/quickstart/clients/provider.py
+.. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python
     :lines: 4
 
 Then we can create an http client running in secure mode.
 
-.. literalinclude:: ../../examples/quickstart/clients/provider.py
+.. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python
     :lines: 6-13
 
@@ -51,7 +51,7 @@ and access policy, which is one of :code:`'NOT_SECURE'`, :code:`'CERTIFICATE'` a
 For more information regarding access policies/security modes, see
 `the Arrowhead documentation. <https://github.com/eclipse-arrowhead/core-java-spring#system-design-description-overview-1>`_
 
-.. literalinclude:: ../../examples/quickstart/clients/provider.py
+.. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python
     :lines: 16-25
 
@@ -62,7 +62,7 @@ The :code:`request` parameter in the previous example is necessary as it contain
 The request body is ignored when the http method is get, but let's make another service that echoes any JSON
 message it's given:
 
-.. literalinclude:: ../../examples/quickstart/clients/provider.py
+.. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python
     :lines: 27-38
 
@@ -70,7 +70,7 @@ In this example, the request body can be accessed as a :code:`dict` using the :c
 
 All that's left to do now is to run the provider, which we do by calling the :code:`run_forever()` method.
 
-.. literalinclude:: ../../examples/quickstart/clients/provider.py
+.. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python
     :lines: 40-41
 
@@ -95,7 +95,7 @@ Here is the full code listing for this example.
 
 ``examples/quickstart/clients/provider.py``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. literalinclude:: ../../examples/quickstart/clients/provider.py
+.. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python
 
 Next, we will create a consumer.
@@ -105,13 +105,13 @@ Getting a consumer running
 
 It's just as easy to get a consumer going, we start similarly by importing the library and creating a client.
 
-.. literalinclude:: ../../examples/quickstart/clients/consumer.py
+.. literalinclude:: ../../../examples/quickstart/clients/consumer.py
     :language: python
     :lines: 4-13
 
 A difference between a provider and a pure consumer is that we need to set up the pure consumer first:
 
-.. literalinclude:: ../../examples/quickstart/clients/consumer.py
+.. literalinclude:: ../../../examples/quickstart/clients/consumer.py
     :language: python
     :lines: 16-17
 
@@ -120,7 +120,7 @@ The setup method enables the consumer to use the core services.
 
 To consume a service, the consumer needs to get the orchestration rule from the orchestrator core system:
 
-.. literalinclude:: ../../examples/quickstart/clients/consumer.py
+.. literalinclude:: ../../../examples/quickstart/clients/consumer.py
     :language: python
     :lines: 19
 
@@ -128,13 +128,13 @@ The first argument is the service definition, and the second is the http method 
 
 Then we can consume the service and print the response:
 
-.. literalinclude:: ../../examples/quickstart/clients/consumer.py
+.. literalinclude:: ../../../examples/quickstart/clients/consumer.py
     :language: python
     :lines: 20-21
 
 Let's do the same for the second service:
 
-.. literalinclude:: ../../examples/quickstart/clients/consumer.py
+.. literalinclude:: ../../../examples/quickstart/clients/consumer.py
     :language: python
     :lines: 23-25
 
@@ -149,7 +149,7 @@ And the full listing:
 
 :code:`examples/quickstart/clients/consumer.py`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. literalinclude:: ../../examples/quickstart/clients/consumer.py
+.. literalinclude:: ../../../examples/quickstart/clients/consumer.py
     :language: python
 
 If you first start the provider application and then run the consumer application, the your terminal should print

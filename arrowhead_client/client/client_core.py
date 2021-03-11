@@ -332,7 +332,7 @@ class ArrowheadClient(ABC):
 
             from arrowhead_client.implementations import AsyncClient
 
-            example_client = AsyncClient(
+            example_client = AsyncClient.create(
                     system_name='example_client',
                     address='127.0.0.1',
                     port=5678,

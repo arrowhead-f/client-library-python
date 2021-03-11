@@ -1,3 +1,11 @@
+"""
+================
+Constants module
+================
+
+A central repository for the constants used throughout the library.
+Can be used by both internal and external users, though external users might prefer to just use strings instead.
+"""
 from enum import Enum
 
 class Security(str, Enum):
@@ -18,10 +26,10 @@ class Protocol(str, Enum):
 
 class HttpMethod(str, Enum):
     """HTTP methods"""
-    HTTP_METHOD_GET = 'GET'
-    HTTP_METHOD_POST = 'POST'
-    HTTP_METHOD_PUT = 'PUT'
-    HTTP_METHOD_DELETE = 'DELETE'
+    GET = 'GET'
+    POST = 'POST'
+    PUT = 'PUT'
+    DELETE = 'DELETE'
 
 class Payload(str, Enum):
     """Payload types"""

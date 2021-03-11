@@ -2,3 +2,6 @@ sphinx
 sphinx_theme
 sphinx_rtd_theme
 sphinx-autodoc-typehints
+sphinx_toolbox
+enum_tools
+sphinxawesome-theme
