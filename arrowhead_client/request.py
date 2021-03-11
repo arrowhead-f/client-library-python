@@ -2,7 +2,7 @@ from typing import Dict, Union
 from dataclasses import dataclass, field
 import json
 
-from arrowhead_client.common import Constants
+from arrowhead_client import constants
 
 
 @dataclass

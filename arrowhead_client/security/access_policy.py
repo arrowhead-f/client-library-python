@@ -10,11 +10,11 @@ from typing import Any
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-from arrowhead_client.common import Constants
 from arrowhead_client.security.access_token import AccessToken
 from arrowhead_client.security.utils import cert_cn
 from arrowhead_client.service import Service
 from arrowhead_client import errors
+from arrowhead_client import constants
 
 
 class AccessPolicy(ABC):
@@ -162,11 +162,11 @@ def get_access_policy(
     Returns:
         Initialized AccessPolicy instance.
     """
-    if policy_name == Constants.POLICY_UNRESTRICTED:
+    if policy_name == constants.AccessPolicy.UNRESTRICTED:
         return UnrestrictedAccessPolicy()
-    elif policy_name == Constants.POLICY_CERTIFICATE:
+    elif policy_name == constants.AccessPolicy.CERTIFICATE:
         return CertificateAccessPolicy()
-    elif policy_name == Constants.POLICY_TOKEN:
+    elif policy_name == constants.AccessPolicy.TOKEN:
         return TokenAccessPolicy(
                 provided_service,
                 privatekey,
@@ -175,5 +175,5 @@ def get_access_policy(
     else:
         raise ValueError(
             f'{policy_name} is not a valid access policy.'
-            f'Valid policies are {set(policy for policy in Constants)}'
+            f'Valid policies are {set(policy for policy in constants.AccessPolicy)}'
         )

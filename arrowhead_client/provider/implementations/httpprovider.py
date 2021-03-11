@@ -6,10 +6,10 @@ from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client.request import Request
 from arrowhead_client import errors
-from arrowhead_client.common import Constants
+from arrowhead_client import constants
 
 
-class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
+class HttpProvider(BaseProvider, protocol=constants.Protocol.HTTP):
     """ Class for provided_service provision """
 
     def __init__(self, cafile: str, app_name: str = '') -> None:
@@ -19,7 +19,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
 
         @self.app.errorhandler(500)
         def internal_error(error):
-            return {Constants.ERROR_MESSAGE: 'Internal issue'}, 500
+            return {constants.Misc.ERROR_MESSAGE: 'Internal issue'}, 500
 
     def add_provided_service(self, rule: RegistrationRule) -> None:
         """ Add provided_service to provider system"""
@@ -38,7 +38,7 @@ class HttpProvider(BaseProvider, protocol=Constants.PROTOCOL_HTTP):
                 is_authorized = False
 
             if not is_authorized:
-                return {Constants.ERROR_MESSAGE:
+                return {constants.Misc.ERROR_MESSAGE:
                             f'Not authorized to consume service '
                             f'{rule.service_definition}@{rule.authority}/'
                             f'{rule.service_uri}'}, 403

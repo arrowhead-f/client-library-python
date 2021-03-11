@@ -4,7 +4,7 @@ from contextlib import nullcontext
 
 import arrowhead_client.security.access_policy as ap
 from arrowhead_client.service import Service
-from arrowhead_client.common import Constants
+from arrowhead_client.constants import Constants
 from tests.test_security.test_access_token import generate_claims
 from tests.test_security import conftest
 

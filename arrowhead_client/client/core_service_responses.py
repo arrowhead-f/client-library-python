@@ -5,10 +5,10 @@ from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
-from arrowhead_client.common import Constants
 from arrowhead_client.security.utils import der_to_pem
 from arrowhead_client import errors
 import arrowhead_client.client.core_service_forms.client as client_forms
+from arrowhead_client import constants
 
 
 def core_service_error_handler(func) -> Callable:
@@ -26,9 +26,9 @@ def core_service_error_handler(func) -> Callable:
     @wraps(func)
     def error_handling_wrapper(core_service_response: Response, *args, **kwargs):
         if core_service_response.status_code == 401:
-            raise errors.NotAuthorizedError(core_service_response.read_json()[Constants.ERROR_MESSAGE])
+            raise errors.NotAuthorizedError(core_service_response.read_json()[constants.Misc.ERROR_MESSAGE])
         elif core_service_response.status_code == 500:
-            raise errors.CoreServiceNotAvailableError(core_service_response.read_json()[Constants.ERROR_MESSAGE])
+            raise errors.CoreServiceNotAvailableError(core_service_response.read_json()[constants.Misc.ERROR_MESSAGE])
 
         return func(core_service_response, *args, **kwargs)
 
@@ -40,7 +40,7 @@ def process_service_query(query_response: Response) -> List[Tuple[Service, Arrow
     """ Handles provided_service query responses and returns a lists of services and systems """
     # TODO: Status 400 is general for all core systems and should be put in the handler.
     if query_response.status_code == 400:
-        raise errors.CoreServiceInputError(query_response.read_json()[Constants.ERROR_MESSAGE])
+        raise errors.CoreServiceInputError(query_response.read_json()[constants.Misc.ERROR_MESSAGE])
 
     query_data = query_response.read_json()['serviceQueryData']
 
@@ -60,7 +60,7 @@ def process_service_register(service_register_response: Response):
     """ Handles service registration responses """
     if service_register_response.status_code == 400:
         raise errors.CoreServiceInputError(
-                service_register_response.read_json()[Constants.ERROR_MESSAGE],
+                service_register_response.read_json()[constants.Misc.ERROR_MESSAGE],
         )
     # TODO: Should return a string representing the successfully registered service for logging?
     return client_forms.ServiceRegistryEntry(**service_register_response.read_json())
@@ -71,7 +71,7 @@ def process_service_unregister(service_unregister_response: Response) -> None:
     """ Handles service unregistration responses """
     if service_unregister_response.status_code == 400:
         raise errors.CoreServiceInputError(
-                service_unregister_response.read_json()[Constants.ERROR_MESSAGE]
+                service_unregister_response.read_json()[constants.Misc.ERROR_MESSAGE]
         )
     # TODO: Should return a string representing the successfully unregistered service for logging?
 
@@ -88,7 +88,7 @@ def process_orchestration(orchestration_response: Response, method='') -> List[O
         List of OrchestrationRules found in the orchestration response.
     """
     if orchestration_response.status_code == 400:
-        raise errors.OrchestrationError(orchestration_response.read_json()[Constants.ERROR_MESSAGE])
+        raise errors.OrchestrationError(orchestration_response.read_json()[constants.Misc.ERROR_MESSAGE])
 
     orchestration_results = client_forms.OrchestrationResponseList(
             **orchestration_response.read_json()

@@ -2,7 +2,7 @@ import pytest
 from contextlib import nullcontext
 
 from arrowhead_client import service
-from arrowhead_client.common import Constants
+from arrowhead_client.constants import Constants
 
 class TestServiceInterface:
     @pytest.mark.parametrize(

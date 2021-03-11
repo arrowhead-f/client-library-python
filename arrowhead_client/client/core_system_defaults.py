@@ -1,20 +1,20 @@
-from arrowhead_client.common import Constants
+from arrowhead_client import constants
 
 _default_address = '127.0.0.1'
 
 default_config = {
     'service_registry': {
-                'system_name': Constants.CORE_SYSTEM_SERVICE_REGISTRY,
+                'system_name': constants.CoreSystem.SERVICE_REGISTRY,
                 'address': _default_address,
                 'port': 8443,
     },
     'orchestrator': {
-                'system_name': Constants.CORE_SYSTEM_ORCHESTRATOR,
+                'system_name': constants.CoreSystem.ORCHESTRATOR,
                 'address': _default_address,
                 'port': 8441,
     },
     'authorization': {
-                'system_name': Constants.CORE_SYSTEM_AUTHORIZATION,
+                'system_name': constants.CoreSystem.AUTHORIZATION,
                 'address': _default_address,
                 'port': 8445,
     },

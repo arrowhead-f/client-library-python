@@ -11,8 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Dict, Optional
 
-#from arrowhead_client.dto import DTOMixin
-from arrowhead_client.common import Constants
+# from arrowhead_client.dto import DTOMixin
+from arrowhead_client import constants
 from arrowhead_client.types import Version, Metadata
 
 
@@ -68,9 +68,9 @@ class ServiceInterface:
         """
         if access_policy == '':
             return cls('', '', '')
-        elif access_policy == Constants.POLICY_UNRESTRICTED:
-            return cls(protocol, Constants.SECURITY_INSECURE, payload)
-        return cls(protocol, Constants.SECURITY_SECURE, payload)
+        elif access_policy == constants.AccessPolicy.UNRESTRICTED:
+            return cls(protocol, constants.Security.INSECURE, payload)
+        return cls(protocol, constants.Security.SECURE, payload)
 
     def dto(self) -> str:
         return f'{self.protocol}-{self.secure}-{self.payload}'
@@ -100,7 +100,7 @@ class ServiceInterface:
                self.payload == other.payload
 
 
-#DTOMixin.register(ServiceInterface)
+# DTOMixin.register(ServiceInterface)
 
 
 class Service:
@@ -120,7 +120,7 @@ class Service:
                  service_definition: str,
                  service_uri: str = '',
                  interface: ServiceInterface = None,
-                 access_policy: str = Constants.POLICY_CERTIFICATE,
+                 access_policy: str = constants.AccessPolicy.CERTIFICATE,
                  metadata: Metadata = None,
                  version: Version = None) -> None:
         self.service_definition = service_definition
@@ -134,12 +134,12 @@ class Service:
     def make(
             cls,
             service_definition: str,
-            service_uri: str='',
-            protocol: str='',
-            access_policy: str='',
-            payload_format: str='',
-            metadata: Metadata=None,
-            version: Version=None,
+            service_uri: str = '',
+            protocol: str = '',
+            access_policy: str = '',
+            payload_format: str = '',
+            metadata: Metadata = None,
+            version: Version = None,
     ):
         return cls(
                 service_definition=service_definition,

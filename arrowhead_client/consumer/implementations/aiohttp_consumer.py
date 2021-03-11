@@ -6,10 +6,10 @@ import aiohttp
 from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.rules import OrchestrationRule
-from arrowhead_client.common import Constants
+from arrowhead_client import constants
 
 
-class AiohttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
+class AiohttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
     def __init__(
             self,
             keyfile: str,
@@ -116,12 +116,12 @@ class WebSocketResponse(ConnectionResponse):
 
 
 def http(secure: str) -> str:
-    if secure == Constants.SECURITY_INSECURE:
+    if secure == constants.Security.INSECURE:
         return 'http://'
     return 'https://'
 
 
 def ws(secure: str) -> str:
-    if secure == Constants.SECURITY_INSECURE:
+    if secure == constants.Security.INSECURE:
         return 'ws://'
     return 'wss://'

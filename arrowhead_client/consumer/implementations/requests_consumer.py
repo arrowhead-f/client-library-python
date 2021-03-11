@@ -3,10 +3,10 @@ import requests
 from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
-from arrowhead_client.common import Constants
+from arrowhead_client import constants
 
 
-class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
+class HttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
     """ Interface for consumer code """
 
     def __init__(
@@ -38,7 +38,7 @@ class HttpConsumer(BaseConsumer, protocol=Constants.PROTOCOL_HTTP):
 
 
 def http(secure: str) -> str:
-    if secure == Constants.SECURITY_INSECURE:
+    if secure == constants.Security.INSECURE:
         return 'http://'
     return 'https://'
 
