@@ -24,7 +24,7 @@ class ServiceInterface:
     Attributes:
         protocol: Protocol description.
         secure: Security information description.
-        payload: Payload payload_format description.
+        payload: Payload format description.
     """
 
     protocol: str

@@ -321,10 +321,10 @@ class ArrowheadClient(ABC):
             system_name: Name for the system the client will register as in the service and system registries.
             address: System address.
             port: System port.
-            config: Config object, payload_format not yet specified. Optional.
-            keyfile: Path to a PEM keyfile. If you use pkcs#12 keystores, you need to convert them to PEM payload_format first.
-            certfile: Path to a PEM certfile. If you use pkcs#12 keystores, you need to convert them to PEM payload_format first.
-            cafile: Path to a PEM certificate authority file. If you use pkcs#12 keystores, you need to convert them to PEM payload_format first.
+            config: Config object, format not yet specified. Optional.
+            keyfile: Path to a PEM keyfile. If you use pkcs#12 keystores, you need to convert them to PEM format first.
+            certfile: Path to a PEM certfile. If you use pkcs#12 keystores, you need to convert them to PEM format first.
+            cafile: Path to a PEM certificate authority file. If you use pkcs#12 keystores, you need to convert them to PEM format first.
         Returns:
             A new ArrowheadClient instance.
 
