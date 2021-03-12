@@ -92,6 +92,8 @@ Example:
     def secure_echo(request):
         return 'ECHO'
 
+.. _token-access-policy:
+
 -------------------
 Token Access Policy
 -------------------
