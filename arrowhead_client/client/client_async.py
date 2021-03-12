@@ -58,7 +58,7 @@ class ArrowheadClientAsync(ArrowheadClient):
             payload_format: str = '',
             # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
             **kwargs,
-    ) -> None:
+    ):
         """
         Add orchestration rule for provided_service definition
 

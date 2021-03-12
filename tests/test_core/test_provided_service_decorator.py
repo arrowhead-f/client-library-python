@@ -18,7 +18,7 @@ def test_provided_service():
         def service_function(self, request):
             return {'fmt': self.format}
 
-    test_client = CustomClient('custom_client', '127.0.0.1', 1337, logger='a', format='1Ab')
+    test_client = CustomClient.create('custom_client', '127.0.0.1', 1337, format='1Ab')
 
     test_client.setup()
 

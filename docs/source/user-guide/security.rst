@@ -1,10 +1,24 @@
-=================
-Security settings
-=================
+.. _security-user-guide:
+
+===================================
+Security in the Arrowhead Framework
+===================================
+
+Security in the Arrowhead Framework is established using a combination of TLS and `JWT-based <https://jwt.io/introduction>`_ token authorization.
+
+Security Modes
+^^^^^^^^^^^^^^
+
+An :py:class:`~arrowhead_client.client.ArrowheadClient` can be run in two different security modes, :py:enum:mem:`~arrowhead_client.constants.Security.INSECURE` mode and :py:enum:mem:`~arrowhead_client.constants.Security.SECURE` mode.
+An ``ArrowheadClient`` must be run in the same security mode as the local cloud it is in, as the ``SECURE`` mode enables TLS.
+``INSECURE`` mode should only be run during testing and prototyping, and ``SECURE`` mode must be used in actual production local clouds.
+
+Access Policies
+^^^^^^^^^^^^^^^
 
 :py:class:`~arrowhead_client.client.ArrowheadClient` objects support the ``CERTIFICATE``, ``UNRESTRICTED``,
-and ``TOKEN`` access policies.
-This document only explains what the policies do and how to use them.
+and ``TOKEN`` access policies for services.
+Here we only explain what the policies are used for and how to enable and use them.
 For an explanation on how they work, go read about the :ref:`authorization-system`.
 
 --------------------------
@@ -32,11 +46,14 @@ Example:
 
     from arrowhead_client.client import SyncClient
 
-    SyncClient.create(
+    example_client = SyncClient.create(
         system_name='Insecure',
         address='127.0.0.1',
         port=1338
     )
+
+    print(example_client.secure)
+    # False
 
 -------------------------
 Certificate Access Policy
@@ -120,21 +137,20 @@ the ``TOKEN`` access policy:
     def secure_echo(request):
         return {"access policy": "TOKEN"}
 
--------
 Summary
--------
+^^^^^^^
 
 What access policies can be used with what security mode is summarized in this table
 
-.. table:: Access Policy table
+.. table:: Access Policy vs Security mode
 
-    +------------------+---------------------------------------------------+
-    |                  |   Allowed access policy                           |
-    |  Client security |                                                   |
-    |  mode            +-------------------+-----------------+-------------+
-    |                  |  ``UNRESTRICTED`` | ``CERTIFICATE`` | ``TOKEN``   |
-    +------------------+-------------------+-----------------+-------------+
-    | ``INSECURE``     |     Yes           |     No          |   No        |
-    +------------------+-------------------+-----------------+-------------+
-    | ``SECURE``       |     No            |     Yes         |   Yes       |
-    +------------------+-------------------+-----------------+-------------+
+    +------------------+-------------+---------------------------------------------------+
+    |                  | TLS enabled | Allowed access policy                             |
+    |  Client security |             |                                                   |
+    |  mode            |             +-------------------+-----------------+-------------+
+    |                  |             |  ``UNRESTRICTED`` | ``CERTIFICATE`` | ``TOKEN``   |
+    +------------------+-------------+-------------------+-----------------+-------------+
+    | ``INSECURE``     | No          |     Yes           |     No          |   No        |
+    +------------------+-------------+-------------------+-----------------+-------------+
+    | ``SECURE``       | Yes         |     No            |     Yes         |   Yes       |
+    +------------------+-------------+-------------------+-----------------+-------------+

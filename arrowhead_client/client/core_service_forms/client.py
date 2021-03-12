@@ -72,12 +72,12 @@ class ServiceRegistryEntry(DTOMixin):
     service_definition: ServiceDefinitionResponse
     provider: ServiceProviderResponse
     service_uri: str
-    end_of_validity: str = None
-    metadata: Metadata = None
-    version: Version = None
-    interfaces: Sequence[ServiceInterfaceResponse] = None
-    created_at: str = None
-    updated_at: str = None
+    end_of_validity: str
+    metadata: Metadata
+    version: Version
+    interfaces: Sequence[ServiceInterfaceResponse]
+    created_at: str
+    updated_at: str
 
 
 class ServiceQueryResponse(DTOMixin):
@@ -89,12 +89,12 @@ class ServiceRegistrationForm(DTOMixin):
     """ Service Registration Form """
     service_definition: str
     service_uri: str
-    interfaces: Sequence[str] = [None]
+    interfaces: Sequence[str]
     provider_system: ArrowheadSystem
     secure: str = ''
-    metadata: Metadata = None
+    metadata: Optional[Metadata] = None
     version: Optional[Version] = None
-    end_of_validity: str = None
+    end_of_validity: Optional[str] = None
 
     @classmethod
     def make(
@@ -202,11 +202,11 @@ class OrchestrationResponse(DTOMixin):
     service: ServiceDefinitionResponse
     service_uri: str
     secure: str
-    metadata: Optional[Metadata] = None
-    interfaces: Sequence[ServiceInterfaceResponse] = None
-    version: Version = None
-    authorization_tokens: Mapping[str, str] = None
-    warnings: Sequence[str] = None
+    metadata: Optional[Metadata]
+    interfaces: Sequence[ServiceInterfaceResponse]
+    version: Version
+    authorization_tokens: Optional[Mapping[str, str]]
+    warnings: Sequence[str]
 
 
 class OrchestrationResponseList(DTOMixin):

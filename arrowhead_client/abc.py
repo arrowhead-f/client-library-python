@@ -11,4 +11,4 @@ class ProtocolMixin(ABC):
         elif isinstance(protocol, str):
             cls._protocol = {protocol.upper()}
         else:
-            raise ValueError('protocol must be of type str or set')
+            raise TypeError('protocol must be of type str or set')

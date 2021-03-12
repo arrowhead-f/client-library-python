@@ -38,12 +38,12 @@ class AccessPolicy(ABC):
 
 class TokenAccessPolicy(AccessPolicy):
     """
-    Access policy used when :code:`POLICY_TOKEN` is specified.
+    Access policy used when :py:enum:member:`~arrowhead_client.constants.AccessPolicy.TOKEN` is specified.
 
-    Attributes:
+    Args:
         provided_service: Service instance.
         provider_keyfile: Provider keyfile path.
-        authorization_key: Public key of the Authorization system in the local cloud.
+        auth_info: Public key of the Authorization system in the local cloud.
     """
     def __init__(
             self,
@@ -69,7 +69,7 @@ class TokenAccessPolicy(AccessPolicy):
             consumer_cert_str: PEM certificate string.
             auth_header: String of format :code:`'Bearer <TOKEN>'`.
         Returns:
-            :code:`True` if valid token, :code:`False` if invalid token or error occurs.
+            ``True`` if valid token, ``False`` if invalid token or error occurs.
         """
         try:
             consumer_cn = cert_cn(consumer_cert_str)
@@ -94,7 +94,7 @@ class TokenAccessPolicy(AccessPolicy):
 
 class CertificateAccessPolicy(AccessPolicy):
     """
-    Access policy used when :code:`POLICY_CERTIFICATE` is specified.
+    Access policy used when :py:enum:member:`~arrowhead_client.constants.AccessPolicy.CERTIFICATE` is specified.
     """
 
     def is_authorized(
@@ -127,7 +127,7 @@ class CertificateAccessPolicy(AccessPolicy):
 
 class UnrestrictedAccessPolicy(AccessPolicy):
     """
-    Access policy used when :code:`NOT_SECURE` is specified.
+    Access policy used when :py:enum:mem:`~arrowhead_client.constants.AccessPolicy.UNRESTRICTED` is specified.
 
     This access policy should only be used in development.
     """

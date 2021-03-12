@@ -135,7 +135,7 @@ def query_response():
                         'updatedAt': '2020-12-04 15:04:12'
                     },
                     'serviceUri': '/orchestrator/orchestration',
-                    'secure': 'CERTIFICATE',
+                    'secure': '',
                     'version': 1,
                     'interfaces': [
                         {
@@ -148,6 +148,7 @@ def query_response():
                     'createdAt': '2020-12-13 17:52:45',
                     'updatedAt': '2020-12-13 17:52:45',
                     'metadata': {'dummy': 'data'},
+                    'endOfValidity': '2020-02-20',
                 }
             ], 'unfilteredHits': 1}).encode(),
             'JSON',

@@ -62,11 +62,8 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'sphinxawesome_theme'
-html_theme_options = {
-    'sticky_navigation': True,
-    'display_version': True,
-}
 html_logo = '_static/arrowhead-logo.svg'
+html_collapsible_definitions = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

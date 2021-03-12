@@ -42,14 +42,21 @@ def process_service_query(query_response: Response) -> List[Tuple[Service, Arrow
     if query_response.status_code == 400:
         raise errors.CoreServiceInputError(query_response.read_json()[constants.Misc.ERROR_MESSAGE])
 
-    query_data = query_response.read_json()['serviceQueryData']
+    query_response_ = client_forms.ServiceQueryResponse(**query_response.read_json())
 
     service_and_system = [
         (
-            _extract_service(query_result),
-            ArrowheadSystem.from_dto(query_result['provider'])
+            Service(
+                    service_definition=query_result.service_definition.service_definition,
+                    service_uri=query_result.service_uri,
+                    interface=ServiceInterface.from_str(query_result.interfaces[0].interface_name),
+                    access_policy='',
+                    metadata=query_result.metadata,
+                    version=query_result.version,
+            ),
+            ArrowheadSystem(**query_result.provider.dict())
         )
-        for query_result in query_data
+        for query_result in query_response_.service_query_data
     ]
 
     return service_and_system

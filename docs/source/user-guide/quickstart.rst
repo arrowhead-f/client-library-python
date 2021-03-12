@@ -49,7 +49,7 @@ To add a service, we decorate a function with the :code:`provided_service` decor
 The decorator takes as arguments the service definition, service uri, protocol and related method, payload format
 and access policy, which is one of :code:`'NOT_SECURE'`, :code:`'CERTIFICATE'` and :code:`'TOKEN`.
 For more information regarding access policies/security modes, see
-`the Arrowhead documentation. <https://github.com/eclipse-arrowhead/core-java-spring#system-design-description-overview-1>`_
+:ref:`the user guide section on security <security-user-guide>` and `the Eclipse-Arrowhead documentation. <https://github.com/eclipse-arrowhead/core-java-spring#authorization>`_
 
 .. literalinclude:: ../../../examples/quickstart/clients/provider.py
     :language: python

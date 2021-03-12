@@ -3,7 +3,7 @@ import json
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-import uvicorn
+import uvicorn # Type: ignore
 
 from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.rules import RegistrationRule

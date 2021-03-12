@@ -11,16 +11,19 @@ from arrowhead_client.security.utils import cert_to_authentication_info
 
 class ArrowheadSystem(DTOMixin):
     """
-    ArrowheadSystem class.
+    ArrowheadSystem class, inherits from :py:class:`~arrowhead_client.dto.DTOMixin`, which makes it a subclass of :py:class:`pydantic.BaseModel`.
+    This makes ``__init__`` have different behaviour, which is described in the links above.
 
     This class is a data container for data related to a system in an Arrowhead local cloud.
     It should not be necessary to create instances of this class outside of sending data between systems.
 
-    Attributes:
-        system_name: System name.
-        address: IP address.
+    Args:
+        system_name (str): System name.
+        address: URL or IP address.
         port: Port.
-        authentication_info: Authentication info.
+        authentication_info (str): Authentication info.
+        systemName: Alias of system_name.
+        authenticationInfo: Alias of authentication_info
     """
 
     system_name: str
@@ -41,7 +44,7 @@ class ArrowheadSystem(DTOMixin):
             authentication_info: str = '',
     ):
         """
-        Creates a new instance of ArrowheadSystem without the need to specify keyword arguments in camelCase form.
+        Creates a new instance of ArrowheadSystem without needing to use keyword arguments.
 
         Args:
             system_name: Name of the system.
@@ -56,7 +59,7 @@ class ArrowheadSystem(DTOMixin):
             from arrowhead_client.system import ArrowheadSystem
 
             # Create an ArrowheadSystem without an authentication info string.
-            example_system = ArrowheadSystem(
+            example_system = ArrowheadSystem.make(
                     'example_system',
                     '127.0.0.1',
                     5678,
@@ -104,7 +107,7 @@ class ArrowheadSystem(DTOMixin):
 
             # Create a new instance of ArrowheadSystem and automatically generate
             # authentication string from a certificate.
-            example_system = ArrowheadSystem(
+            example_system = ArrowheadSystem.with_certfile(
                     'example_system',
                     '127.0.0.1',
                     5678,

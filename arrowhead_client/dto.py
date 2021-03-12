@@ -1,3 +1,9 @@
+"""
+DTO Module
+==========
+
+Contains the :py:class:`~arrowhead_client.dto.DTOMixin` class.
+"""
 import re
 from abc import ABC
 from datetime import datetime, timedelta
@@ -9,7 +15,14 @@ from arrowhead_client.service import ServiceInterface
 
 
 def to_camel_case(variable_name: str) -> str:
-    """ Turns snake_case string into camelCase """
+    """
+    Turns snake_case string into camelCase.
+
+    Args:
+        variable_name: variable name in ``snake_case_form``.
+    Returns:
+        variable_name in ``camelCaseForm``.
+    """
     first_split, *split_name = [split for split in variable_name.split('_') if split != '']
     initial_underscore = '_' if variable_name.startswith('_') else ''
     trailing_underscore = '_' if variable_name.endswith('_') else ''
@@ -19,7 +32,14 @@ def to_camel_case(variable_name: str) -> str:
 
 
 def to_snake_case(variable_name: str) -> str:
-    """ Turns camelCase string into snake_case """
+    """
+    Turns camelCase string into snake_case.
+
+    Args:
+        variable_name: Variable name in ``camelCaseForm``.
+    Returns:
+        variable_name in ``snake_case_form``.
+    """
     split_camel = re.findall(r'[A-Z][a-z0-9]*|[a-z0-9]+', variable_name)
     initial_underscore = '_' if variable_name.startswith('_') else ''
     trailing_underscore = '_' if variable_name.endswith('_') else ''
@@ -29,7 +49,17 @@ def to_snake_case(variable_name: str) -> str:
 
 
 class DTOMixin(ABC, BaseModel):
-    """ Mixin to create data-transfer objects from class """
+    """
+    Mixin to create data-transfer objects from class.
+
+    This class is a customized version of :py:class:`pydantic.BaseModel`, which gives it some quirks:
+
+     * When subclassing ``DTOMixin``, you should not specify ``__init__``, instead you use the attribute syntax(?).
+     * A subclass of ``DTOMixin`` must be instantiated with keyword arguments.
+     * A subclass of ``DTOMixin`` can alternatively be instantiated with keyword arguments in camelCase form.
+
+    For a more detailed explanation of how to use ``DTOMixin``, check the :ref:`data transfer object user guide <dto-user-guide>`.
+    """
 
     class Config:
         alias_generator = to_camel_case
