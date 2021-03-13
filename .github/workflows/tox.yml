@@ -27,8 +27,8 @@ jobs:
           pip install tox tox-gh-actions setuptools wheel
       - name: Build library
         run: |
-          python setup.py bdist_wheel sdist
-          pip install -e .:
+          python setup.py sdist bdist_wheel
+          pip install -e .
       - name: Run Tox
         # Run tox using the version of Python in `PATH`
         run: tox
