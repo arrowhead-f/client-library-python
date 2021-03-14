@@ -1,4 +1,4 @@
-from typing import Mapping, Tuple, List, Callable
+from typing import Tuple, List, Callable
 from functools import wraps
 
 from arrowhead_client.system import ArrowheadSystem

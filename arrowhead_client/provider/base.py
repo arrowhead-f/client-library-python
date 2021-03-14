@@ -6,6 +6,7 @@ from arrowhead_client.rules import RegistrationRule
 
 class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
     """Abstract base class for providers"""
+
     def __init__(self, cafile: str):
         self.cafile = cafile
 

@@ -35,6 +35,7 @@ class ConnectionResponse(ABC):
     """
     Adapter for websockets
     """
+
     def __init__(
             self,
             connector,

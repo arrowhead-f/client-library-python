@@ -17,12 +17,13 @@ class OrchestrationRule:
     """
     Collection of objects necessary to perform service consumption.
     """
+
     def __init__(
             self,
             consumed_service: Service,
             provider_system: ArrowheadSystem,
-            method: str='',
-            authorization_token: str='',
+            method: str = '',
+            authorization_token: str = '',
     ):
         """
         Args:
@@ -105,6 +106,7 @@ class RegistrationRule:
     """
     Collection of objects necessary to provide a service.
     """
+
     def __init__(
             self,
             provided_service: Service,
@@ -178,11 +180,12 @@ class OrchestrationRuleContainer(MutableMapping):
 
     This class is a thin wrapper around a dictionary, except for the :py:meth:`OrchestrationRuleContainer.store` method.
     """
+
     def __init__(self):
         self._rulecontainer: Dict[str, OrchestrationRule] = {}
 
     def __getitem__(self, key: str) -> OrchestrationRule:
-       return self._rulecontainer[key]
+        return self._rulecontainer[key]
 
     def __setitem__(
             self,
@@ -214,6 +217,7 @@ class RegistrationRuleContainer:
     """
     Registration Rule Container
     """
+
     def __init__(self):
         self._rulecontainer: Dict[str, RegistrationRule] = {}
 

@@ -8,10 +8,12 @@ Can be used by both internal and external users, though external users might pre
 """
 from enum import Enum
 
+
 class Security(str, Enum):
     """Security Modes"""
     INSECURE = 'INSECURE'
     SECURE = 'SECURE'
+
 
 class AccessPolicy(str, Enum):
     """Access policies"""
@@ -19,10 +21,12 @@ class AccessPolicy(str, Enum):
     CERTIFICATE = 'CERTIFICATE'
     TOKEN = 'TOKEN'
 
+
 class Protocol(str, Enum):
     """Protocols"""
     HTTP = 'HTTP'
     WS = 'WS'
+
 
 class HttpMethod(str, Enum):
     """HTTP methods"""
@@ -31,10 +35,12 @@ class HttpMethod(str, Enum):
     PUT = 'PUT'
     DELETE = 'DELETE'
 
+
 class Payload(str, Enum):
     """Payload types"""
     JSON = 'JSON'
     TEXT = 'TEXT'
+
 
 class CoreSystem(str, Enum):
     """Core systems"""
@@ -42,6 +48,7 @@ class CoreSystem(str, Enum):
     ORCHESTRATOR = 'orchestrator'
     AUTHORIZATION = 'authorization'
     EVENT_HANDLER = 'event_handler'
+
 
 class Misc(str, Enum):
     """Auxiliary constants"""

@@ -14,6 +14,7 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
         certfile: Certificate certfile.
         cafile: Certificate authority file.
     """
+
     def __init__(
             self,
             keyfile,

@@ -1,5 +1,4 @@
 import ssl
-from typing import Optional
 
 import aiohttp
 
@@ -13,6 +12,7 @@ class AiohttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
     """
     Asynchronous consumer based on AioHttp.
     """
+
     def __init__(
             self,
             keyfile: str,
@@ -34,7 +34,7 @@ class AiohttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
     async def async_shutdown(self):
         await self.http_session.close()
 
-    async def consume_service(
+    async def consume_service(  # type: ignore
             self,
             rule: OrchestrationRule,
             **kwargs,

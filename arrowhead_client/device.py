@@ -1,5 +1,6 @@
 from arrowhead_client.dto import DTOMixin
 
+
 class ArrowheadDevice(DTOMixin):
     device_name: str
     address: str

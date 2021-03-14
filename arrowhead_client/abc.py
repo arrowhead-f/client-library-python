@@ -1,5 +1,6 @@
 from abc import ABC
 
+
 class ProtocolMixin(ABC):
     def __init_subclass__(cls, protocol='', **kwargs):
         if protocol == '':

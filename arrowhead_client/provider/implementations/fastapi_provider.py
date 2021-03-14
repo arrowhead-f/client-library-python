@@ -3,12 +3,11 @@ import json
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-import uvicorn # Type: ignore
+import uvicorn  # type: ignore
 
 from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.rules import RegistrationRule
 from arrowhead_client.security.access_policy import TokenAccessPolicy
-from arrowhead_client import errors
 from arrowhead_client import constants
 
 

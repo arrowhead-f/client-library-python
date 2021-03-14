@@ -15,6 +15,7 @@ class AccessToken:
         interface_id: Provided service interface description
         service_id: Provided service definition
     """
+
     def __init__(self,
                  consumer_id: str,
                  interface_id: str,

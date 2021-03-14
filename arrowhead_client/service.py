@@ -8,8 +8,7 @@ There is rarely a need to create a custom instance of any of the classes here.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, asdict
-from typing import Dict, Optional
+from dataclasses import dataclass
 
 # from arrowhead_client.dto import DTOMixin
 from arrowhead_client import constants

@@ -1,6 +1,6 @@
 import arrowhead_client.client.core_service_forms.client
 from arrowhead_client import errors as errors
-from arrowhead_client.client import core_service_responses as responses, core_service_forms as forms
+from arrowhead_client.client import core_service_responses as responses
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service
@@ -28,7 +28,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                     f'No services available for'
                     f' service \'{service_definition}\''
             )
-        res = await self.consumer.consume_service(rule, **kwargs)
+        res = await self.consumer.consume_service(rule, **kwargs)  # type: ignore
         return res
 
     async def connect(self, service_definition, **kwargs) -> ConnectionResponse:
@@ -49,7 +49,7 @@ class ArrowheadClientAsync(ArrowheadClient):
 
         await self.consumer.async_startup()
 
-    async def add_orchestration_rule(
+    async def add_orchestration_rule(  # type: ignore
             self,
             service_definition: str,
             method: str,
@@ -104,7 +104,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                 json=service_registration_form.dto(),
         )
 
-        service_registry_response = responses.process_service_register(service_registration_response)
+        responses.process_service_register(service_registration_response)
 
     async def _register_all_services(self):
         for rule in self.registration_rules:

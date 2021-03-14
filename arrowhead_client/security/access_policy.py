@@ -7,8 +7,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 # Not used because the CertificateAccessPolicy is disabled, see comment there.
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
+from cryptography import x509  # noqa: F401
+from cryptography.hazmat.backends import default_backend  # noqa: F401
 
 from arrowhead_client.security.access_token import AccessToken
 from arrowhead_client.security.utils import cert_cn
@@ -45,6 +45,7 @@ class TokenAccessPolicy(AccessPolicy):
         provider_keyfile: Provider keyfile path.
         auth_info: Public key of the Authorization system in the local cloud.
     """
+
     def __init__(
             self,
             provided_service: Service,
@@ -174,6 +175,6 @@ def get_access_policy(
         )
     else:
         raise ValueError(
-            f'{policy_name} is not a valid access policy.'
-            f'Valid policies are {set(policy for policy in constants.AccessPolicy)}'
+                f'{policy_name} is not a valid access policy.'
+                f'Valid policies are {set(policy for policy in constants.AccessPolicy)}'
         )
