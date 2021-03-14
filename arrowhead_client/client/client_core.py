@@ -81,7 +81,7 @@ def provided_service(
 
         def __set_name__(self, owner: Type[ArrowheadClient], name: str):
             if '__arrowhead_services__' not in dir(owner):
-                raise AttributeError(f'provided_service can decorate ArrowheadClient methods.')
+                raise AttributeError('provided_service can decorate ArrowheadClient methods.')
 
             owner.__arrowhead_services__.append(name)
 
