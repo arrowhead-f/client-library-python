@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install flake8 and mypy
         run:
-          pip install flake8 mypy
+          pip install flake8 mypy -r requirements.txt
       - name: Run flake8
         run:
           flake8 --ignore=E501,E126,E127 arrowhead_client/ examples/

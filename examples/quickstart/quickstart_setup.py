@@ -1,6 +1,7 @@
 import subprocess
 import requests
 import time
+from typing import List
 
 from arrowhead_client.dto import DTOMixin
 from arrowhead_client.rules import OrchestrationRule
@@ -35,7 +36,7 @@ with requests.Session() as session:
                 session.get('https://127.0.0.1:8445/authorization/echo')
                 is_online[2] = True
                 print('Authorization is online')
-        except Exception as e:
+        except Exception:
             time.sleep(2)
         else:
             print('All core systems are online\n')
@@ -134,13 +135,13 @@ provider_system = ArrowheadSystem(
         address='127.0.0.1',
         port=7655,
         authentication_info='MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhv0G6H'
-        'Cst8lQlAXuevgoZpozM6XKT7ihtrWGfrN4vYG+e0f1b2Q88glW'
-        'G+VjrD++dnjSmoU4f/7CTSvwcDtjsW4UFHWJNIkHF8WvugPT7Q'
-        '5HaWr80uO0P+JNfbMD9e2FzMLRt9SBrTUKIMSXV/pQSGWQNQg5'
-        'QK0oAaeQT0RPgC8+XwKck0R33DCuh/I6gtPKlgGcOkabbbZucP'
-        'oRY6ZldB5Tm11mlWagjUGOzX3c8e2nhb02CDWcq8DWZW8cCBru'
-        'ODyicvk/Ocda3di4MtYkSdbsy6jbrQsTJnd5FXtAMAbeAnyY/S'
-        'b485AyByya7KQTmPAXVqnDZi314enjwJAJswIDAQAB',
+                            'Cst8lQlAXuevgoZpozM6XKT7ihtrWGfrN4vYG+e0f1b2Q88glW'
+                            'G+VjrD++dnjSmoU4f/7CTSvwcDtjsW4UFHWJNIkHF8WvugPT7Q'
+                            '5HaWr80uO0P+JNfbMD9e2FzMLRt9SBrTUKIMSXV/pQSGWQNQg5'
+                            'QK0oAaeQT0RPgC8+XwKck0R33DCuh/I6gtPKlgGcOkabbbZucP'
+                            'oRY6ZldB5Tm11mlWagjUGOzX3c8e2nhb02CDWcq8DWZW8cCBru'
+                            'ODyicvk/Ocda3di4MtYkSdbsy6jbrQsTJnd5FXtAMAbeAnyY/S'
+                            'b485AyByya7KQTmPAXVqnDZi314enjwJAJswIDAQAB',
 )
 
 consumer_data = setup_client.consume_service(
@@ -185,12 +186,14 @@ echo_res = setup_client.consume_service(
 hello_id = hello_res['serviceDefinition']['id']
 echo_id = echo_res['serviceDefinition']['id']
 
+
 class OrchestrationMgmtStoreForm(DTOMixin):
     service_definition_name: str
     consumer_system_id: str
     provider_system: ArrowheadSystem
     service_interface_name: str
     priority: int = 1
+
 
 hello_orch_form = OrchestrationMgmtStoreForm(
         service_definition_name='hello-arrowhead',
@@ -210,13 +213,13 @@ res = setup_client.consume_service(
         json=[hello_orch_form.dto(), echo_orch_form.dto()]
 )
 
-from typing import List
 
 class AuthorizationIntracloudForm(DTOMixin):
     consumer_id: int
     provider_ids: List[int]
     interface_ids: List[int]
     service_definition_ids: List[int]
+
 
 hello_auth_form = AuthorizationIntracloudForm(
         consumer_id=systems['consumer'][1],
