@@ -2,7 +2,6 @@
 Async provider example app
 """
 from typing import Dict
-from dataclasses import dataclass
 
 from fastapi import WebSocket
 
@@ -11,7 +10,7 @@ from arrowhead_client.client.implementations import AsyncClient
 
 
 class TestClient(AsyncClient):
-    def __init__(self, *args, format:str='A', **kwargs):
+    def __init__(self, *args, format: str = 'A', **kwargs):
         super().__init__(*args, **kwargs)
         self.format = format
 
@@ -22,7 +21,7 @@ class TestClient(AsyncClient):
             method='GET',
             payload_format='JSON',
             access_policy='CERTIFICATE', )
-    def hello(self, request: Dict=None):
+    def hello(self, request: Dict = None):
         return {'msg': self.format}
 
 
@@ -36,7 +35,6 @@ provider = TestClient.create(
         format='B'
 )
 
-
 '''
 @provider.provided_service(
         service_definition='hello-arrowhead',
@@ -48,6 +46,7 @@ provider = TestClient.create(
 async def hello_arrowhead(request: Dict = None):
     return {"msg": "Hello, Arrowhead!"}
 '''
+
 
 @provider.provided_service(
         service_definition='echo',
@@ -76,6 +75,7 @@ async def ws_test(websocket: WebSocket):
         data = await websocket.receive_json()
         await websocket.send_json({data['Q']: 'Yes'})
     await websocket.close()
+
 
 if __name__ == '__main__':
     provider.run_forever()

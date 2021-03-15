@@ -1,5 +1,5 @@
 
-name: Python package
+name: Tox testing
 
 on:
   push:
@@ -32,3 +32,5 @@ jobs:
       - name: Run Tox
         # Run tox using the version of Python in `PATH`
         run: tox
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1

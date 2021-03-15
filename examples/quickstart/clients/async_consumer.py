@@ -6,13 +6,14 @@ import asyncio
 from arrowhead_client.client.implementations import AsyncClient
 
 consumer = AsyncClient.create(
-                system_name='quickstart-consumer',
-                address='127.0.0.1',
-                port=7656,
-                keyfile='certificates/crypto/quickstart-consumer.key',
-                certfile='certificates/crypto/quickstart-consumer.crt',
-                cafile='certificates/crypto/sysop.ca',
+        system_name='quickstart-consumer',
+        address='127.0.0.1',
+        port=7656,
+        keyfile='certificates/crypto/quickstart-consumer.key',
+        certfile='certificates/crypto/quickstart-consumer.crt',
+        cafile='certificates/crypto/sysop.ca',
 )
+
 
 async def main(consumer):
     async with consumer:
@@ -42,6 +43,7 @@ async def main(consumer):
 async def print_response(consumer, service_definition, **kwargs):
     resp = await consumer.consume_service(service_definition, **kwargs)
     print(resp.read_json().get('msg'))
+
 
 if __name__ == '__main__':
     asyncio.run(main(consumer))
