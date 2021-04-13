@@ -6,7 +6,7 @@ Constants module
 A central repository for the constants used throughout the library.
 Can be used by both internal and external users, though external users might prefer to just use strings instead.
 """
-from enum import Enum
+from enum import Enum, Flag, auto
 
 
 class Security(str, Enum):
@@ -48,6 +48,15 @@ class CoreSystem(str, Enum):
     ORCHESTRATOR = 'orchestrator'
     AUTHORIZATION = 'authorization'
     EVENT_HANDLER = 'event_handler'
+
+class OrchestrationFlags(Flag):
+    MATCHMAKING = auto()
+    METADATA_SEARCH = auto()
+    ONLY_PREFERRED = auto()
+    PING_PROVIDERS = auto()
+    OVERRIDE_STORE = auto()
+    ENABLE_INTER_CLOUD = auto()
+    TRIGGER_INTER_CLOUD = auto()
 
 
 class Misc(str, Enum):

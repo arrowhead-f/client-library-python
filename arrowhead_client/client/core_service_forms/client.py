@@ -7,6 +7,7 @@ from arrowhead_client.service import Service
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.device import ArrowheadDevice
 from arrowhead_client.types import Metadata, Version
+from arrowhead_client.constants import OrchestrationFlags
 
 
 ####################
@@ -71,13 +72,13 @@ class ServiceRegistryEntry(DTOMixin):
     id: int
     service_definition: ServiceDefinitionResponse
     provider: ServiceProviderResponse
-    service_uri: str
-    end_of_validity: str
-    metadata: Metadata
-    version: Version
+    service_uri: str = ''
+    end_of_validity: str = ''
+    metadata: Metadata = None
+    version: Version = None
     interfaces: Sequence[ServiceInterfaceResponse]
-    created_at: str
-    updated_at: str
+    created_at: str = ''
+    updated_at: str = ''
 
 
 class ServiceQueryResponse(DTOMixin):
@@ -150,6 +151,10 @@ class OrchestrationFlagsForm(DTOMixin):
                 trigger_inter_cloud=trigger_inter_cloud,
         )
 
+    @classmethod
+    def from_flags(cls, flags: OrchestrationFlags):
+        return cls.make(*[bool(flags & of_flag) for of_flag in OrchestrationFlags])
+
     def __and__(self, other: OrchestrationFlagsForm) -> OrchestrationFlagsForm:
         new_flags = {
             key: flag1 & flag2
@@ -184,7 +189,7 @@ class OrchestrationForm(DTOMixin):
             cls,
             requester_system: ArrowheadSystem,
             requested_service: Service,
-            orchestration_flags: OrchestrationFlagsForm = None,
+            orchestration_flags: OrchestrationFlags = OrchestrationFlags.OVERRIDE_STORE,
             preferred_providers: Mapping = None,
     ):
         return cls(
@@ -192,7 +197,7 @@ class OrchestrationForm(DTOMixin):
                 requested_service=ServiceQueryForm.make(
                         requested_service,
                 ),
-                orchestration_flags=orchestration_flags or default_flags,
+                orchestration_flags=OrchestrationFlagsForm.from_flags(orchestration_flags),
                 preferred_providers=preferred_providers,
         )
 

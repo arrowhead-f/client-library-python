@@ -6,19 +6,18 @@ from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service
 from arrowhead_client.provider.implementations.fastapi_provider import FastapiProvider
 from arrowhead_client.response import Response, ConnectionResponse
+from arrowhead_client.constants import OrchestrationFlags
 
 
 class ArrowheadClientAsync(ArrowheadClient):
     """
     Base class for asynchronous Arrowhead Clients.
     """
-    provider: FastapiProvider
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO: replace call to provider.app with a startup and shutdown handler on the provider itself
-        self.provider.app.add_event_handler('startup', self.client_setup)
-        self.provider.app.add_event_handler('shutdown', self.client_cleanup)
+        self.provider.add_startup_routine(self.client_setup)
+        self.provider.add_shutdown_routine(self.client_cleanup)
 
     async def consume_service(self, service_definition, **kwargs) -> Response:
         rule = self.orchestration_rules.get(service_definition)
@@ -56,7 +55,7 @@ class ArrowheadClientAsync(ArrowheadClient):
             protocol: str = '',
             access_policy: str = '',
             payload_format: str = '',
-            # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+            orchestration_flags: OrchestrationFlags = OrchestrationFlags.OVERRIDE_STORE,
             **kwargs,
     ):
         """
@@ -78,6 +77,7 @@ class ArrowheadClientAsync(ArrowheadClient):
         orchestration_form = arrowhead_client.client.core_service_forms.client.OrchestrationForm.make(
                 self.system,
                 requested_service,
+                orchestration_flags,
                 **kwargs
         )
 

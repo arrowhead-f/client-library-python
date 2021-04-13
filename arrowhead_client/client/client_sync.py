@@ -1,10 +1,13 @@
-import arrowhead_client.client.core_service_forms.client
+from typing import Optional
+import warnings
+
+import arrowhead_client.client.core_service_forms.client as forms
 from arrowhead_client import errors as errors
+from arrowhead_client.constants import OrchestrationFlags
 from arrowhead_client.client import core_service_responses as responses
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service, ServiceInterface
-
 
 class ArrowheadClientSync(ArrowheadClient):
     """
@@ -45,6 +48,7 @@ class ArrowheadClientSync(ArrowheadClient):
             access_policy: str = '',
             payload_format: str = '',
             # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+            orchestration_flags: OrchestrationFlags = OrchestrationFlags.OVERRIDE_STORE,
             **kwargs,
     ) -> None:
         """
@@ -66,9 +70,10 @@ class ArrowheadClientSync(ArrowheadClient):
                 access_policy=access_policy
         )
 
-        orchestration_form = arrowhead_client.client.core_service_forms.client.OrchestrationForm.make(
+        orchestration_form = forms.OrchestrationForm.make(
                 self.system,
                 requested_service,
+                orchestration_flags,
                 **kwargs
         )
 
@@ -122,7 +127,7 @@ class ArrowheadClientSync(ArrowheadClient):
             service: Service to register with the Service registry.
         """
 
-        service_registration_form = arrowhead_client.client.core_service_forms.client.ServiceRegistrationForm.make(
+        service_registration_form = forms.ServiceRegistrationForm.make(
                 provided_service=service,
                 provider_system=self.system,
         )
