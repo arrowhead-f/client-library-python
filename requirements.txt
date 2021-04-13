@@ -1,4 +1,4 @@
 Flask>=1.0.2
 requests>=2.21
-cryptography==3.2
+cryptography==3.3.2
 jwcrypto==0.8
