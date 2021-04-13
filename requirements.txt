@@ -3,6 +3,6 @@ aiohttp[standard]
 uvicorn
 Flask>=1.0.2
 requests>=2.21
-cryptography
+cryptography>=3.3.2
 jwcrypto==0.8
 six
