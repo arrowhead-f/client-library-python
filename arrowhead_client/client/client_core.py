@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type, List
+from typing import Any, Dict, Tuple, Callable, Type, List, Optional
 from abc import ABC, abstractmethod
 
 from arrowhead_client.system import ArrowheadSystem
@@ -17,6 +17,7 @@ from arrowhead_client.rules import (
     RegistrationRuleContainer,
     RegistrationRule,
 )
+from arrowhead_client import constants
 
 
 def provided_service(
@@ -241,7 +242,8 @@ class ArrowheadClient(ABC):
             protocol: str = '',
             access_policy: str = '',
             payload_format: str = '',
-            # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
+            # TODO: Should **kwargs be preferred_providers?
+            orchestration_flags: constants.OrchestrationFlags = constants.OrchestrationFlags.OVERRIDE_STORE,
             **kwargs,
     ) -> None:
         """
@@ -254,6 +256,7 @@ class ArrowheadClient(ABC):
             method: Optional. The HTTP method given in uppercase that is used to consume the provided_service.
             access_policy: Optional. Service access policy.
             payload_format: Optional. Service payload format.
+            orchestration_flags: Optional. Sets orchestration mode.
 
         Example::
 

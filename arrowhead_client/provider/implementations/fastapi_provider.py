@@ -1,4 +1,4 @@
-from typing import Mapping, Dict
+from typing import Mapping, Dict, Callable
 import json
 
 from fastapi import FastAPI, Request, Response
@@ -79,3 +79,9 @@ class FastapiProvider(BaseProvider, protocol=constants.Protocol.HTTP):
                 ssl_certfile=certfile,
                 ssl_ca_certs=self.cafile,
         )
+
+    def add_startup_routine(self, func: Callable):
+        self.app.add_event_handler('startup', func)
+
+    def add_shutdown_routine(self, func: Callable):
+        self.app.add_event_handler('shutdown', func)

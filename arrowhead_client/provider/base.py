@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from arrowhead_client.abc import ProtocolMixin
 from arrowhead_client.rules import RegistrationRule
@@ -37,3 +38,21 @@ class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             certfile: client certfile.
             cafile: certificate authority file
         """
+
+    def add_startup_routine(self, func: Callable):
+        """
+        Schedules ``func`` to be called during startup.
+
+        Args:
+            func: Function executed during startup, must not take any arguments.
+        """
+        raise NotImplementedError
+
+    def add_shutdown_routine(self, func: Callable):
+        """
+        Schedules ``func`` to be called during shutdown.
+
+        Args:
+            func: Function executed during shutdown, must not take any arguments.
+        """
+        raise NotImplementedError

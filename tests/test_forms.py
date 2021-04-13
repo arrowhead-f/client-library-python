@@ -1,6 +1,6 @@
-import arrowhead_client.client.core_service_forms.client
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.constants import OrchestrationFlags
 import arrowhead_client.client.core_service_forms.client as forms
 
 requester_system = ArrowheadSystem.make('test_system', 'localhost', 0)
@@ -46,7 +46,7 @@ def test_orchestration_flags():
         'triggerInterCloud',
     }
 
-    of = arrowhead_client.client.core_service_forms.client.OrchestrationFlagsForm.make(*([True] * 7))
+    of = forms.OrchestrationFlagsForm.make(*([True] * 7))
 
     assert set(of.dto().keys()) == valid_keys
     assert of.override_store == True
@@ -57,7 +57,7 @@ def test_orchestration_form():
     orchestration_form = forms.OrchestrationForm.make(
             requester_system,
             provided_service,
-            orchestration_flags,
+            OrchestrationFlags.MATCHMAKING,
             {'test': 'test'},
     )
 
