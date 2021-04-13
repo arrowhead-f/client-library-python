@@ -2,7 +2,7 @@ from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.rules import OrchestrationRule, OrchestrationRuleContainer
 
-provider_system = ArrowheadSystem('test', '127.0.0.1', 1337, '')
+provider_system = ArrowheadSystem.make('test', '127.0.0.1', 1337, '')
 consumed_service = Service(
         'test',
         'test',

@@ -27,13 +27,13 @@ def test_protocol_double_subclassing(protocol, expectation):
         class Test(TestBase, protocol=protocol):
             pass
 
-@pytest.mark.parametrize('protocol', ('html', 'HTML'))
+@pytest.mark.parametrize('protocol', ({'html'}, {'HTML'}))
 def test_protocol_uppercase(protocol):
     class Test(abc.ProtocolMixin, protocol=protocol):
         pass
 
     test = Test()
 
-    assert Test._protocol == protocol.upper()
-    assert test._protocol == protocol.upper()
+    assert Test._protocol <= {prot.upper() for prot in protocol}
+    assert test._protocol <= {prot.upper() for prot in protocol}
 

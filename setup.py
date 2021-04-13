@@ -4,6 +4,9 @@ import _version
 with open('README.md', 'r') as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as rf:
+    required = [line for line in rf.readlines()]
+
 setuptools.setup(
         name=_version.__lib_name__,
         version=_version.__version__,
@@ -15,12 +18,7 @@ setuptools.setup(
         url='https://github.com/arrowhead-f/client-library-python',
         packages=setuptools.find_packages(exclude=['tests', 'examples']),
         license='EPL-2.0',
-        install_requires=[
-            'Flask>=1.0.2',
-            'requests>=2.21',
-            'gevent>=20.5.0',
-            'typing-extensions>=3.7'
-        ],
+        install_requires=required,
         classifiers=[
             'Development Status :: 3 - Alpha',
             'Intended Audience :: Developers',

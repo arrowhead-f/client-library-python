@@ -1,9 +1,18 @@
+"""
+==============
+Service Module
+==============
+
+There is rarely a need to create a custom instance of any of the classes here.
+:py:
+"""
+
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, Optional
 
-from arrowhead_client.dto import DTOMixin
-from arrowhead_client.common import Constants
+# from arrowhead_client.dto import DTOMixin
+from arrowhead_client import constants
+from arrowhead_client.types import Version, Metadata
 
 
 @dataclass()
@@ -58,12 +67,18 @@ class ServiceInterface:
         """
         if access_policy == '':
             return cls('', '', '')
-        elif access_policy == Constants.POLICY_UNRESTRICTED:
-            return cls(protocol, Constants.SECURITY_INSECURE, payload)
-        return cls(protocol, Constants.SECURITY_SECURE, payload)
+        elif access_policy == constants.AccessPolicy.UNRESTRICTED:
+            return cls(protocol, constants.Security.INSECURE, payload)
+        return cls(protocol, constants.Security.SECURE, payload)
 
     def dto(self) -> str:
-        return '-'.join(vars(self).values())
+        return f'{self.protocol}-{self.secure}-{self.payload}'
+
+    def json(self) -> str:
+        return self.dto()
+
+    def dict(self, **kwargs) -> str:
+        return self.dto()
 
     def __bool__(self):
         return any(vars(self).values())
@@ -84,7 +99,7 @@ class ServiceInterface:
                self.payload == other.payload
 
 
-DTOMixin.register(ServiceInterface)
+# DTOMixin.register(ServiceInterface)
 
 
 class Service:
@@ -104,15 +119,39 @@ class Service:
                  service_definition: str,
                  service_uri: str = '',
                  interface: ServiceInterface = None,
-                 access_policy: str = Constants.POLICY_CERTIFICATE,
-                 metadata: Dict = None,
-                 version: Optional[int] = None) -> None:
+                 access_policy: str = constants.AccessPolicy.CERTIFICATE,
+                 metadata: Metadata = None,
+                 version: Version = None) -> None:
         self.service_definition = service_definition
         self.service_uri = service_uri
         self.interface = interface or ServiceInterface('', '', '')
         self.access_policy = access_policy
         self.metadata = metadata
         self.version = version
+
+    @classmethod
+    def make(
+            cls,
+            service_definition: str,
+            service_uri: str = '',
+            protocol: str = '',
+            access_policy: str = '',
+            payload_format: str = '',
+            metadata: Metadata = None,
+            version: Version = None,
+    ):
+        return cls(
+                service_definition=service_definition,
+                service_uri=service_uri,
+                interface=ServiceInterface(
+                        protocol,
+                        access_policy,
+                        payload_format,
+                ),
+                access_policy=access_policy,
+                metadata=metadata,
+                version=version,
+        )
 
     # TODO: Write good repr
     # def __repr__(self) -> str:

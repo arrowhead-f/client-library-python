@@ -1,9 +1,9 @@
 """
-HttpProvider example app
+Provider example app
 """
-import arrowhead_client.api as ar
+from arrowhead_client.client.implementations import SyncClient
 
-provider = ar.ArrowheadHttpClient(
+provider = SyncClient.create(
         system_name='quickstart-provider',
         address='127.0.0.1',
         port=7655,

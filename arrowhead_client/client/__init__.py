@@ -1,3 +1,13 @@
-from .client_core import ArrowheadClient, provided_service
+"""
+Client module
+"""
+from .client_core import provided_service, ArrowheadClient
+from .client_async import ArrowheadClientAsync
+from .implementations import AsyncClient
 
-__all__ = ['ArrowheadClient', 'provided_service']
+__all__ = [
+    'provided_service',
+    'ArrowheadClient',
+    'ArrowheadClientAsync',
+    'AsyncClient',
+]

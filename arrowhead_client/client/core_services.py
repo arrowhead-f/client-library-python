@@ -5,7 +5,7 @@ from collections import namedtuple
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.rules import OrchestrationRule
-from arrowhead_client.common import Constants
+from arrowhead_client import constants
 
 CoreConfig = namedtuple(
         'CoreConfig',
@@ -25,31 +25,31 @@ class CoreServices(CoreConfig, Enum):
         'service-register',
         'serviceregistry/register',
         'POST', 'HTTP', 'JSON',
-        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
+        constants.CoreSystem.SERVICE_REGISTRY.value,
     )
     SERVICE_UNREGISTER = (
         'service-unregister',
         'serviceregistry/unregister',
         'DELETE', 'HTTP', 'JSON',
-        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
+        constants.CoreSystem.SERVICE_REGISTRY.value,
     )
     SERVICE_QUERY = (
         'service-query',
         'serviceregistry/query',
         'POST', 'HTTP', 'JSON',
-        Constants.CORE_SYSTEM_SERVICE_REGISTRY.value,
+        constants.CoreSystem.SERVICE_REGISTRY.value,
     )
     ORCHESTRATION = (
         'orchestration-service',
         'orchestrator/orchestration',
         'POST', 'HTTP', 'JSON',
-        Constants.CORE_SYSTEM_ORCHESTRATOR.value,
+        constants.CoreSystem.ORCHESTRATOR.value,
     )
     PUBLICKEY = (
         'auth-public-key',
         'authorization/publickey',
         'GET', 'HTTP', 'JSON',
-        Constants.CORE_SYSTEM_AUTHORIZATION.value,
+        constants.CoreSystem.AUTHORIZATION.value,
     )
 
 
@@ -71,8 +71,8 @@ def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
 
 
 def _extract_rule(core_service_tuple, config, secure) -> OrchestrationRule:
-    secure = Constants.SECURITY_SECURE if secure else Constants.SECURITY_INSECURE
-    access_policy = Constants.POLICY_CERTIFICATE if secure else Constants.POLICY_UNRESTRICTED
+    secure = constants.Security.SECURE if secure else constants.Security.INSECURE
+    access_policy = constants.AccessPolicy.CERTIFICATE if secure else constants.AccessPolicy.UNRESTRICTED
     interface = ServiceInterface(core_service_tuple.protocol, secure, core_service_tuple.payload)
     core_system = ArrowheadSystem(**config[core_service_tuple.system])
     return OrchestrationRule(

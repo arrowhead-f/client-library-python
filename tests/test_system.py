@@ -16,10 +16,11 @@ def valid_keys():
 }
 
 def test_arrowhead_system(valid_keys):
-    test_system = ArrowheadSystem(
+    test_system = ArrowheadSystem.make(
             'test_system',
             '127.0.0.1',
             0,
+            'blablabla'
     )
 
     assert test_system.dto().keys() == valid_keys
@@ -32,15 +33,15 @@ def test_from_dto(valid_keys):
         "systemName": "test_system",
         "address": "127.0.0.1",
         "port": 0,
-        "authenticationInfo": ""
+        "authenticationInfo": "bla"
     }
 
-    test_system = ArrowheadSystem.from_dto(dto)
+    test_system = ArrowheadSystem(**dto)
 
     assert test_system.dto().keys() == valid_keys
     assert test_system.authority == '127.0.0.1:0'
     assert test_system.system_name == 'test_system'
-    assert test_system.authentication_info == ''
+    assert test_system.authentication_info == 'bla'
 
 @pytest.fixture
 def certfile_path(tmp_path):

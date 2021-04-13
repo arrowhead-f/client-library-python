@@ -1,0 +1,33 @@
+
+name: Code quality check with flake8 and mypy
+
+on:
+  push:
+    branches: [Development]
+  pull_request:
+    branches: [Development, master]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install flake8 and mypy
+        run:
+          pip install flake8 mypy -r requirements.txt
+      - name: Run flake8
+        run:
+          flake8 --ignore=E501,E126,E127 arrowhead_client/ examples/
+      - name: Run mypy
+        if: ${{ always() }}
+        run:
+          mypy arrowhead_client/

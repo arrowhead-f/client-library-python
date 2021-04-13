@@ -1,61 +1,15 @@
-from abc import abstractmethod, ABC
-
-from arrowhead_client.response import Response
-from arrowhead_client.rules import OrchestrationRule, RegistrationRule
+from abc import ABC
 
 
 class ProtocolMixin(ABC):
     def __init_subclass__(cls, protocol='', **kwargs):
         if protocol == '':
             raise ValueError('No protocol specified.')
-        elif not isinstance(protocol, str):
-            raise TypeError('Protocol must be of type str.')
-        cls._protocol = protocol.upper()
-
-
-class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
-    """Abstract base class for consumers"""
-    @abstractmethod
-    def consume_service(
-            self,
-            rule: OrchestrationRule,
-            **kwargs) -> Response:
-        """
-        Consume service according to the consumation rule and return the response.
-
-        Args:
-           rule: Orchestration rule.
-        Returns:
-            A Response object.
-        """
-
-
-class BaseProvider(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
-    """Abstract base class for providers"""
-    @abstractmethod
-    def add_provided_service(self, rule: RegistrationRule, ) -> None:
-        """
-        Adds the provided service to the provider according the provision rule.
-
-        Args:
-            rule: Provision rule.
-        """
-
-    @abstractmethod
-    def run_forever(
-            self,
-            address: str,
-            port: int,
-            keyfile: str,
-            certfile: str,
-    ) -> None:
-        """
-        Starts the provider and runs until interrupted.
-
-        Args:
-            address: system ip address.
-            port: system port.
-            keyfile: client keyfile.
-            certfile: client certfile.
-            cafile: certificate authority file
-        """
+        elif isinstance(protocol, set):
+            if not all(isinstance(prot, str) for prot in protocol):
+                raise ValueError('All protocols specified must be of type str')
+            cls._protocol = set(prot.upper() for prot in protocol)
+        elif isinstance(protocol, str):
+            cls._protocol = {protocol.upper()}
+        else:
+            raise TypeError('protocol must be of type str or set')
