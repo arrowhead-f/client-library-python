@@ -3,6 +3,9 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, Dict, Tuple, Callable, Type, List, Optional
 from abc import ABC, abstractmethod
+from pathlib import Path
+
+import yaml
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.provider.base import BaseProvider
@@ -18,6 +21,7 @@ from arrowhead_client.rules import (
     RegistrationRule,
 )
 from arrowhead_client import constants
+from arrowhead_client.settings import ClientSettings
 
 
 def provided_service(
@@ -82,7 +86,7 @@ def provided_service(
 
         def __set_name__(self, owner: Type[ArrowheadClient], name: str):
             if '__arrowhead_services__' not in dir(owner):
-                raise AttributeError('provided_service can decorate ArrowheadClient methods.')
+                raise AttributeError('provided_service can only decorate ArrowheadClient methods.')
 
             owner.__arrowhead_services__.append(name)
 
@@ -140,7 +144,6 @@ class ArrowheadClient(ABC):
             config: Dict = None,
             keyfile: str = '',
             certfile: str = '',
-            **kwargs,
     ):
         self.system = system
         self.consumer = consumer
@@ -316,7 +319,6 @@ class ArrowheadClient(ABC):
             certfile: str = '',
             cafile: str = '',
             log_mode: str = 'debug',
-            **kwargs,
     ) -> ArrowheadClient:
         """
         Factory method for client instances.
@@ -367,10 +369,35 @@ class ArrowheadClient(ABC):
                 config=config,
                 keyfile=keyfile,
                 certfile=certfile,
-                **kwargs
         )
 
         return new_instance
+
+    @classmethod
+    def from_yaml(cls, config_path: str):
+        """
+        Factory method to create
+
+        Args:
+            config_path: Path to config_file
+        Returns:
+            ArrowheadClient instance with parameters from config.
+        """
+        with open(config_path, 'r') as yamlfile:
+            config = yaml.safe_load(yamlfile)['client']
+
+        return cls.create(
+                **config
+        )
+
+    @classmethod
+    def from_config(cls, config_path: str):
+        config_type = Path(config_path).suffix
+
+        if config_type == 'yaml':
+            return cls.from_yaml(config_path)
+        else:
+            raise ValueError(f'Configuration file format {config_type} unsupported')
 
     @abstractmethod
     def _register_service(self, service):

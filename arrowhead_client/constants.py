@@ -48,6 +48,15 @@ class CoreSystem(str, Enum):
     ORCHESTRATOR = 'orchestrator'
     AUTHORIZATION = 'authorization'
     EVENT_HANDLER = 'event_handler'
+    DATAMANAGER = 'datamanager'
+    CERTIFICATE_AUTHORITY = 'certificate_authority'
+    CHOREOGRAPHER = 'choreographer'
+    ONBOARDING_CONTROLLER = 'onboarding_controller'
+    SYSTEM_REGISTRY = 'system_registry'
+    DEVICE_REGISTRY = 'device_registry'
+    GATEKEEPER = 'gatekeeper'
+    GATEWAY = 'gateway'
+
 
 class OrchestrationFlags(Flag):
     MATCHMAKING = auto()

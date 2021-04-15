@@ -22,6 +22,7 @@ class TestClient(AsyncClient):
             payload_format='JSON',
             access_policy='CERTIFICATE', )
     def hello(self, request: Dict = None):
+        self.format = 'C'
         return {'msg': self.format}
 
 
