@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type, List, Optional
+from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -19,8 +19,11 @@ from arrowhead_client.rules import (
     OrchestrationRuleContainer,
     RegistrationRuleContainer,
     RegistrationRule,
+    EventRule,
 )
 from arrowhead_client import constants
+from arrowhead_client.types import Metadata
+from arrowhead_client.constants import Protocol
 from arrowhead_client.settings import ClientSettings
 
 
@@ -72,7 +75,7 @@ def provided_service(
     """
 
     class ServiceDescriptor:
-        def __init__(self, func):
+        def __init__(self, func: Callable):
             self.service_instance = Service.make(
                     service_definition,
                     service_uri,
@@ -102,6 +105,16 @@ def provided_service(
             )
 
     return ServiceDescriptor
+
+
+def provided_event(
+        event_type: str,
+        metadata: Metadata,
+):
+    class EventDescriptor:
+        def __init__(self, payload_generator: Optional[Callable]):
+            ...
+
 
 
 class ArrowheadClient(ABC):
@@ -138,15 +151,18 @@ class ArrowheadClient(ABC):
     def __init__(
             self,
             system: ArrowheadSystem,
-            consumer: BaseConsumer,
+            consumers: Sequence[BaseConsumer],
             provider: BaseProvider,
             logger: Any,
             config: Dict = None,
             keyfile: str = '',
             certfile: str = '',
+            **kwargs,
     ):
         self.system = system
-        self.consumer = consumer
+        self.consumers = {protocol: consumer
+                          for consumer in consumers
+                          for protocol in consumer._protocol}
         self.provider = provider
         self.keyfile = keyfile
         self.certfile = certfile
@@ -163,7 +179,7 @@ class ArrowheadClient(ABC):
         self.add_provided_service = self.provider.add_provided_service
 
     __arrowhead_services__: List[str] = []
-    __arrowhead_consumer__: Type[BaseConsumer]
+    __arrowhead_consumer__: Sequence[Type[BaseConsumer]]
     __arrowhead_provider__: Type[BaseProvider]
 
     @property
@@ -236,6 +252,22 @@ class ArrowheadClient(ABC):
             return func
 
         return wrapped_func
+
+    def event_service(
+            self,
+            event_type: str,
+            metadata: Optional[Metadata],
+    ):
+        """
+        Decorator for registering events.
+
+        Args:
+            event_type: Name of event type that will be published.
+            metadata: Dictionary of metadata.
+        Returns:
+
+        """
+
 
     @abstractmethod
     def add_orchestration_rule(
@@ -319,6 +351,7 @@ class ArrowheadClient(ABC):
             certfile: str = '',
             cafile: str = '',
             log_mode: str = 'debug',
+            **kwargs,
     ) -> ArrowheadClient:
         """
         Factory method for client instances.
@@ -363,23 +396,29 @@ class ArrowheadClient(ABC):
         )
         new_instance = cls(
                 system,
-                cls.__arrowhead_consumer__(keyfile, certfile, cafile),
+                tuple(consumer(keyfile, certfile, cafile) for consumer in cls.__arrowhead_consumer__),
                 cls.__arrowhead_provider__(cafile),
                 logger,
                 config=config,
                 keyfile=keyfile,
                 certfile=certfile,
+                **kwargs,
         )
 
         return new_instance
 
     @classmethod
-    def from_yaml(cls, config_path: str):
+    def from_yaml(
+            cls,
+            config_path: str,
+            **kwargs,
+    ):
         """
         Factory method to create
 
         Args:
             config_path: Path to config_file
+            **kwargs: Keyword arguments going into ArrowheadClient.create()
         Returns:
             ArrowheadClient instance with parameters from config.
         """
@@ -387,15 +426,15 @@ class ArrowheadClient(ABC):
             config = yaml.safe_load(yamlfile)['client']
 
         return cls.create(
-                **config
+                **{**config, **kwargs}
         )
 
     @classmethod
-    def from_config(cls, config_path: str):
+    def from_config(cls, config_path: str, **kwargs):
         config_type = Path(config_path).suffix
 
-        if config_type == 'yaml':
-            return cls.from_yaml(config_path)
+        if config_type == '.yaml':
+            return cls.from_yaml(config_path, **kwargs)
         else:
             raise ValueError(f'Configuration file format {config_type} unsupported')
 
