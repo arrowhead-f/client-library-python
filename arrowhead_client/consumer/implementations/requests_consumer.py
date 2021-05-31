@@ -19,8 +19,9 @@ class RequestsConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
     ):
         super().__init__(keyfile, certfile, cafile)
         self.session = requests.Session()
-        self.session.verify = cafile
+        self.session.verify = True
         self.session.cert = (certfile, keyfile)
+        self.cafile = cafile
 
     def consume_service(
             self,
@@ -33,6 +34,7 @@ class RequestsConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
                 rule.method,
                 url=f'{http(rule.secure)}{rule.endpoint}',
                 auth=ArrowheadTokenAuth(rule.authorization_token),
+                verify=self.cafile,
                 **kwargs
         )
 
