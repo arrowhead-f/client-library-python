@@ -50,6 +50,18 @@ services:
     ports:
       - 8441:8441
 
+  eventhandler:
+    container_name: eventhandler.quickstart
+    image: svetlint/eventhandler:latest
+    depends_on:
+      - mysql.quickstart
+    volumes:
+      - ./core_system_config/eventhandler.properties:/eventhandler/application.properties
+      - ./certificates/crypto/event_handler.p12:/eventhandler/event_handler.p12
+      - ./certificates/crypto/truststore.p12:/eventhandler/truststore.p12
+    ports:
+      - 8455:8455
+
 volumes:
   mysql.quickstart:
     external: true  

@@ -6,9 +6,10 @@ from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client import constants
+from arrowhead_client.constants import Protocol
 
 
-class AiohttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
+class AiohttpConsumer(BaseConsumer, protocol={Protocol.HTTP, Protocol.WS}):
     """
     Asynchronous consumer based on AioHttp.
     """
@@ -29,7 +30,11 @@ class AiohttpConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
         self.http_session: aiohttp.ClientSession
 
     async def async_startup(self):
-        self.http_session = aiohttp.ClientSession()
+        # Initialize http_session if it isn't initialized
+        try:
+            self.http_session
+        except AttributeError:
+            self.http_session = aiohttp.ClientSession()
 
     async def async_shutdown(self):
         await self.http_session.close()

@@ -27,7 +27,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                     f'No services available for'
                     f' service \'{service_definition}\''
             )
-        res = await self.consumer.consume_service(rule, **kwargs)  # type: ignore
+        res = await self.consumers[rule.protocol].consume_service(rule, **kwargs)  # type: ignore
         return res
 
     async def connect(self, service_definition, **kwargs) -> ConnectionResponse:
@@ -39,14 +39,15 @@ class ArrowheadClientAsync(ArrowheadClient):
                     f' service \'{service_definition}\''
             )
 
-        connector = await self.consumer.connect(rule, **kwargs)
+        connector = await self.consumers[rule.protocol].connect(rule, **kwargs)
 
         return connector
 
     async def setup(self):
         super().setup()
 
-        await self.consumer.async_startup()
+        for consumer in self.consumers.values():
+            await consumer.async_startup()
 
     async def add_orchestration_rule(  # type: ignore
             self,
@@ -165,7 +166,8 @@ class ArrowheadClientAsync(ArrowheadClient):
     async def client_cleanup(self):
         print('Shutting down Arrowhead Client')
         await self._unregister_all_services()
-        await self.consumer.async_shutdown()
+        for consumer in self.consumers:
+            await consumer.async_shutdown()
         self._logger.info('Server shut down')
 
     async def __aenter__(self):
@@ -174,4 +176,5 @@ class ArrowheadClientAsync(ArrowheadClient):
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.consumer.async_shutdown()
+        for consumer in self.consumers.values():
+            await consumer.async_shutdown()

@@ -68,5 +68,5 @@ class AsyncClient(ArrowheadClientAsync):
             return "ECHO"
 
     """
+    __arrowhead_consumer__ = (AiohttpConsumer,)
     __arrowhead_provider__ = AsyncHttpProvider
-    __arrowhead_consumer__ = AiohttpConsumer

@@ -224,7 +224,7 @@ class OrchestrationResponseList(DTOMixin):
 
 class EventPublishForm(DTOMixin):
     event_type: str
-    meta_data: Metadata
+    meta_data: Optional[Metadata] = None
     payload: str
     source: ArrowheadSystem
     time_stamp: str
@@ -232,12 +232,12 @@ class EventPublishForm(DTOMixin):
 
 class EventSubscribeForm(DTOMixin):
     event_type: str
-    filter_meta_data: Metadata
+    filter_meta_data: Optional[Metadata] = None
     match_meta_data: bool
     notify_uri: str
-    sources: Sequence[ArrowheadSystem]
-    start_date: str
-    end_date: str
+    sources: Optional[Sequence[ArrowheadSystem]] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
     subscriber_system: ArrowheadSystem
 
 

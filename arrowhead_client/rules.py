@@ -174,6 +174,20 @@ class RegistrationRule:
         return result
 
 
+class EventRule:
+    def __init__(
+            self,
+            event_type: str,
+            source_system: ArrowheadSystem,
+            metadata: Optional[Metadata] = None,
+            payload_generator: Optional[Callable] = None,
+    ):
+        self.event_type = event_type
+        self.metadata = metadata
+        self.payload_generator = payload_generator
+        self.source_system = source_system
+
+
 class OrchestrationRuleContainer(MutableMapping):
     """
     Orchestration Rule Container.
