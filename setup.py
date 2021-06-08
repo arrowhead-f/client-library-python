@@ -1,4 +1,5 @@
 import setuptools
+"""
 import _version
 
 with open('README.md', 'r') as fh:
@@ -31,3 +32,7 @@ setuptools.setup(
         ],
         python_requires='>=3.7'
 )
+"""
+
+if __name__ == '__main__':
+    setuptools.setup()
