@@ -125,6 +125,7 @@ class ArrowheadClientSync(ArrowheadClient):
                 self.auth_authentication_info = responses.process_publickey(authorization_response)
             self._initialize_provided_services()
             self._register_all_services()
+            self._initialize_event_subscription()
             self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
             self.provider.run_forever(
@@ -217,3 +218,15 @@ class ArrowheadClientSync(ArrowheadClient):
                 print(e)
             else:
                 rule.is_provided = False
+
+    def _subscribe_event(self, event_type):
+        pass
+
+    def _subscribe_all_events(self):
+        pass
+
+    def _unsubscribe_event(self, event_type):
+        pass
+
+    def _unsubscribe_all_events(self):
+        pass

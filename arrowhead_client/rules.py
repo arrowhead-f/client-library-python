@@ -5,6 +5,7 @@ Rules Module
 """
 from typing import Optional, Iterator, Callable, Dict
 from collections.abc import MutableMapping
+from uuid import uuid4
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
@@ -174,18 +175,21 @@ class RegistrationRule:
         return result
 
 
-class EventRule:
+class EventSubscriptionRule:
     def __init__(
             self,
             event_type: str,
-            source_system: ArrowheadSystem,
+            subscriber_system: ArrowheadSystem,
+            callback: Callable,
             metadata: Optional[Metadata] = None,
-            payload_generator: Optional[Callable] = None,
     ):
         self.event_type = event_type
         self.metadata = metadata
-        self.payload_generator = payload_generator
-        self.source_system = source_system
+        self.subscriber_system = subscriber_system
+        # Use uuid to generate the notification url for added security
+        self.uuid = uuid4()
+        self.notify_uri = f'{subscriber_system.address}:{subscriber_system.port}/event-notifications/{self.uuid}'
+        self.callback = callback
 
 
 class OrchestrationRuleContainer(MutableMapping):

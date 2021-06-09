@@ -19,7 +19,7 @@ from arrowhead_client.rules import (
     OrchestrationRuleContainer,
     RegistrationRuleContainer,
     RegistrationRule,
-    EventRule,
+    EventSubscriptionRule,
 )
 from arrowhead_client import constants
 from arrowhead_client.types import Metadata
@@ -172,6 +172,7 @@ class ArrowheadClient(ABC):
         self.auth_authentication_info = None
         self.orchestration_rules = OrchestrationRuleContainer()
         self.registration_rules = RegistrationRuleContainer()
+        self.event_subscription_rules: Dict[str, EventSubscriptionRule] = {}
         # TODO: Should add_provided_service be exactly the same as the provider's,
         # or should this class do something on top of it?
         # It's currently not even being used so it could likely be removed.
@@ -254,13 +255,13 @@ class ArrowheadClient(ABC):
 
         return wrapped_func
 
-    def subscribed_event(
+    def handle_event(
             self,
             event_type: str,
-            metadata: Optional[Metadata],
+            metadata_filter: Optional[Metadata] = None,
     ):
         """
-        Decorator for registering events.
+        Decorator for subscribing to events.
 
         Args:
             event_type: Name of event type that will be published.
@@ -268,6 +269,18 @@ class ArrowheadClient(ABC):
         Returns:
 
         """
+
+        def decorator(func):
+            self.event_subscription_rules[event_type] = EventSubscriptionRule(
+                    event_type=event_type,
+                    subscriber_system=self.system,
+                    metadata=metadata_filter,
+                    callback=func,
+            )
+
+            return func
+
+        return decorator
 
 
     @abstractmethod
@@ -481,6 +494,27 @@ class ArrowheadClient(ABC):
         """
         pass
 
+    # TODO: Make the event_{} methods abstractmethods
+    def _subscribe_event(self, event_type):
+        """
+        Subscribes to event
+        """
+
+    def _subscribe_all_events(self):
+        """
+        Subscribes to all events.
+        """
+
+    def _unsubscribe_event(self, event_type):
+        """
+        Unsubscribe to event.
+        """
+
+    def _unsubscribe_all_events(self):
+        """
+        Unsubscribe to all events.
+        """
+
     def _initialize_provided_services(self) -> None:
         for rule in self.registration_rules:
             rule.access_policy = get_access_policy(
@@ -490,6 +524,27 @@ class ArrowheadClient(ABC):
                     authorization_key=self.auth_authentication_info
             )
             self.provider.add_provided_service(rule)
+
+    def _initialize_event_subscription(self) -> None:
+        for event_type, rule in self.event_subscription_rules.items():
+            fake_service = Service(
+                   service_definition=f'{event_type}-{rule.uuid}',
+                   service_uri=rule.notify_uri,
+            )
+            fake_access_policy = get_access_policy(
+                    policy_name=constants.AccessPolicy.CERTIFICATE,
+                    provided_service=fake_service,
+                    privatekey=self.keyfile,
+                    authorization_key=self.auth_authentication_info
+            )
+            fake_registration_rule = RegistrationRule(
+                    provided_service = fake_service,
+                    provider_system=rule.subscriber_system,
+                    method='PUT',
+                    access_policy=fake_access_policy,
+                    func=rule.callback,
+            )
+            self.provider.add_provided_service(rule=fake_registration_rule)
 
     def _core_service_setup(self) -> None:
         """
