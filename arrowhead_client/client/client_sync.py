@@ -1,4 +1,6 @@
-from typing import Optional
+import json
+from datetime import datetime, timezone
+from typing import Optional, Union, Dict
 import warnings
 
 import arrowhead_client.client.core_service_forms.client as forms
@@ -38,7 +40,28 @@ class ArrowheadClientSync(ArrowheadClient):
                     f' service \'{service_definition}\''
             )
 
-        return self.consumer.consume_service(rule, **kwargs, )
+        return self.consumers[rule.protocol].consume_service(rule, **kwargs, )
+
+    def publish_event(
+            self,
+            event_type: str,
+            payload: Union[str, bytes, Dict],
+    ):
+        event_publish_form = forms.EventPublishForm(
+                event_type=event_type,
+                payload = payload if not isinstance(payload, dict) else json.dumps(payload),
+                source = self.system,
+                timestamp = datetime.utcnow().astimezone(timezone.utc)
+        )
+
+        event_publish_response = self.consume_service(
+                CoreServices.EVENT_PUBLISH.service_definition,
+                json=event_publish_form.dto(),
+                cert=self.cert,
+        )
+
+        return event_publish_response
+
 
     def add_orchestration_rule(
             self,

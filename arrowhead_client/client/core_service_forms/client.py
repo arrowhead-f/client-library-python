@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Sequence, Optional, Mapping
 
 from arrowhead_client.dto import DTOMixin
@@ -227,7 +228,7 @@ class EventPublishForm(DTOMixin):
     meta_data: Optional[Metadata] = None
     payload: str
     source: ArrowheadSystem
-    time_stamp: str
+    timestamp: datetime
 
 
 class EventSubscribeForm(DTOMixin):

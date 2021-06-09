@@ -51,6 +51,12 @@ class CoreServices(CoreConfig, Enum):
         'GET', 'HTTP', 'JSON',
         constants.CoreSystem.AUTHORIZATION.value,
     )
+    EVENT_PUBLISH = (
+        'event-publish',
+        'eventhandler/publish',
+        'POST', 'HTTP', 'JSON',
+        constants.CoreSystem.EVENT_HANDLER.value
+    )
 
 
 def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:

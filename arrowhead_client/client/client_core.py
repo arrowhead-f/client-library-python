@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence
+from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence, Union
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -182,6 +182,7 @@ class ArrowheadClient(ABC):
     __arrowhead_consumer__: Sequence[Type[BaseConsumer]]
     __arrowhead_provider__: Type[BaseProvider]
 
+    # TODO: Remove this property, it is requests specific
     @property
     def cert(self) -> Tuple[str, str]:
         """ Tuple of the keyfile and certfile """
@@ -328,6 +329,14 @@ class ArrowheadClient(ABC):
 
             ...
         """
+        pass
+
+    @abstractmethod
+    def publish_event(
+            self,
+            event_type: str,
+            payload: Union[str, bytes, Dict],
+    ):
         pass
 
     @abstractmethod
