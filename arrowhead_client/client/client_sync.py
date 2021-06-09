@@ -49,11 +49,10 @@ class ArrowheadClientSync(ArrowheadClient):
     ):
         event_publish_form = forms.EventPublishForm(
                 event_type=event_type,
-                payload = payload if not isinstance(payload, dict) else json.dumps(payload),
+                payload = str(payload if not isinstance(payload, dict) else json.dumps(payload)),
                 source = self.system,
-                timestamp = datetime.utcnow().astimezone(timezone.utc)
+                time_stamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         )
-
         event_publish_response = self.consume_service(
                 CoreServices.EVENT_PUBLISH.service_definition,
                 json=event_publish_form.dto(),

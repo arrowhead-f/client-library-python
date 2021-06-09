@@ -228,7 +228,7 @@ class EventPublishForm(DTOMixin):
     meta_data: Optional[Metadata] = None
     payload: str
     source: ArrowheadSystem
-    timestamp: datetime
+    time_stamp: str
 
 
 class EventSubscribeForm(DTOMixin):

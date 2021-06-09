@@ -36,7 +36,7 @@ class SyncClient(ArrowheadClientSync):
 
     """
     __arrowhead_provider__ = FlaskProvider
-    __arrowhead_consumer__ = RequestsConsumer
+    __arrowhead_consumer__ = (RequestsConsumer,)
 
 
 class AsyncClient(ArrowheadClientAsync):

@@ -254,7 +254,7 @@ class ArrowheadClient(ABC):
 
         return wrapped_func
 
-    def event_service(
+    def subscribed_event(
             self,
             event_type: str,
             metadata: Optional[Metadata],
