@@ -234,7 +234,7 @@ class EventPublishForm(DTOMixin):
 class EventSubscribeForm(DTOMixin):
     event_type: str
     filter_meta_data: Optional[Metadata] = None
-    match_meta_data: bool
+    match_meta_data: bool = False
     notify_uri: str
     sources: Optional[Sequence[ArrowheadSystem]] = None
     start_date: Optional[str] = None

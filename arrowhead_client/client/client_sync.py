@@ -9,6 +9,7 @@ from arrowhead_client.constants import OrchestrationFlags
 from arrowhead_client.client import core_service_responses as responses
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
+from arrowhead_client.rules import EventSubscriptionRule
 from arrowhead_client.service import Service, ServiceInterface
 
 class ArrowheadClientSync(ArrowheadClient):
@@ -126,6 +127,7 @@ class ArrowheadClientSync(ArrowheadClient):
             self._initialize_provided_services()
             self._register_all_services()
             self._initialize_event_subscription()
+            self._subscribe_all_events()
             self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
             self.provider.run_forever(
@@ -140,6 +142,7 @@ class ArrowheadClientSync(ArrowheadClient):
         finally:
             print('Shutting down Arrowhead system')
             self._unregister_all_services()
+            self._unsubscribe_all_events()
             self._logger.info('Server shut down')
 
     def _register_service(self, service: Service):
@@ -185,12 +188,9 @@ class ArrowheadClientSync(ArrowheadClient):
         Args:
             service: Service to unregister with the Service registry.
         """
-
-        service_definition = service.service_definition
-
         # TODO: Should be a "form"?
         unregistration_payload = {
-            'service_definition': service_definition,
+            'service_definition': service.service_definition,
             'system_name': self.system.system_name,
             'address': self.system.address,
             'port': self.system.port
@@ -219,14 +219,43 @@ class ArrowheadClientSync(ArrowheadClient):
             else:
                 rule.is_provided = False
 
-    def _subscribe_event(self, event_type):
-        pass
+    def _subscribe_event(self, event_rule: EventSubscriptionRule):
+        event_subscription_form = forms.EventSubscribeForm(
+                event_type=event_rule.event_type,
+                notify_uri=event_rule.notify_uri,
+                subscriber_system=event_rule.subscriber_system,
+        )
+
+        event_subscription_response = self.consume_service(
+                CoreServices.EVENT_SUBSCRIBE.service_definition,
+                json=event_subscription_form.dto(),
+                cert=self.cert
+        )
+
+        # TODO: Process subscription response
+        print(event_subscription_response)
 
     def _subscribe_all_events(self):
-        pass
+        for event_type, rule in self.event_subscription_rules.items():
+            self._subscribe_event(rule)
 
-    def _unsubscribe_event(self, event_type):
-        pass
+    def _unsubscribe_event(self, rule: EventSubscriptionRule):
+        unsubscription_payload = {
+            "event_type": rule.event_type,
+            "system_name": rule.subscriber_system.system_name,
+            "address": rule.subscriber_system.address,
+            "port": rule.subscriber_system.port,
+        }
+
+        event_unsubscription_response = self.consume_service(
+                CoreServices.EVENT_UNSUBSCRIBE.service_definition,
+                params=unsubscription_payload,
+                cert=self.cert,
+        )
+
+        # TODO: Process unsubscription response
+        print(event_unsubscription_response)
 
     def _unsubscribe_all_events(self):
-        pass
+        for event_type, rule in self.event_subscription_rules.items():
+            self._unsubscribe_event(rule)

@@ -55,7 +55,19 @@ class CoreServices(CoreConfig, Enum):
         'event-publish',
         'eventhandler/publish',
         'POST', 'HTTP', 'JSON',
-        constants.CoreSystem.EVENT_HANDLER.value
+        constants.CoreSystem.EVENT_HANDLER.value,
+    )
+    EVENT_SUBSCRIBE = (
+        'event-subscribe',
+        'eventhandler/subscribe',
+        'POST', 'HTTP', 'JSON',
+        constants.CoreSystem.EVENT_HANDLER.value,
+    )
+    EVENT_UNSUBSCRIBE = (
+        'event-unsubscribe',
+        'eventhandler/unsubscribe',
+        'DELETE', 'HTTP', 'JSON',
+        constants.CoreSystem.EVENT_HANDLER.value,
     )
 
 
