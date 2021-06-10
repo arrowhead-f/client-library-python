@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Sequence, Optional, Mapping
 
@@ -229,6 +230,20 @@ class EventPublishForm(DTOMixin):
     payload: str
     source: ArrowheadSystem
     time_stamp: str
+
+
+class EventForm(DTOMixin):
+    #serial_version_UID = int
+    event_type: str
+    meta_data: Optional[Metadata] = None
+    payload: str
+    time_stamp: str
+
+    def json_payload(self):
+        try:
+            return json.dumps(self.payload)
+        except json.JSONDecodeError as e:
+            raise Exception('Event payload is not JSON decodable') from e
 
 
 class EventSubscribeForm(DTOMixin):

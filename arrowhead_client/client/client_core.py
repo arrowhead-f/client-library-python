@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from arrowhead_client.client.core_service_forms.client import EventForm
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.consumer.base import BaseConsumer
@@ -270,7 +271,7 @@ class ArrowheadClient(ABC):
 
         """
 
-        def decorator(func):
+        def decorator(func: Callable):
             self.event_subscription_rules[event_type] = EventSubscriptionRule(
                     event_type=event_type,
                     subscriber_system=self.system,
@@ -494,22 +495,25 @@ class ArrowheadClient(ABC):
         """
         pass
 
-    # TODO: Make the event_{} methods abstractmethods
+    @abstractmethod
     def _subscribe_event(self, event_type):
         """
         Subscribes to event
         """
 
+    @abstractmethod
     def _subscribe_all_events(self):
         """
         Subscribes to all events.
         """
 
+    @abstractmethod
     def _unsubscribe_event(self, event_type):
         """
         Unsubscribe to event.
         """
 
+    @abstractmethod
     def _unsubscribe_all_events(self):
         """
         Unsubscribe to all events.
@@ -530,6 +534,7 @@ class ArrowheadClient(ABC):
             fake_service = Service(
                    service_definition=f'{event_type}-{rule.uuid}',
                    service_uri=rule.notify_uri,
+                    interface=ServiceInterface.from_str('HTTP-SECURE-JSON'),
             )
             fake_access_policy = get_access_policy(
                     policy_name=constants.AccessPolicy.CERTIFICATE,
@@ -540,11 +545,11 @@ class ArrowheadClient(ABC):
             fake_registration_rule = RegistrationRule(
                     provided_service = fake_service,
                     provider_system=rule.subscriber_system,
-                    method='PUT',
+                    method='POST',
                     access_policy=fake_access_policy,
                     func=rule.callback,
             )
-            self.provider.add_provided_service(rule=fake_registration_rule)
+            self.provider.add_provided_service(fake_registration_rule)
 
     def _core_service_setup(self) -> None:
         """

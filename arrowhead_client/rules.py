@@ -188,7 +188,7 @@ class EventSubscriptionRule:
         self.subscriber_system = subscriber_system
         # Use uuid to generate the notification url for added security
         self.uuid = uuid4()
-        self.notify_uri = f'{subscriber_system.address}:{subscriber_system.port}/event-notifications/{self.uuid}'
+        self.notify_uri = f'event-notifications/{self.uuid}'
         self.callback = callback
 
 
