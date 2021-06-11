@@ -181,7 +181,7 @@ class ArrowheadClient(ABC):
         self.add_provided_service = self.provider.add_provided_service
 
     __arrowhead_services__: List[str] = []
-    __arrowhead_consumer__: Sequence[Type[BaseConsumer]]
+    __arrowhead_consumers__: Sequence[Type[BaseConsumer]]
     __arrowhead_provider__: Type[BaseProvider]
 
     # TODO: Remove this property, it is requests specific
@@ -383,7 +383,7 @@ class ArrowheadClient(ABC):
 
         If you wish to use different producers or consumers, create a new class inheriting from either
         :code:`client.ArrowheadClientAsync` or :code:`client.ArrowheadClientSync` and specify the
-        :code:`__arrowhead_provider__` and :code:`__arrowhead_consumer__` fields.
+        :code:`__arrowhead_provider__` and :code:`__arrowhead_consumers__` fields.
 
         Args:
             system_name: Name for the system the client will register as in the service and system registries.
@@ -419,7 +419,7 @@ class ArrowheadClient(ABC):
         )
         new_instance = cls(
                 system,
-                tuple(consumer(keyfile, certfile, cafile) for consumer in cls.__arrowhead_consumer__),
+                tuple(consumer(keyfile, certfile, cafile) for consumer in cls.__arrowhead_consumers__),
                 cls.__arrowhead_provider__(cafile),
                 logger,
                 config=config,
