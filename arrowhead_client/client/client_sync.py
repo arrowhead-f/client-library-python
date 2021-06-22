@@ -33,15 +33,21 @@ class ArrowheadClientSync(ArrowheadClient):
             **kwargs: Collection of keyword arguments passed to the consumer.
         """
 
-        rule = self.orchestration_rules.get(service_definition)
-        if rule is None:
-            # TODO: Not sure if this should raise an error or just log?
-            raise errors.NoAvailableServicesError(
-                    f'No services available for'
-                    f' service \'{service_definition}\''
-            )
+        for rule in self.orchestration_rules[service_definition]:
+            if not rule.active:
+                continue
+            try:
+                return self.consumers[rule.protocol].consume_service(rule, **kwargs, )
+            except OSError:
+                rule.active = False
+                continue
 
-        return self.consumers[rule.protocol].consume_service(rule, **kwargs, )
+        # TODO: Not sure if this should raise an error or just log?
+        raise errors.NoAvailableServicesError(
+                f'No services available for'
+                f' service \'{service_definition}\''
+        )
+
 
     def publish_event(
             self,
@@ -109,8 +115,7 @@ class ArrowheadClientSync(ArrowheadClient):
 
         rules = responses.process_orchestration(orchestration_response, method)
 
-        for rule in rules:
-            self.orchestration_rules.store(rule)
+        self.orchestration_rules[service_definition] = rules
 
     def run_forever(self) -> None:
         """

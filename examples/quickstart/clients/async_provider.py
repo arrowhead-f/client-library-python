@@ -79,5 +79,5 @@ async def ws_test(websocket: WebSocket):
 
 
 if __name__ == '__main__':
-    print(provider.__arrowhead_consumer__)
+    print(provider.__arrowhead_consumers__)
     provider.run_forever()

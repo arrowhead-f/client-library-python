@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from enum import Enum
 from collections import namedtuple
 
@@ -88,10 +88,10 @@ def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
     return rules
 
 
-def _extract_rule(core_service_tuple, config, secure) -> OrchestrationRule:
-    secure = constants.Security.SECURE if secure else constants.Security.INSECURE
+def _extract_rule(core_service_tuple: CoreConfig, config: Dict, secure: bool) -> OrchestrationRule:
+    secure_string = constants.Security.SECURE if secure else constants.Security.INSECURE
     access_policy = constants.AccessPolicy.CERTIFICATE if secure else constants.AccessPolicy.UNRESTRICTED
-    interface = ServiceInterface(core_service_tuple.protocol, secure, core_service_tuple.payload)
+    interface = ServiceInterface(core_service_tuple.protocol, secure_string, core_service_tuple.payload)
     core_system = ArrowheadSystem(**config[core_service_tuple.system])
     return OrchestrationRule(
             Service(

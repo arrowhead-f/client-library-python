@@ -11,6 +11,7 @@ Unreleased
 - Eventhandler supported through the following methods:
   - `ArrowheadClient.handle_event` is used to decorate a callback that acts on the received event.
   - `ArrowheadClient.publish_event` to publish events to the Event handler.
+- `ArrowheadClient.consume_service` will now iterate through all orchestration rules and try to make a connection for each one. If none succeeds an error will be thrown.  
 - The API is not stable and the names of the methods are subject to change without notice.
 
 Prior to version 0.5.Xa

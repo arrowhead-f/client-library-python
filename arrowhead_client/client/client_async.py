@@ -25,15 +25,19 @@ class ArrowheadClientAsync(ArrowheadClient):
         self.provider.add_shutdown_routine(self.client_cleanup)
 
     async def consume_service(self, service_definition, **kwargs) -> Response:
-        rule = self.orchestration_rules.get(service_definition)
-        if rule is None:
-            # TODO: Not sure if this should raise an error or just log?
-            raise errors.NoAvailableServicesError(
-                    f'No services available for'
-                    f' service \'{service_definition}\''
-            )
-        res = await self.consumers[rule.protocol].consume_service(rule, **kwargs)  # type: ignore
-        return res
+        for rule in self.orchestration_rules[service_definition]:
+            if not rule.active:
+                continue
+            try:
+                return await self.consumers[rule.protocol].consume_service(rule, **kwargs)  # type: ignore
+            except OSError:
+                rule.active = False
+                continue
+
+        raise errors.NoAvailableServicesError(
+                f'No services available for'
+                f' service \'{service_definition}\''
+        )
 
     async def publish_event(
             self,
