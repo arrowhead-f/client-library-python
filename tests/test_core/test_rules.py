@@ -44,14 +44,9 @@ def test_orchestration_rule_container_rule_input():
             authorization_token
     )
 
-    rule_container['first'] = rule
     rule_container.store(rule)
 
-    assert rule_container['first'].service_definition == consumed_service.service_definition
-    assert rule_container['test'].service_definition == consumed_service.service_definition
-
-    del rule_container['first']
-    assert rule_container.get('first') == None
+    assert rule_container['test'][0].service_definition == consumed_service.service_definition
 
     assert len(rule_container) == 1
 

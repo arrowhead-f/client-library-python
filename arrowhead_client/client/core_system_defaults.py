@@ -18,8 +18,8 @@ default_config = {
         'address': _default_address,
         'port': 8445,
     },
-    'eventhandler': {
-        'system_name': 'eventhandler',
+    'event_handler': {
+        'system_name': constants.CoreSystem.EVENT_HANDLER,
         'address': _default_address,
         'port': 8455,
     },

@@ -1,4 +1,6 @@
-from typing import Optional
+import json
+from datetime import datetime, timezone
+from typing import Optional, Union, Dict
 import warnings
 
 import arrowhead_client.client.core_service_forms.client as forms
@@ -7,6 +9,7 @@ from arrowhead_client.constants import OrchestrationFlags
 from arrowhead_client.client import core_service_responses as responses
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
+from arrowhead_client.rules import EventSubscriptionRule
 from arrowhead_client.service import Service, ServiceInterface
 
 class ArrowheadClientSync(ArrowheadClient):
@@ -30,15 +33,41 @@ class ArrowheadClientSync(ArrowheadClient):
             **kwargs: Collection of keyword arguments passed to the consumer.
         """
 
-        rule = self.orchestration_rules.get(service_definition)
-        if rule is None:
-            # TODO: Not sure if this should raise an error or just log?
-            raise errors.NoAvailableServicesError(
-                    f'No services available for'
-                    f' service \'{service_definition}\''
-            )
+        for rule in self.orchestration_rules[service_definition]:
+            if not rule.active:
+                continue
+            try:
+                return self.consumers[rule.protocol].consume_service(rule, **kwargs, )
+            except OSError:
+                rule.active = False
+                continue
 
-        return self.consumer.consume_service(rule, **kwargs, )
+        # TODO: Not sure if this should raise an error or just log?
+        raise errors.NoAvailableServicesError(
+                f'No services available for'
+                f' service \'{service_definition}\''
+        )
+
+
+    def publish_event(
+            self,
+            event_type: str,
+            payload: Union[str, bytes, Dict],
+    ):
+        event_publish_form = forms.EventPublishForm(
+                event_type=event_type,
+                payload = str(payload if not isinstance(payload, dict) else json.dumps(payload)),
+                source = self.system,
+                time_stamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        )
+        event_publish_response = self.consume_service(
+                CoreServices.EVENT_PUBLISH.service_definition,
+                json=event_publish_form.dto(),
+                cert=self.cert,
+        )
+
+        return event_publish_response
+
 
     def add_orchestration_rule(
             self,
@@ -86,8 +115,7 @@ class ArrowheadClientSync(ArrowheadClient):
 
         rules = responses.process_orchestration(orchestration_response, method)
 
-        for rule in rules:
-            self.orchestration_rules.store(rule)
+        self.orchestration_rules[service_definition] = rules
 
     def run_forever(self) -> None:
         """
@@ -103,6 +131,8 @@ class ArrowheadClientSync(ArrowheadClient):
                 self.auth_authentication_info = responses.process_publickey(authorization_response)
             self._initialize_provided_services()
             self._register_all_services()
+            self._initialize_event_subscription()
+            self._subscribe_all_events()
             self._logger.info('Starting server')
             print('Started Arrowhead ArrowheadSystem')
             self.provider.run_forever(
@@ -117,6 +147,7 @@ class ArrowheadClientSync(ArrowheadClient):
         finally:
             print('Shutting down Arrowhead system')
             self._unregister_all_services()
+            self._unsubscribe_all_events()
             self._logger.info('Server shut down')
 
     def _register_service(self, service: Service):
@@ -162,12 +193,9 @@ class ArrowheadClientSync(ArrowheadClient):
         Args:
             service: Service to unregister with the Service registry.
         """
-
-        service_definition = service.service_definition
-
         # TODO: Should be a "form"?
         unregistration_payload = {
-            'service_definition': service_definition,
+            'service_definition': service.service_definition,
             'system_name': self.system.system_name,
             'address': self.system.address,
             'port': self.system.port
@@ -195,3 +223,44 @@ class ArrowheadClientSync(ArrowheadClient):
                 print(e)
             else:
                 rule.is_provided = False
+
+    def _subscribe_event(self, event_rule: EventSubscriptionRule):
+        event_subscription_form = forms.EventSubscribeForm(
+                event_type=event_rule.event_type,
+                notify_uri=event_rule.notify_uri,
+                subscriber_system=event_rule.subscriber_system,
+        )
+
+        event_subscription_response = self.consume_service(
+                CoreServices.EVENT_SUBSCRIBE.service_definition,
+                json=event_subscription_form.dto(),
+                cert=self.cert
+        )
+
+        # TODO: Process subscription response
+        print(event_subscription_response)
+
+    def _subscribe_all_events(self):
+        for event_type, rule in self.event_subscription_rules.items():
+            self._subscribe_event(rule)
+
+    def _unsubscribe_event(self, rule: EventSubscriptionRule):
+        unsubscription_payload = {
+            "event_type": rule.event_type,
+            "system_name": rule.subscriber_system.system_name,
+            "address": rule.subscriber_system.address,
+            "port": rule.subscriber_system.port,
+        }
+
+        event_unsubscription_response = self.consume_service(
+                CoreServices.EVENT_UNSUBSCRIBE.service_definition,
+                params=unsubscription_payload,
+                cert=self.cert,
+        )
+
+        # TODO: Process unsubscription response
+        print(event_unsubscription_response)
+
+    def _unsubscribe_all_events(self):
+        for event_type, rule in self.event_subscription_rules.items():
+            self._unsubscribe_event(rule)

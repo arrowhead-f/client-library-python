@@ -22,6 +22,7 @@ class TestClient(AsyncClient):
             payload_format='JSON',
             access_policy='CERTIFICATE', )
     def hello(self, request: Dict = None):
+        self.format = 'C'
         return {'msg': self.format}
 
 
@@ -78,4 +79,5 @@ async def ws_test(websocket: WebSocket):
 
 
 if __name__ == '__main__':
+    print(provider.__arrowhead_consumers__)
     provider.run_forever()

@@ -3,8 +3,10 @@
 Rules Module
 ============
 """
-from typing import Optional, Iterator, Callable, Dict
+from typing import Optional, Iterator, Callable, Dict, List, Sequence
 from collections.abc import MutableMapping
+from collections import defaultdict
+from uuid import uuid4
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
@@ -36,6 +38,7 @@ class OrchestrationRule:
         self._provider_system = provider_system
         self._method = method
         self._authorization_token = authorization_token
+        self.active = True
 
     @property
     def service_definition(self) -> str:
@@ -174,6 +177,23 @@ class RegistrationRule:
         return result
 
 
+class EventSubscriptionRule:
+    def __init__(
+            self,
+            event_type: str,
+            subscriber_system: ArrowheadSystem,
+            callback: Callable,
+            metadata: Optional[Metadata] = None,
+    ):
+        self.event_type = event_type
+        self.metadata = metadata
+        self.subscriber_system = subscriber_system
+        # Use uuid to generate the notification url for added security
+        self.uuid = uuid4()
+        self.notify_uri = f'event-notifications/{self.uuid}'
+        self.callback = callback
+
+
 class OrchestrationRuleContainer(MutableMapping):
     """
     Orchestration Rule Container.
@@ -182,19 +202,19 @@ class OrchestrationRuleContainer(MutableMapping):
     """
 
     def __init__(self):
-        self._rulecontainer: Dict[str, OrchestrationRule] = {}
+        self._rulecontainer: Dict[str, List[OrchestrationRule]] = defaultdict(list)
 
-    def __getitem__(self, key: str) -> OrchestrationRule:
+    def __getitem__(self, key: str) -> List[OrchestrationRule]:
         return self._rulecontainer[key]
 
     def __setitem__(
             self,
             key: str,
-            item: OrchestrationRule
+            item: List[OrchestrationRule]
     ) -> None:
         self._rulecontainer[key] = item
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key):
         del self._rulecontainer[key]
 
     def __iter__(self) -> Iterator[str]:
@@ -210,7 +230,7 @@ class OrchestrationRuleContainer(MutableMapping):
         Args:
             item: OrchestrationRule to be stored.
         """
-        self._rulecontainer[item.service_definition] = item
+        self[item.service_definition].append(item)
 
 
 class RegistrationRuleContainer:

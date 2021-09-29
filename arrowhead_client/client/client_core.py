@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type, List, Optional
+from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence, Union
 from abc import ABC, abstractmethod
+from pathlib import Path
 
+import yaml
+
+from arrowhead_client.client.core_service_forms.client import EventForm
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.consumer.base import BaseConsumer
@@ -16,8 +20,12 @@ from arrowhead_client.rules import (
     OrchestrationRuleContainer,
     RegistrationRuleContainer,
     RegistrationRule,
+    EventSubscriptionRule,
 )
 from arrowhead_client import constants
+from arrowhead_client.types import Metadata
+from arrowhead_client.constants import Protocol
+from arrowhead_client.settings import ClientSettings
 
 
 def provided_service(
@@ -38,7 +46,7 @@ def provided_service(
         protocol: Protocol used by this service (e.g. HTTP and WS).
         method: Command used by the protocol (e.g. HTTP GET or POST). If the protocol does use a command (e.g. WS), this should be '*'.
         payload_format: The payload_format of the payload (e.g. JSON, XML, or TEXT).
-        access_policy: :code:`'UNRESTRICTED'` if system is in insecure mode, :code:`'CERTIFICATE'` or :code:`'TOKEN'` if system is in secure mode.
+        access_policy: :code:`'UNRESTRICTED'` if system is in insecure mode, :code:`'CERTIFICATE'` or :code:`'TOKEN'` if system is in secure_string mode.
 
     Returns:
         A ServiceDescriptor object
@@ -68,7 +76,7 @@ def provided_service(
     """
 
     class ServiceDescriptor:
-        def __init__(self, func):
+        def __init__(self, func: Callable):
             self.service_instance = Service.make(
                     service_definition,
                     service_uri,
@@ -82,7 +90,7 @@ def provided_service(
 
         def __set_name__(self, owner: Type[ArrowheadClient], name: str):
             if '__arrowhead_services__' not in dir(owner):
-                raise AttributeError('provided_service can decorate ArrowheadClient methods.')
+                raise AttributeError('provided_service can only decorate ArrowheadClient methods.')
 
             owner.__arrowhead_services__.append(name)
 
@@ -98,6 +106,36 @@ def provided_service(
             )
 
     return ServiceDescriptor
+
+
+def subscribed_event(
+        event_type: str,
+        metadata: Metadata,
+):
+    class EventDescriptor:
+        def __init__(self, callback: Callable):
+            self.event_type = event_type
+            self.metadata = metadata
+            self.callback = callback
+
+        def __set_name__(self, owner: Type[ArrowheadClient], name: str):
+            if '__arrowhead_subscribed_events__' not in dir(owner):
+                raise AttributeError('subscribed_event can only decorate ArrowheadClient methods.')
+
+            owner.__arrowhead_subscribed_events__.append(name)
+
+        def __get__(self, instance: ArrowheadClient, owner: Type[ArrowheadClient]):
+            if instance is None:
+                return self
+
+            return EventSubscriptionRule(
+                    event_type=self.event_type,
+                    subscriber_system=instance.system,
+                    callback=self.callback,
+                    metadata=self.metadata,
+            )
+
+    return EventDescriptor
 
 
 class ArrowheadClient(ABC):
@@ -125,7 +163,7 @@ class ArrowheadClient(ABC):
     In addition to the arguments mentioned above, ``__init__`` also generates the following attributes:
 
     Attributes:
-        secure: ``True`` if keyfile and certfile are both given, which means the client will run in secure mode.
+        secure: ``True`` if keyfile and certfile are both given, which means the client will run in secure_string mode.
         auth_authentication_info: Authorization system certificate string. It is attained when a connection to a secure local cloud is established.
         orchestration_rules: Mapping containing the rules with the information necessary to perform service consumption.
         registration_rules: Mapping containing the rules with the information necessary to perform service registration.
@@ -134,7 +172,7 @@ class ArrowheadClient(ABC):
     def __init__(
             self,
             system: ArrowheadSystem,
-            consumer: BaseConsumer,
+            consumers: Sequence[BaseConsumer],
             provider: BaseProvider,
             logger: Any,
             config: Dict = None,
@@ -143,7 +181,9 @@ class ArrowheadClient(ABC):
             **kwargs,
     ):
         self.system = system
-        self.consumer = consumer
+        self.consumers: Dict[str, BaseConsumer] = {protocol: consumer
+                          for consumer in consumers
+                          for protocol in consumer._protocol}
         self.provider = provider
         self.keyfile = keyfile
         self.certfile = certfile
@@ -153,6 +193,7 @@ class ArrowheadClient(ABC):
         self.auth_authentication_info = None
         self.orchestration_rules = OrchestrationRuleContainer()
         self.registration_rules = RegistrationRuleContainer()
+        self.event_subscription_rules: Dict[str, EventSubscriptionRule] = {}
         # TODO: Should add_provided_service be exactly the same as the provider's,
         # or should this class do something on top of it?
         # It's currently not even being used so it could likely be removed.
@@ -160,9 +201,11 @@ class ArrowheadClient(ABC):
         self.add_provided_service = self.provider.add_provided_service
 
     __arrowhead_services__: List[str] = []
-    __arrowhead_consumer__: Type[BaseConsumer]
+    __arrowhead_subscribed_events__: List[str] = []
+    __arrowhead_consumers__: Sequence[Type[BaseConsumer]]
     __arrowhead_provider__: Type[BaseProvider]
 
+    # TODO: Remove this property, it is requests specific
     @property
     def cert(self) -> Tuple[str, str]:
         """ Tuple of the keyfile and certfile """
@@ -172,8 +215,13 @@ class ArrowheadClient(ABC):
         # Setup methods
         self._core_service_setup()
 
+        # Setup services defined by method decorators
         for class_service_rule in self.__arrowhead_services__:
             self.registration_rules.store(getattr(self, class_service_rule))
+
+        # Setup event subscriptions defined by method decorators
+        for class_event_subscription in self.__arrowhead_subscribed_events__:
+            self.event_subscription_rules[class_event_subscription] = getattr(self, class_event_subscription)
 
     def provided_service(
             self,
@@ -233,6 +281,34 @@ class ArrowheadClient(ABC):
             return func
 
         return wrapped_func
+
+    def handle_event(
+            self,
+            event_type: str,
+            metadata_filter: Optional[Metadata] = None,
+    ):
+        """
+        Decorator for subscribing to events.
+
+        Args:
+            event_type: Name of event type that will be published.
+            metadata: Dictionary of metadata.
+        Returns:
+
+        """
+
+        def decorator(func: Callable):
+            self.event_subscription_rules[event_type] = EventSubscriptionRule(
+                    event_type=event_type,
+                    subscriber_system=self.system,
+                    metadata=metadata_filter,
+                    callback=func,
+            )
+
+            return func
+
+        return decorator
+
 
     @abstractmethod
     def add_orchestration_rule(
@@ -296,6 +372,14 @@ class ArrowheadClient(ABC):
         pass
 
     @abstractmethod
+    def publish_event(
+            self,
+            event_type: str,
+            payload: Union[str, bytes, Dict],
+    ):
+        pass
+
+    @abstractmethod
     def run_forever(self):
         """
         Start the server, publish all provided_service, and run until interrupted.
@@ -325,7 +409,7 @@ class ArrowheadClient(ABC):
 
         If you wish to use different producers or consumers, create a new class inheriting from either
         :code:`client.ArrowheadClientAsync` or :code:`client.ArrowheadClientSync` and specify the
-        :code:`__arrowhead_provider__` and :code:`__arrowhead_consumer__` fields.
+        :code:`__arrowhead_provider__` and :code:`__arrowhead_consumers__` fields.
 
         Args:
             system_name: Name for the system the client will register as in the service and system registries.
@@ -361,16 +445,47 @@ class ArrowheadClient(ABC):
         )
         new_instance = cls(
                 system,
-                cls.__arrowhead_consumer__(keyfile, certfile, cafile),
+                tuple(consumer(keyfile, certfile, cafile) for consumer in cls.__arrowhead_consumers__),
                 cls.__arrowhead_provider__(cafile),
                 logger,
                 config=config,
                 keyfile=keyfile,
                 certfile=certfile,
-                **kwargs
+                **kwargs,
         )
 
         return new_instance
+
+    @classmethod
+    def from_yaml(
+            cls,
+            config_path: str,
+            **kwargs,
+    ):
+        """
+        Factory method to create
+
+        Args:
+            config_path: Path to config_file
+            **kwargs: Keyword arguments going into ArrowheadClient.create()
+        Returns:
+            ArrowheadClient instance with parameters from config.
+        """
+        with open(config_path, 'r') as yamlfile:
+            config = yaml.safe_load(yamlfile)['client']
+
+        return cls.create(
+                **{**config, **kwargs}
+        )
+
+    @classmethod
+    def from_config(cls, config_path: str, **kwargs):
+        config_type = Path(config_path).suffix
+
+        if config_type == '.yaml':
+            return cls.from_yaml(config_path, **kwargs)
+        else:
+            raise ValueError(f'Configuration file format {config_type} unsupported')
 
     @abstractmethod
     def _register_service(self, service):
@@ -406,6 +521,30 @@ class ArrowheadClient(ABC):
         """
         pass
 
+    @abstractmethod
+    def _subscribe_event(self, event_type):
+        """
+        Subscribes to event
+        """
+
+    @abstractmethod
+    def _subscribe_all_events(self):
+        """
+        Subscribes to all events.
+        """
+
+    @abstractmethod
+    def _unsubscribe_event(self, event_type):
+        """
+        Unsubscribe to event.
+        """
+
+    @abstractmethod
+    def _unsubscribe_all_events(self):
+        """
+        Unsubscribe to all events.
+        """
+
     def _initialize_provided_services(self) -> None:
         for rule in self.registration_rules:
             rule.access_policy = get_access_policy(
@@ -415,6 +554,28 @@ class ArrowheadClient(ABC):
                     authorization_key=self.auth_authentication_info
             )
             self.provider.add_provided_service(rule)
+
+    def _initialize_event_subscription(self) -> None:
+        for event_type, rule in self.event_subscription_rules.items():
+            fake_service = Service(
+                   service_definition=f'{event_type}-{rule.uuid}',
+                   service_uri=rule.notify_uri,
+                    interface=ServiceInterface.from_str('HTTP-SECURE-JSON'),
+            )
+            fake_access_policy = get_access_policy(
+                    policy_name=constants.AccessPolicy.CERTIFICATE,
+                    provided_service=fake_service,
+                    privatekey=self.keyfile,
+                    authorization_key=self.auth_authentication_info
+            )
+            fake_registration_rule = RegistrationRule(
+                    provided_service = fake_service,
+                    provider_system=rule.subscriber_system,
+                    method='POST',
+                    access_policy=fake_access_policy,
+                    func=rule.callback,
+            )
+            self.provider.add_provided_service(fake_registration_rule)
 
     def _core_service_setup(self) -> None:
         """
@@ -427,3 +588,29 @@ class ArrowheadClient(ABC):
 
         for rule in core_rules:
             self.orchestration_rules.store(rule)
+
+    def _update_certificates(
+            self,
+            new_certfile: Path,
+            new_keyfile: Path,
+            new_cafile: Optional[Path] = None
+    ):
+        if (
+            not new_certfile.is_file()
+            or not new_keyfile.is_file()
+            or (new_cafile is not None and not new_cafile.is_file())
+        ):
+            raise ValueError('New certificate files need to exist')
+        # TODO: Check that files contain valid X509 information?
+
+        self.certfile = new_certfile
+        self.keyfile = new_keyfile
+
+        if new_cafile is not None:
+            self.provider.cafile = new_cafile
+
+        for protocol, consumer in self.consumers.items():
+            consumer.certfile = new_certfile
+            consumer.keyfile = new_keyfile
+            if new_cafile is not None:
+                consumer.cafile = new_cafile

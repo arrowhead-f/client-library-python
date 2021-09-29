@@ -1,0 +1,13 @@
+version: 2
+
+cloud:
+  systems:
+    - service_registry:
+        address: 127.0.0.1
+        port: 8443
+    - orchestration:
+        address: 127.0.0.1
+        port: 8441
+    - authorization:
+        address: 127.0.0.1
+        port: 8443

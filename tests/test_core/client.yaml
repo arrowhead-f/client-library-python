@@ -1,0 +1,10 @@
+version: 2
+
+client:
+  system_name: "test_system"
+  address: "127.0.0.1"
+  port: 123456
+  keyfile: "certificates/test.key"
+  certfile: "certificates/test.crt"
+  cafile: "certificates/sysop.ca"
+  config: ""

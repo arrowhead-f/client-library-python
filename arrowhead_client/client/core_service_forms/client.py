@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime
 from typing import Sequence, Optional, Mapping
 
 from arrowhead_client.dto import DTOMixin
@@ -224,20 +226,34 @@ class OrchestrationResponseList(DTOMixin):
 
 class EventPublishForm(DTOMixin):
     event_type: str
-    meta_data: Metadata
+    meta_data: Optional[Metadata] = None
     payload: str
     source: ArrowheadSystem
     time_stamp: str
 
 
+class EventForm(DTOMixin):
+    #serial_version_UID = int
+    event_type: str
+    meta_data: Optional[Metadata] = None
+    payload: str
+    time_stamp: str
+
+    def json_payload(self):
+        try:
+            return json.dumps(self.payload)
+        except json.JSONDecodeError as e:
+            raise Exception('Event payload is not JSON decodable') from e
+
+
 class EventSubscribeForm(DTOMixin):
     event_type: str
-    filter_meta_data: Metadata
-    match_meta_data: bool
+    filter_meta_data: Optional[Metadata] = None
+    match_meta_data: bool = False
     notify_uri: str
-    sources: Sequence[ArrowheadSystem]
-    start_date: str
-    end_date: str
+    sources: Optional[Sequence[ArrowheadSystem]] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
     subscriber_system: ArrowheadSystem
 
 

@@ -20,7 +20,7 @@ subprocess.run(['docker-compose', 'up', '-d'])
 with requests.Session() as session:
     session.verify = 'certificates/crypto/sysop.ca'
     session.cert = ('certificates/crypto/sysop.crt', 'certificates/crypto/sysop.key')
-    is_online = [False, False, False]
+    is_online = [False, False, False, False]
     print('Waiting for core systems to get online (might take a few minutes...)')
     while True:
         try:
@@ -36,6 +36,10 @@ with requests.Session() as session:
                 session.get('https://127.0.0.1:8445/authorization/echo')
                 is_online[2] = True
                 print('Authorization is online')
+            #if not is_online[3]:
+            #    session.get('https://127.0.0.1:8455/eventhandler/echo')
+            #    is_online[3] = True
+            #    print('Event Handler is online')
         except Exception:
             time.sleep(2)
         else:
