@@ -92,7 +92,7 @@ def provided_service(
             if '__arrowhead_services__' not in dir(owner):
                 raise AttributeError('provided_service can only decorate ArrowheadClient methods.')
 
-            owner.__arrowhead_services__.append(name)
+            owner.__arrowhead_services__ += (name, )
 
         def __get__(self, instance: ArrowheadClient, owner: Type[ArrowheadClient]):
             if instance is None:
@@ -122,7 +122,7 @@ def subscribed_event(
             if '__arrowhead_subscribed_events__' not in dir(owner):
                 raise AttributeError('subscribed_event can only decorate ArrowheadClient methods.')
 
-            owner.__arrowhead_subscribed_events__.append(name)
+            owner.__arrowhead_subscribed_events__ += (name,)
 
         def __get__(self, instance: ArrowheadClient, owner: Type[ArrowheadClient]):
             if instance is None:
@@ -200,8 +200,8 @@ class ArrowheadClient(ABC):
         # Maybe it should be it's own method?
         self.add_provided_service = self.provider.add_provided_service
 
-    __arrowhead_services__: List[str] = []
-    __arrowhead_subscribed_events__: List[str] = []
+    __arrowhead_services__: Tuple[str] = ()
+    __arrowhead_subscribed_events__: Tuple[str] = ()
     __arrowhead_consumers__: Sequence[Type[BaseConsumer]]
     __arrowhead_provider__: Type[BaseProvider]
 
@@ -282,10 +282,10 @@ class ArrowheadClient(ABC):
 
         return wrapped_func
 
-    def handle_event(
+    def subscribed_event(
             self,
             event_type: str,
-            metadata_filter: Optional[Metadata] = None,
+            metadata: Optional[Metadata] = None,
     ):
         """
         Decorator for subscribing to events.
@@ -301,7 +301,7 @@ class ArrowheadClient(ABC):
             self.event_subscription_rules[event_type] = EventSubscriptionRule(
                     event_type=event_type,
                     subscriber_system=self.system,
-                    metadata=metadata_filter,
+                    metadata=metadata,
                     callback=func,
             )
 
