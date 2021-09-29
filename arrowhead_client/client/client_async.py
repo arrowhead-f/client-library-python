@@ -1,3 +1,4 @@
+import traceback
 import arrowhead_client.client.core_service_forms.client
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses
@@ -113,9 +114,12 @@ class ArrowheadClientAsync(ArrowheadClient):
             try:
                 await self._register_service(rule.provided_service)
             except errors.CoreServiceInputError as e:
-                # TODO: logging
                 if str(e).endswith('already exists.'):
                     rule.is_provided = True
+                else:
+                    print(f"ERROR: {__name__} failed to register provider: {e}")
+                    traceback.print_exception(type(e), e, e.__traceback__)
+
             else:
                 rule.is_provided = True
 

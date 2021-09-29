@@ -143,7 +143,7 @@ class Service:
         return cls(
                 service_definition=service_definition,
                 service_uri=service_uri,
-                interface=ServiceInterface(
+                interface=ServiceInterface.with_access_policy(
                         protocol,
                         access_policy,
                         payload_format,
