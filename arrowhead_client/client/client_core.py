@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence, Union
+from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence, Union, ClassVar
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -110,7 +110,7 @@ def provided_service(
 
 def subscribed_event(
         event_type: str,
-        metadata: Metadata,
+        metadata: Optional[Metadata] = None,
 ):
     class EventDescriptor:
         def __init__(self, callback: Callable):
@@ -200,10 +200,10 @@ class ArrowheadClient(ABC):
         # Maybe it should be it's own method?
         self.add_provided_service = self.provider.add_provided_service
 
-    __arrowhead_services__: Tuple[str] = ()
-    __arrowhead_subscribed_events__: Tuple[str] = ()
-    __arrowhead_consumers__: Sequence[Type[BaseConsumer]]
-    __arrowhead_provider__: Type[BaseProvider]
+    __arrowhead_services__: ClassVar[Tuple[str, ...]] = ()
+    __arrowhead_subscribed_events__: ClassVar[Tuple[str, ...]] = ()
+    __arrowhead_consumers__: ClassVar[Sequence[Type[BaseConsumer]]]
+    __arrowhead_provider__: ClassVar[Type[BaseProvider]]
 
     # TODO: Remove this property, it is requests specific
     @property
@@ -558,8 +558,8 @@ class ArrowheadClient(ABC):
     def _initialize_event_subscription(self) -> None:
         for event_type, rule in self.event_subscription_rules.items():
             fake_service = Service(
-                   service_definition=f'{event_type}-{rule.uuid}',
-                   service_uri=rule.notify_uri,
+                    service_definition=f'{event_type}-{rule.uuid}',
+                    service_uri=rule.notify_uri,
                     interface=ServiceInterface.from_str('HTTP-SECURE-JSON'),
             )
             fake_access_policy = get_access_policy(
