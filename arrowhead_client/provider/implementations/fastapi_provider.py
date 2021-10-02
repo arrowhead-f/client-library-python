@@ -3,6 +3,7 @@ import json
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 import uvicorn  # type: ignore
 
 from arrowhead_client.provider.base import BaseProvider
@@ -52,7 +53,7 @@ class FastapiProvider(BaseProvider, protocol=constants.Protocol.HTTP):
 
         if rule.protocol == constants.Protocol.HTTP:
             self.app.add_api_route(
-                    path=f'/{rule.service_uri}',
+                    path=f'/{rule.service_uri.lstrip("/")}',
                     endpoint=rule.func,
                     methods=[rule.method],
             )
@@ -69,6 +70,8 @@ class FastapiProvider(BaseProvider, protocol=constants.Protocol.HTTP):
             keyfile: str,
             certfile: str,
     ):
+        # TODO: Should http requests be redirected to https requests automatically in secure mode?
+        # self.app.add_middleware(HTTPSRedirectMiddleware)
         self.app.add_middleware(ArrowheadAccessPolicyMiddleware, policy_map=self.policy_map)
 
         uvicorn.run(
