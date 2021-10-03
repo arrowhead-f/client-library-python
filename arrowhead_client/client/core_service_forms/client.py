@@ -58,9 +58,9 @@ class ServiceProviderResponse(DTOMixin):
     system_name: str
     address: str
     port: str
-    authentication_info: str
-    created_at: str
-    updated_at: str
+    authentication_info: str = ''
+    created_at: str = ''
+    updated_at: str = ''
 
 
 class ServiceInterfaceResponse(DTOMixin):
