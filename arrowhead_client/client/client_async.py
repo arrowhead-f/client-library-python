@@ -47,14 +47,13 @@ class ArrowheadClientAsync(ArrowheadClient):
     ):
         event_publish_form = forms.EventPublishForm(
                 event_type=event_type,
-                payload = str(payload if not isinstance(payload, dict) else json.dumps(payload)),
+                payload = str(payload) if not isinstance(payload, dict) else json.dumps(payload),
                 source = self.system,
                 time_stamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         )
         event_publish_response = await self.consume_service(
                 CoreServices.EVENT_PUBLISH.service_definition,
                 json=event_publish_form.dto(),
-                cert=self.cert,
         )
 
         return event_publish_response
@@ -191,7 +190,6 @@ class ArrowheadClientAsync(ArrowheadClient):
         )
 
         # TODO: Process subscription response
-        print(event_subscription_response)
 
     async def _subscribe_all_events(self):
         for event_type, rule in self.event_subscription_rules.items():
@@ -211,7 +209,6 @@ class ArrowheadClientAsync(ArrowheadClient):
         )
 
         # TODO: Process unsubscription response
-        print(event_unsubscription_response)
 
     async def _unsubscribe_all_events(self):
         for event_type, rule in self.event_subscription_rules.items():
@@ -240,7 +237,7 @@ class ArrowheadClientAsync(ArrowheadClient):
         print('Shutting down Arrowhead Client')
         await self._unregister_all_services()
         await self._unsubscribe_all_events()
-        for consumer in self.consumers:
+        for consumer in self.consumers.values():
             await consumer.async_shutdown()
         self._logger.info('Server shut down')
 
