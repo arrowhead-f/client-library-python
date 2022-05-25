@@ -85,7 +85,7 @@ class OrchestrationRule:
         """The URI to the service, without the protocol"""
         return f'{self._provider_system.address}:' \
                f'{self._provider_system.port}/' \
-               f'{self._consumed_service.service_uri}'
+               f'{self._consumed_service.service_uri.lstrip("/")}'
 
     @property
     def authentication_info(self) -> str:

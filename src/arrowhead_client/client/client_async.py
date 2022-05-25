@@ -141,6 +141,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                 continue
             try:
                 await self._register_service(rule.provided_service)
+                print(f'registered service {rule.service_definition}')
             except errors.CoreServiceInputError as e:
                 if str(e).endswith('already exists.'):
                     rule.is_provided = True
