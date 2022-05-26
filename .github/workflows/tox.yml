@@ -21,10 +21,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
-      - name: Install Tox and any other packages
+      - name: Install dependencies
         run: | 
           python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions setuptools wheel
+          python -m pip install tox tox-gh-actions
       - name: Run Tox
         run: |
           PYVER=${{matrix.python}}
