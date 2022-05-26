@@ -3,7 +3,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 
 
-from tests.test_security.conftest import generate_keys, generate_cert
+from tests.unit_tests.test_security.conftest import generate_keys, generate_cert
 from arrowhead_client.system import ArrowheadSystem
 
 @pytest.fixture()

@@ -5,8 +5,8 @@ from contextlib import nullcontext
 import arrowhead_client.security.access_policy as ap
 from arrowhead_client.service import Service
 from arrowhead_client import constants
-from tests.test_security.test_access_token import generate_claims
-from tests.test_security import conftest
+from tests.unit_tests.test_security.test_access_token import generate_claims
+from tests.unit_tests.test_security import conftest
 
 def pytest_generate_tests(metafunc):
     # called once per each test function

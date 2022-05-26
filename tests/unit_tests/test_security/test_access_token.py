@@ -1,7 +1,7 @@
 import pytest
 import time
 
-from tests.test_security import conftest
+from tests.unit_tests.test_security import conftest
 
 from arrowhead_client.security.access_token import AccessToken
 from arrowhead_client import errors
