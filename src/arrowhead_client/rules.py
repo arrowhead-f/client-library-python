@@ -3,16 +3,20 @@
 Rules Module
 ============
 """
-from typing import Optional, Iterator, Callable, Dict, List, Sequence
+from __future__ import annotations
+
+from typing import Optional, Iterator, Callable, Dict, List, Sequence, TypeVar, Generic, Any
 from collections.abc import MutableMapping
 from collections import defaultdict
 from uuid import uuid4
+from pydantic import BaseModel
 
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.security.access_policy import AccessPolicy
 from arrowhead_client import errors
 from arrowhead_client.types import Version, Metadata
+from arrowhead_client.request import Request
 
 
 class OrchestrationRule:
@@ -115,8 +119,9 @@ class RegistrationRule:
             provided_service: Service,
             provider_system: ArrowheadSystem,
             method: str,
-            func: Callable,
+            func: Callable[[Request], Any],
             access_policy: AccessPolicy = None,
+            data_model: Optional[BaseModel] = None,
     ):
         """
             provided_service: Service provided by the ``provider_system``.
@@ -131,6 +136,7 @@ class RegistrationRule:
         self._func = func
         self._access_policy = access_policy
         self.is_provided = False
+        self.data_model = data_model
 
     @property
     def service_definition(self):
@@ -139,6 +145,10 @@ class RegistrationRule:
     @property
     def service_uri(self):
         return self._provided_service.service_uri
+
+    @property
+    def payload_type(self):
+        self._provided_service.interface.payload
 
     @property
     def provided_service(self):

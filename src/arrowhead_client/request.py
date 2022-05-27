@@ -1,16 +1,20 @@
-from typing import Dict, Union
+from typing import Dict, Union, Optional, TypeVar, Generic
 from dataclasses import dataclass, field
 import json
 
+from pydantic import BaseModel
+
 from arrowhead_client import constants
 
+M = TypeVar('M', bound=BaseModel)
 
 @dataclass
-class Request:
+class Request(Generic[M]):
     body: bytes
     payload_type: str
     status: Union[str, int] = ''
     query: Dict = field(default_factory=dict)
+    data_model: Optional[M] = None
 
     # _request_object: Any
 

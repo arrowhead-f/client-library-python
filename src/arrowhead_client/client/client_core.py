@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence, Union, ClassVar
+from typing import Any, Dict, Tuple, Callable, Type, List, Optional, Sequence, Union, ClassVar, ForwardRef
 from abc import ABC, abstractmethod
 from pathlib import Path
 
 import yaml
+from pydantic import BaseModel
 
 from arrowhead_client.client.core_service_forms.client import EventForm
+from arrowhead_client.request import Request
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.provider.base import BaseProvider
 from arrowhead_client.consumer.base import BaseConsumer
@@ -28,6 +30,11 @@ from arrowhead_client.constants import Protocol
 from arrowhead_client.settings import ClientSettings
 
 
+class ServiceDescriptorBase:
+    def __init__(self, func: Callable[[Request], Any]):
+        ...
+
+
 def provided_service(
         service_definition: str,
         service_uri: str,
@@ -35,7 +42,8 @@ def provided_service(
         method: str,
         payload_format: str,
         access_policy: str,
-):
+        data_model: BaseModel | None = None
+) -> Type[ServiceDescriptorBase]:
     """
     Decorator to create services bound to subclasses of ArrowheadClient.
     Should be used when the client needs to manage states, for example a counter of how many times a service has been accessed, see example below.
@@ -75,8 +83,9 @@ def provided_service(
                 return list(reversed(input))
     """
 
-    class ServiceDescriptor:
-        def __init__(self, func: Callable):
+    class ServiceDescriptor(ServiceDescriptorBase):
+        def __init__(self, func: Callable[[Request], Any]):
+            super().__init__(func)
             self.service_instance = Service.make(
                     service_definition,
                     service_uri,
@@ -88,13 +97,13 @@ def provided_service(
             self.service_definition = service_definition
             self.func = func
 
-        def __set_name__(self, owner: Type[ArrowheadClient], name: str):
+        def __set_name__(self, owner: type[ArrowheadClient], name: str):
             if '__arrowhead_services__' not in dir(owner):
                 raise AttributeError('provided_service can only decorate ArrowheadClient methods.')
 
             owner.__arrowhead_services__ += (name, )
 
-        def __get__(self, instance: ArrowheadClient, owner: Type[ArrowheadClient]):
+        def __get__(self, instance: ArrowheadClient, owner: type[ArrowheadClient]):
             if instance is None:
                 return self
 
@@ -103,6 +112,7 @@ def provided_service(
                     provider_system=instance.system,
                     method=self.method,
                     func=partial(self.func, instance),
+                    data_model=data_model,
             )
 
     return ServiceDescriptor
@@ -110,7 +120,7 @@ def provided_service(
 
 def subscribed_event(
         event_type: str,
-        metadata: Optional[Metadata] = None,
+        metadata: Metadata | None = None,
 ):
     class EventDescriptor:
         def __init__(self, callback: Callable):
@@ -118,7 +128,7 @@ def subscribed_event(
             self.metadata = metadata
             self.callback = callback
 
-        def __set_name__(self, owner: Type[ArrowheadClient], name: str):
+        def __set_name__(self, owner: type[ArrowheadClient], name: str):
             if '__arrowhead_subscribed_events__' not in dir(owner):
                 raise AttributeError('subscribed_event can only decorate ArrowheadClient methods.')
 
@@ -175,13 +185,13 @@ class ArrowheadClient(ABC):
             consumers: Sequence[BaseConsumer],
             provider: BaseProvider,
             logger: Any,
-            config: Dict = None,
+            config: dict = None,
             keyfile: str = '',
             certfile: str = '',
             **kwargs,
     ):
         self.system = system
-        self.consumers: Dict[str, BaseConsumer] = {protocol: consumer
+        self.consumers: dict[str, BaseConsumer] = {protocol: consumer
                           for consumer in consumers
                           for protocol in consumer._protocol}
         self.provider = provider
@@ -193,21 +203,21 @@ class ArrowheadClient(ABC):
         self.auth_authentication_info = None
         self.orchestration_rules = OrchestrationRuleContainer()
         self.registration_rules = RegistrationRuleContainer()
-        self.event_subscription_rules: Dict[str, EventSubscriptionRule] = {}
+        self.event_subscription_rules: dict[str, EventSubscriptionRule] = {}
         # TODO: Should add_provided_service be exactly the same as the provider's,
         # or should this class do something on top of it?
         # It's currently not even being used so it could likely be removed.
         # Maybe it should be it's own method?
         self.add_provided_service = self.provider.add_provided_service
 
-    __arrowhead_services__: ClassVar[Tuple[str, ...]] = ()
-    __arrowhead_subscribed_events__: ClassVar[Tuple[str, ...]] = ()
-    __arrowhead_consumers__: ClassVar[Sequence[Type[BaseConsumer]]]
-    __arrowhead_provider__: ClassVar[Type[BaseProvider]]
+    __arrowhead_services__: ClassVar[tuple[str, ...]] = ()
+    __arrowhead_subscribed_events__: ClassVar[tuple[str, ...]] = ()
+    __arrowhead_consumers__: ClassVar[Sequence[type[BaseConsumer]]]
+    __arrowhead_provider__: ClassVar[type[BaseProvider]]
 
     # TODO: Remove this property, it is requests specific
     @property
-    def cert(self) -> Tuple[str, str]:
+    def cert(self) -> tuple[str, str]:
         """ Tuple of the keyfile and certfile """
         return self.certfile, self.keyfile
 
@@ -231,7 +241,8 @@ class ArrowheadClient(ABC):
             method: str,
             payload_format: str,
             access_policy: str,
-    ) -> Callable:
+            data_model: BaseModel | None = None,
+    ) -> Callable[[Callable[[Request], Any]], Callable[[Request], Any]]:
         """
         Decorator to add a provided provided_service to the provider.
         Useful during testing, because unlike the free :code:`provided_service` decorator this one does not require subclassing :code:`ArrowheadClient`.
@@ -269,13 +280,14 @@ class ArrowheadClient(ABC):
                 access_policy,
         )
 
-        def wrapped_func(func):
+        def wrapped_func(func: Callable[[Request], Any]):
             self.registration_rules.store(
                     RegistrationRule(
                             provided_service,
                             self.system,
                             method,
                             func,
+                            data_model=data_model,
                     )
             )
             return func
@@ -285,7 +297,7 @@ class ArrowheadClient(ABC):
     def subscribed_event(
             self,
             event_type: str,
-            metadata: Optional[Metadata] = None,
+            metadata: Metadata | None = None,
     ):
         """
         Decorator for subscribing to events.
@@ -375,7 +387,7 @@ class ArrowheadClient(ABC):
     def publish_event(
             self,
             event_type: str,
-            payload: Union[str, bytes, Dict],
+            payload: str | bytes | dict
     ):
         pass
 
@@ -395,7 +407,7 @@ class ArrowheadClient(ABC):
             system_name: str,
             address: str,
             port: int,
-            config: Dict = None,
+            config: dict = None,
             keyfile: str = '',
             certfile: str = '',
             cafile: str = '',
@@ -593,7 +605,7 @@ class ArrowheadClient(ABC):
             self,
             new_certfile: Path,
             new_keyfile: Path,
-            new_cafile: Optional[Path] = None
+            new_cafile: Path | None = None
     ):
         if (
             not new_certfile.is_file()
@@ -603,11 +615,11 @@ class ArrowheadClient(ABC):
             raise ValueError('New certificate files need to exist')
         # TODO: Check that files contain valid X509 information?
 
-        self.certfile = new_certfile
-        self.keyfile = new_keyfile
+        self.certfile = new_certfile.as_uri()
+        self.keyfile = new_keyfile.as_uri()
 
         if new_cafile is not None:
-            self.provider.cafile = new_cafile
+            self.provider.cafile = new_cafile.as_uri()
 
         for protocol, consumer in self.consumers.items():
             consumer.certfile = new_certfile

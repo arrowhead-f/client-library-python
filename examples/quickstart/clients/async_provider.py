@@ -6,6 +6,7 @@ from typing import Dict
 from fastapi import WebSocket
 
 from arrowhead_client.client import provided_service
+from arrowhead_client.request import Request
 from arrowhead_client.client.implementations import AsyncClient
 
 
@@ -56,7 +57,7 @@ async def hello_arrowhead(request: Dict = None):
         method='PUT',
         payload_format='JSON',
         access_policy='CERTIFICATE', )
-async def echo(request: Dict):
+async def echo(request: Request):
     body = request
 
     return body

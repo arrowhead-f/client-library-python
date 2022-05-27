@@ -1,4 +1,5 @@
-from typing import Union, Dict
+from __future__ import annotations
+
 from dataclasses import dataclass
 import json
 from abc import ABC, abstractmethod
@@ -13,9 +14,9 @@ class Response:
     """
     payload: bytes
     payload_type: str
-    status_code: Union[str, int]
+    status_code: str | int
 
-    def read_json(self) -> Dict:
+    def read_json(self) -> dict:
         if self.payload_type != constants.Payload.JSON:
             raise RuntimeError(f'Payload type must be \'{constants.Payload.JSON}\' to use read_json(), '
                                f'current type is {self.payload_type}')

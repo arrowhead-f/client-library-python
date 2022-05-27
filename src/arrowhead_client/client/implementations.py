@@ -2,7 +2,7 @@ from arrowhead_client.client.client_sync import ArrowheadClientSync
 from arrowhead_client.client.client_async import ArrowheadClientAsync
 from arrowhead_client.provider.implementations.httpprovider import FlaskProvider
 from arrowhead_client.consumer.implementations.requests_consumer import RequestsConsumer
-from arrowhead_client.provider.implementations.fastapi_provider import FastapiProvider as AsyncHttpProvider
+from arrowhead_client.provider.implementations.starlette_provider import StarletteProvider as AsyncHttpProvider
 from arrowhead_client.consumer.implementations.aiohttp_consumer import AiohttpConsumer
 
 
