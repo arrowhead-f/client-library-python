@@ -1,4 +1,6 @@
-from typing import Dict, Union, Optional, TypeVar, Generic
+from __future__ import annotations
+
+from typing import Dict, Union, Optional, TypeVar, Generic, Type
 from dataclasses import dataclass, field
 import json
 
@@ -12,13 +14,13 @@ M = TypeVar('M', bound=BaseModel)
 class Request(Generic[M]):
     body: bytes
     payload_type: str
-    status: Union[str, int] = ''
+    status: str | int = ''
     query: Dict = field(default_factory=dict)
-    data_model: Optional[M] = None
+    data_model: Type[M] | None = None
 
     # _request_object: Any
 
-    def read_json(self):
+    def read_json(self, **kwargs):
         if self.payload_type != constants.Payload.JSON:
             raise RuntimeError(f'Body type must be \'{constants.Payload.JSON}\' '
                                f'to use read_json(), current type is {self.payload_type}')

@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from functools import partial
 from typing import Any, Callable, Type, Sequence, ClassVar
+try:
+    from typing import Protocol
+except ImportError:
+    from typing_extensions import Protocol
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -28,7 +32,7 @@ from arrowhead_client.types import Metadata
 
 
 class ServiceDescriptorBase:
-    def __init__(self, func: Callable[[Request], Any]):
+    def __init__(self, func: Callable[[Any, Request], Any]):
         ...
 
 
@@ -39,7 +43,7 @@ def provided_service(
         method: str,
         payload_format: str,
         access_policy: str,
-        data_model: BaseModel | None = None
+        data_model: type[BaseModel] | None = None
 ) -> Type[ServiceDescriptorBase]:
     """
     Decorator to create services bound to subclasses of ArrowheadClient.
@@ -81,7 +85,7 @@ def provided_service(
     """
 
     class ServiceDescriptor(ServiceDescriptorBase):
-        def __init__(self, func: Callable[[Request], Any]):
+        def __init__(self, func: Callable[[Any, Request], Any]):
             super().__init__(func)
             self.service_instance = Service.make(
                     service_definition,
@@ -238,7 +242,7 @@ class ArrowheadClient(ABC):
             method: str,
             payload_format: str,
             access_policy: str,
-            data_model: BaseModel | None = None,
+            data_model: type[BaseModel] | None = None,
     ) -> Callable[[Callable[[Request], Any]], Callable[[Request], Any]]:
         """
         Decorator to add a provided provided_service to the provider.

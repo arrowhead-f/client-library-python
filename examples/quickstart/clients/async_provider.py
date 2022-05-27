@@ -4,6 +4,7 @@ Async provider example app
 from typing import Dict
 
 from fastapi import WebSocket
+from pydantic import BaseModel
 
 from arrowhead_client.client import provided_service
 from arrowhead_client.request import Request
@@ -22,7 +23,7 @@ class TestClient(AsyncClient):
             method='GET',
             payload_format='JSON',
             access_policy='CERTIFICATE', )
-    def hello(self, request: Dict = None):
+    def hello(self, request: Request):
         self.format = 'C'
         return {'msg': self.format}
 
@@ -49,6 +50,9 @@ async def hello_arrowhead(request: Dict = None):
     return {"msg": "Hello, Arrowhead!"}
 '''
 
+class Test(BaseModel):
+    a: int
+    b: str
 
 @provider.provided_service(
         service_definition='echo',
@@ -56,8 +60,9 @@ async def hello_arrowhead(request: Dict = None):
         protocol='HTTP',
         method='PUT',
         payload_format='JSON',
-        access_policy='CERTIFICATE', )
-async def echo(request: Request):
+        access_policy='CERTIFICATE',
+        data_model=Test,)
+async def echo(request: Request[Test]):
     body = request
 
     return body
