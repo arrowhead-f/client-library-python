@@ -7,7 +7,7 @@ from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client.security.utils import der_to_pem
 from arrowhead_client import errors
-import arrowhead_client.client.core_service_forms.client as client_forms
+from arrowhead_client import forms
 from arrowhead_client import constants
 
 
@@ -42,7 +42,7 @@ def process_service_query(query_response: Response) -> List[Tuple[Service, Arrow
     if query_response.status_code == 400:
         raise errors.CoreServiceInputError(query_response.read_json()[constants.Misc.ERROR_MESSAGE])
 
-    query_response_ = client_forms.ServiceQueryResponse(**query_response.read_json())
+    query_response_ = forms.ServiceQueryResponse(**query_response.read_json())
 
     service_and_system = [
         (
@@ -70,7 +70,7 @@ def process_service_register(service_register_response: Response):
                 service_register_response.read_json()[constants.Misc.ERROR_MESSAGE],
         )
     # TODO: Should return a string representing the successfully registered service for logging?
-    return client_forms.ServiceRegistryEntry(**service_register_response.read_json())
+    return forms.ServiceRegistryEntry(**service_register_response.read_json())
 
 
 @core_service_error_handler
@@ -97,7 +97,7 @@ def process_orchestration(orchestration_response: Response, method='') -> List[O
     if orchestration_response.status_code == 400:
         raise errors.OrchestrationError(orchestration_response.read_json()[constants.Misc.ERROR_MESSAGE])
 
-    orchestration_results = client_forms.OrchestrationResponseList(
+    orchestration_results = forms.OrchestrationResponseList(
             **orchestration_response.read_json()
     ).response
 
@@ -117,7 +117,7 @@ def process_publickey(publickey_response: Response) -> str:
 
 
 def _extract_orchestration_rules(
-        orchestration_result: client_forms.OrchestrationResponse,
+        orchestration_result: forms.OrchestrationResponse,
         method,
 ) -> OrchestrationRule:
     """
@@ -142,7 +142,7 @@ def _extract_orchestration_rules(
     return OrchestrationRule(service, system, method, auth_token)
 
 
-def _extract_service(query_data: client_forms.OrchestrationResponse) -> Service:
+def _extract_service(query_data: forms.OrchestrationResponse) -> Service:
     """ Extracts provided_service data from test_core provided_service response """
     # TODO: this code guarded against different versions of OrchestrationResponse, not sure why
     '''

@@ -2,17 +2,16 @@ import traceback
 import json
 from datetime import datetime
 from typing import Dict, Union
-import arrowhead_client.client.core_service_forms.client
+
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.rules import EventSubscriptionRule
 from arrowhead_client.service import Service
-from arrowhead_client.provider.implementations.fastapi_provider import FastapiProvider
 from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.constants import OrchestrationFlags
-from arrowhead_client.client.core_service_forms import client as forms
+from arrowhead_client import forms
 
 
 class ArrowheadClientAsync(ArrowheadClient):
@@ -103,7 +102,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                 payload_format=payload_format,
         )
 
-        orchestration_form = arrowhead_client.client.core_service_forms.client.OrchestrationForm.make(
+        orchestration_form = arrowhead_client.core_service_forms.__init__.OrchestrationForm.make(
                 self.system,
                 requested_service,
                 orchestration_flags,
@@ -123,7 +122,7 @@ class ArrowheadClientAsync(ArrowheadClient):
             self.orchestration_rules.store(rule)
 
     async def _register_service(self, service: Service):
-        service_registration_form = arrowhead_client.client.core_service_forms.client.ServiceRegistrationForm.make(
+        service_registration_form = arrowhead_client.core_service_forms.__init__.ServiceRegistrationForm.make(
                 provided_service=service,
                 provider_system=self.system,
         )

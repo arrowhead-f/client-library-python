@@ -86,7 +86,8 @@ class DTOMixin(ABC, BaseModel):
             by_alias=True,
             **kwargs
     ) -> str:
-        return super().json(
+        return BaseModel.json(
+                self,
                 exclude_defaults=exclude_defaults,
                 exclude_none=exclude_none,
                 by_alias=by_alias,

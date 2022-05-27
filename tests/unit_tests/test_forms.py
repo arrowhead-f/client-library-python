@@ -1,7 +1,7 @@
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service, ServiceInterface
 from arrowhead_client.constants import OrchestrationFlags
-import arrowhead_client.client.core_service_forms.client as forms
+import arrowhead_client.forms.__init__ as forms
 
 requester_system = ArrowheadSystem.make('test_system', 'localhost', 0)
 provider_system = ArrowheadSystem.make('test_system', 'localhost', 0)

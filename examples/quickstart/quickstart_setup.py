@@ -9,7 +9,7 @@ from arrowhead_client.service import ServiceInterface
 from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.client.core_system_defaults import default_config
-from arrowhead_client.client.core_service_forms.client import ServiceRegistrationForm
+from arrowhead_client.forms import ServiceRegistrationForm
 from arrowhead_client.client.implementations import SyncClient
 
 subprocess.run(['docker-compose', 'down'])
