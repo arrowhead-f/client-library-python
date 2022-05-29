@@ -4,6 +4,7 @@ from typing import Any
 from collections.abc import Mapping, Callable
 from functools import partial
 import json
+import ssl
 
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -112,6 +113,7 @@ class StarletteProvider(BaseProvider, protocol=constants.Protocol.HTTP):
         self.app.add_middleware(
             ArrowheadAccessPolicyMiddleware, policy_map=self.policy_map
         )
+        cert_required = ssl.CERT_REQUIRED if all((keyfile, certfile, self.cafile)) else ssl.CERT_NONE
 
         uvicorn.run(
             self.app,
@@ -120,6 +122,7 @@ class StarletteProvider(BaseProvider, protocol=constants.Protocol.HTTP):
             ssl_keyfile=keyfile,
             ssl_certfile=certfile,
             ssl_ca_certs=self.cafile,
+            ssl_cert_reqs=cert_required,
         )
 
     def add_startup_routine(self, func: Callable):
