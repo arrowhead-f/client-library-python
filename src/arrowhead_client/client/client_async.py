@@ -71,8 +71,6 @@ class ArrowheadClientAsync(ArrowheadClient):
         return connector
 
     async def setup(self):
-        super().setup()
-
         for consumer in self.consumers.values():
             await consumer.async_startup()
 
@@ -102,7 +100,7 @@ class ArrowheadClientAsync(ArrowheadClient):
                 payload_format=payload_format,
         )
 
-        orchestration_form = arrowhead_client.core_service_forms.__init__.OrchestrationForm.make(
+        orchestration_form = forms.OrchestrationForm.make(
                 self.system,
                 requested_service,
                 orchestration_flags,
@@ -122,7 +120,7 @@ class ArrowheadClientAsync(ArrowheadClient):
             self.orchestration_rules.store(rule)
 
     async def _register_service(self, service: Service):
-        service_registration_form = arrowhead_client.core_service_forms.__init__.ServiceRegistrationForm.make(
+        service_registration_form = forms.ServiceRegistrationForm.make(
                 provided_service=service,
                 provider_system=self.system,
         )
@@ -215,6 +213,11 @@ class ArrowheadClientAsync(ArrowheadClient):
             await self._unsubscribe_event(rule)
 
     def run_forever(self):
+        super().setup()
+
+        self._initialize_provided_services()
+        self._initialize_event_subscription()
+
         self.provider.run_forever(
                 address=self.system.address,
                 port=self.system.port,
@@ -228,9 +231,7 @@ class ArrowheadClientAsync(ArrowheadClient):
         if self.secure:
             authorization_response = await self.consume_service(CoreServices.PUBLICKEY.service_definition)
             self.auth_authentication_info = responses.process_publickey(authorization_response)
-        self._initialize_provided_services()
         await self._register_all_services()
-        self._initialize_event_subscription()
         await self._subscribe_all_events()
 
     async def client_cleanup(self):

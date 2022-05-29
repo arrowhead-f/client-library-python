@@ -457,10 +457,10 @@ class ArrowheadClient(ABC):
                 certfile,
         )
         new_instance = cls(
-                system,
-                tuple(consumer(keyfile, certfile, cafile) for consumer in cls.__arrowhead_consumers__),
-                cls.__arrowhead_provider__(cafile),
-                logger,
+                system=system,
+                consumers=tuple(consumer(keyfile, certfile, cafile) for consumer in cls.__arrowhead_consumers__),
+                provider=cls.__arrowhead_provider__(cafile),
+                logger=logger,
                 config=config,
                 keyfile=keyfile,
                 certfile=certfile,

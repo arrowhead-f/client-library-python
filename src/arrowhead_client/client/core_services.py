@@ -83,7 +83,7 @@ def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
     """
 
     rules = [_extract_rule(core_service, config, secure)
-             for core_service in CoreServices]
+             for core_service in CoreServices if _extract_rule(core_service, config, secure) is not None]
 
     return rules
 
@@ -92,7 +92,10 @@ def _extract_rule(core_service_tuple: CoreConfig, config: Dict, secure: bool) ->
     secure_string = constants.Security.SECURE if secure else constants.Security.INSECURE
     access_policy = constants.AccessPolicy.CERTIFICATE if secure else constants.AccessPolicy.UNRESTRICTED
     interface = ServiceInterface(core_service_tuple.protocol, secure_string, core_service_tuple.payload)
-    core_system = ArrowheadSystem(**config[core_service_tuple.system])
+    try:
+        core_system = ArrowheadSystem(**config[core_service_tuple.system])
+    except KeyError:
+        return None
     return OrchestrationRule(
             Service(
                     core_service_tuple.service_definition,
