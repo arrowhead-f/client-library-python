@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import Coroutine, Any
 
 from arrowhead_client.abc import ProtocolMixin
 from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.rules import OrchestrationRule
+from arrowhead_client.types import M
 
 
 class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
@@ -29,8 +33,9 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
     def consume_service(
             self,
             rule: OrchestrationRule,
-            **kwargs
-    ) -> Response:
+            data_model: type[M] | None = None,
+            **kwargs,
+    ) -> Response[M] | Coroutine[Any, Any, Response[M]]:
         """
         Consumes service according to the orchestrationrule.
 
@@ -54,6 +59,17 @@ class BaseConsumer(ProtocolMixin, ABC, protocol='<PROTOCOL>'):
             A connection object, currently implementation specific.
         """
         raise NotImplementedError
+
+
+class AsyncBaseConsumer(BaseConsumer, ABC, protocol='<PROTOCOL>'):
+    @abstractmethod
+    async def consume_service(
+            self,
+            rule: OrchestrationRule,
+            data_model: type[M] | None = None,
+            **kwargs,
+    ) -> Response[M]:
+        ...
 
     async def async_startup(self):
         raise NotImplementedError

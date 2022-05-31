@@ -1,16 +1,21 @@
+from __future__ import annotations
+
+import ssl
 import traceback
 import json
 from datetime import datetime
-from typing import Dict, Union
+from typing import Dict, Union, Mapping
 
 from arrowhead_client import errors as errors
 from arrowhead_client.client import core_service_responses as responses
 from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
+from arrowhead_client.consumer.base import AsyncBaseConsumer
 from arrowhead_client.rules import EventSubscriptionRule
 from arrowhead_client.service import Service
 from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.constants import OrchestrationFlags
+from arrowhead_client.types import M
 from arrowhead_client import forms
 
 
@@ -18,41 +23,51 @@ class ArrowheadClientAsync(ArrowheadClient):
     """
     Base class for asynchronous Arrowhead Clients.
     """
+    consumers: Mapping[str, AsyncBaseConsumer]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.provider.add_startup_routine(self.client_setup)
         self.provider.add_shutdown_routine(self.client_cleanup)
 
-    async def consume_service(self, service_definition, **kwargs) -> Response:
+    async def consume_service(
+        self,
+        service_definition: str,
+        data_model: type[M] | None = None,
+        **kwargs,
+    ) -> Response[M]:
         for rule in self.orchestration_rules[service_definition]:
             if not rule.active:
                 continue
             try:
-                return await self.consumers[rule.protocol].consume_service(rule, **kwargs)  # type: ignore
-            except OSError:
+                ret = await self.consumers[rule.protocol].consume_service(rule, data_model, **kwargs)
+                return ret
+            except ssl.SSLCertVerificationError:
+                raise
+            except OSError as e:
                 rule.active = False
                 continue
-
-        raise errors.NoAvailableServicesError(
-                f'No services available for'
-                f' service \'{service_definition}\''
-        )
+        else:
+            raise errors.NoAvailableServicesError(
+                f"No services available for" f" service '{service_definition}'"
+            )
 
     async def publish_event(
-            self,
-            event_type: str,
-            payload: Union[str, bytes, Dict],
+        self,
+        event_type: str,
+        payload: Union[str, bytes, Dict],
     ):
         event_publish_form = forms.EventPublishForm(
-                event_type=event_type,
-                payload = str(payload) if not isinstance(payload, dict) else json.dumps(payload),
-                source = self.system,
-                time_stamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+            event_type=event_type,
+            payload=str(payload)
+            if not isinstance(payload, dict)
+            else json.dumps(payload),
+            source=self.system,
+            time_stamp=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         )
         event_publish_response = await self.consume_service(
-                CoreServices.EVENT_PUBLISH.service_definition,
-                json=event_publish_form.dto(),
+            CoreServices.EVENT_PUBLISH.service_definition,
+            json=event_publish_form.dto(),
         )
 
         return event_publish_response
@@ -62,8 +77,7 @@ class ArrowheadClientAsync(ArrowheadClient):
         if rule is None:
             # TODO: Not sure if this should raise an error or just log?
             raise errors.NoAvailableServicesError(
-                    f'No services available for'
-                    f' service \'{service_definition}\''
+                f"No services available for" f" service '{service_definition}'"
             )
 
         connector = await self.consumers[rule.protocol].connect(rule, **kwargs)
@@ -75,14 +89,15 @@ class ArrowheadClientAsync(ArrowheadClient):
             await consumer.async_startup()
 
     async def add_orchestration_rule(  # type: ignore
-            self,
-            service_definition: str,
-            method: str,
-            protocol: str = '',
-            access_policy: str = '',
-            payload_format: str = '',
-            orchestration_flags: OrchestrationFlags = OrchestrationFlags.OVERRIDE_STORE,
-            **kwargs,
+        self,
+        service_definition: str,
+        method: str,
+        protocol: str = "",
+        access_policy: str = "",
+        payload_format: str = "",
+        orchestration_flags: OrchestrationFlags = OrchestrationFlags.OVERRIDE_STORE,
+        data_model: type[M] | None = None,
+        **kwargs,
     ):
         """
         Add orchestration rule for provided_service definition
@@ -94,24 +109,21 @@ class ArrowheadClientAsync(ArrowheadClient):
         """
 
         requested_service = Service.make(
-                service_definition,
-                protocol=protocol,
-                access_policy=access_policy,
-                payload_format=payload_format,
+            service_definition,
+            protocol=protocol,
+            access_policy=access_policy,
+            payload_format=payload_format,
         )
 
         orchestration_form = forms.OrchestrationForm.make(
-                self.system,
-                requested_service,
-                orchestration_flags,
-                **kwargs
+            self.system, requested_service, orchestration_flags, **kwargs
         )
 
         # TODO: Add an argument for arrowhead forms in consume_service, and one for the ssl-files
-        orchestration_response = await self.consume_service(
-                CoreServices.ORCHESTRATION.service_definition,
-                json=orchestration_form.dto(),
-                # cert=self.cert,
+        orchestration_response: Response[forms.OrchestrationResponseList] = await self.consume_service(
+            CoreServices.ORCHESTRATION.service_definition,
+            json=orchestration_form.dto(),
+            # cert=self.cert,
         )
 
         rules = responses.process_orchestration(orchestration_response, method)
@@ -121,13 +133,13 @@ class ArrowheadClientAsync(ArrowheadClient):
 
     async def _register_service(self, service: Service):
         service_registration_form = forms.ServiceRegistrationForm.make(
-                provided_service=service,
-                provider_system=self.system,
+            provided_service=service,
+            provider_system=self.system,
         )
 
-        service_registration_response = await self.consume_service(
-                CoreServices.SERVICE_REGISTER.service_definition,
-                json=service_registration_form.dto(),
+        service_registration_response: Response[forms.ServiceRegistryEntry] = await self.consume_service(
+            CoreServices.SERVICE_REGISTER.service_definition,
+            json=service_registration_form.dto(),
         )
 
         responses.process_service_register(service_registration_response)
@@ -138,9 +150,9 @@ class ArrowheadClientAsync(ArrowheadClient):
                 continue
             try:
                 await self._register_service(rule.provided_service)
-                print(f'registered service {rule.service_definition}')
+                print(f"registered service {rule.service_definition}")
             except errors.CoreServiceInputError as e:
-                if str(e).endswith('already exists.'):
+                if str(e).endswith("already exists."):
                     rule.is_provided = True
                 else:
                     print(f"ERROR: {__name__} failed to register provider: {e}")
@@ -151,15 +163,15 @@ class ArrowheadClientAsync(ArrowheadClient):
 
     async def _unregister_service(self, service: Service):
         unregistration_payload = {
-            'service_definition': service.service_definition,
-            'system_name': self.system.system_name,
-            'address': self.system.address,
-            'port': self.system.port,
+            "service_definition": service.service_definition,
+            "system_name": self.system.system_name,
+            "address": self.system.address,
+            "port": self.system.port,
         }
 
         service_unregistration_response = await self.consume_service(
-                CoreServices.SERVICE_UNREGISTER.service_definition,
-                params=unregistration_payload,
+            CoreServices.SERVICE_UNREGISTER.service_definition,
+            params=unregistration_payload,
         )
 
         responses.process_service_unregister(service_unregistration_response)
@@ -177,14 +189,14 @@ class ArrowheadClientAsync(ArrowheadClient):
 
     async def _subscribe_event(self, event_rule: EventSubscriptionRule):
         event_subscription_form = forms.EventSubscribeForm(
-                event_type=event_rule.event_type,
-                notify_uri=event_rule.notify_uri,
-                subscriber_system=event_rule.subscriber_system,
+            event_type=event_rule.event_type,
+            notify_uri=event_rule.notify_uri,
+            subscriber_system=event_rule.subscriber_system,
         )
 
         event_subscription_response = await self.consume_service(
-                CoreServices.EVENT_SUBSCRIBE.service_definition,
-                json=event_subscription_form.dto(),
+            CoreServices.EVENT_SUBSCRIBE.service_definition,
+            json=event_subscription_form.dto(),
         )
 
         # TODO: Process subscription response
@@ -202,8 +214,8 @@ class ArrowheadClientAsync(ArrowheadClient):
         }
 
         event_unsubscription_response = await self.consume_service(
-                CoreServices.EVENT_UNSUBSCRIBE.service_definition,
-                params=unsubscription_payload,
+            CoreServices.EVENT_UNSUBSCRIBE.service_definition,
+            params=unsubscription_payload,
         )
 
         # TODO: Process unsubscription response
@@ -219,31 +231,36 @@ class ArrowheadClientAsync(ArrowheadClient):
         self._initialize_event_subscription()
 
         self.provider.run_forever(
-                address=self.system.address,
-                port=self.system.port,
-                # TODO: keyfile and certfile should be given in provider.__init__
-                keyfile=self.keyfile,
-                certfile=self.certfile,
+            address=self.system.address,
+            port=self.system.port,
+            # TODO: keyfile and certfile should be given in provider.__init__
+            keyfile=self.keyfile,
+            certfile=self.certfile,
         )
 
     async def client_setup(self):
         await self.setup()
         if self.secure:
-            authorization_response = await self.consume_service(CoreServices.PUBLICKEY.service_definition)
-            self.auth_authentication_info = responses.process_publickey(authorization_response)
+            authorization_response = await self.consume_service(
+                CoreServices.PUBLICKEY.service_definition
+            )
+            self.auth_authentication_info = responses.process_publickey(
+                authorization_response
+            )
         await self._register_all_services()
         await self._subscribe_all_events()
 
     async def client_cleanup(self):
-        print('Shutting down Arrowhead Client')
+        print("Shutting down Arrowhead Client")
         await self._unregister_all_services()
         await self._unsubscribe_all_events()
         for consumer in self.consumers.values():
             await consumer.async_shutdown()
-        self._logger.info('Server shut down')
+        self._logger.info("Server shut down")
 
     async def __aenter__(self):
-        await self.setup()
+        ArrowheadClient.setup(self)
+        await self.client_setup()
 
         return self
 

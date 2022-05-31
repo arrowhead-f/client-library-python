@@ -76,8 +76,8 @@ class ServiceRegistryEntry(DTOMixin):
     provider: ServiceProviderResponse
     service_uri: str = ''
     end_of_validity: str = ''
-    metadata: Metadata = None
-    version: Version = None
+    metadata: Optional[Metadata] = None
+    version: Optional[Version] = None
     interfaces: Sequence[ServiceInterfaceResponse]
     created_at: str = ''
     updated_at: str = ''

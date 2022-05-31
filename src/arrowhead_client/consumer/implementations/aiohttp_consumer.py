@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ssl
 
 import aiohttp
@@ -7,6 +9,8 @@ from arrowhead_client.response import Response, ConnectionResponse
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client import constants
 from arrowhead_client.constants import Protocol
+from arrowhead_client.types import M
+from arrowhead_client.errors import ServiceConnectionError
 
 
 class AiohttpConsumer(BaseConsumer, protocol={Protocol.HTTP, Protocol.WS}):
@@ -14,11 +18,13 @@ class AiohttpConsumer(BaseConsumer, protocol={Protocol.HTTP, Protocol.WS}):
     Asynchronous consumer based on AioHttp.
     """
 
+    http_session: aiohttp.ClientSession
+
     def __init__(
-            self,
-            keyfile: str,
-            certfile: str,
-            cafile: str,
+        self,
+        keyfile: str,
+        certfile: str,
+        cafile: str,
     ):
         super().__init__(keyfile, certfile, cafile)
         if keyfile and certfile and cafile:
@@ -26,8 +32,6 @@ class AiohttpConsumer(BaseConsumer, protocol={Protocol.HTTP, Protocol.WS}):
             self.ssl_context.load_cert_chain(certfile, keyfile)
         else:
             self.ssl_context = ssl.create_default_context()
-
-        self.http_session: aiohttp.ClientSession
 
     async def async_startup(self):
         # Initialize http_session if it isn't initialized
@@ -40,42 +44,51 @@ class AiohttpConsumer(BaseConsumer, protocol={Protocol.HTTP, Protocol.WS}):
         await self.http_session.close()
 
     async def consume_service(  # type: ignore
-            self,
-            rule: OrchestrationRule,
-            **kwargs,
-    ) -> Response:
-        headers = kwargs.get('headers', {})
+        self,
+        rule: OrchestrationRule,
+        data_model: type[M] | None = None,
+        **kwargs,
+    ) -> Response[M]:
+        headers = kwargs.get("headers", {})
         if rule.secure:
-            auth_header = {'Authorization': f'Bearer {rule.authorization_token}'}
+            auth_header = {"Authorization": f"Bearer {rule.authorization_token}"}
             headers = {**headers, **auth_header}
 
-        async with self.http_session.request(
+        try:
+            async with self.http_session.request(
                 rule.method,
-                f'{http(rule.secure)}{rule.endpoint}',
+                f"{http(rule.secure)}{rule.endpoint}",
                 headers=headers,
                 ssl=self.ssl_context,
                 **kwargs,
-        ) as resp:
-            status_code = resp.status
-            raw_response = await resp.read()
+            ) as resp:
+                status_code = resp.status
+                raw_response = await resp.read()
+        except Exception as e:
+            raise ServiceConnectionError(rule.service_definition, rule.system_name, rule.endpoint) from e
 
-        return Response(raw_response, rule.payload_type, status_code)
+        return Response(
+            raw_response,
+            rule.payload_type,
+            status_code,
+            data_model=data_model or rule.data_model,
+        )
 
     async def connect(
-            self,
-            rule: OrchestrationRule,
-            **kwargs,
+        self,
+        rule: OrchestrationRule,
+        **kwargs,
     ) -> "WebSocketResponse":
-        headers = kwargs.get('headers', {})
+        headers = kwargs.get("headers", {})
         if rule.secure:
-            auth_header = {'Authorization': f'Bearer {rule.authorization_token}'}
+            auth_header = {"Authorization": f"Bearer {rule.authorization_token}"}
             headers = {**headers, **auth_header}
 
         connection = await self.http_session.ws_connect(
-                f'{ws(rule.secure)}{rule.endpoint}',
-                ssl=self.ssl_context,
-                headers=headers,
-                **kwargs,
+            f"{ws(rule.secure)}{rule.endpoint}",
+            ssl=self.ssl_context,
+            headers=headers,
+            **kwargs,
         )
 
         return WebSocketResponse(connection, rule.payload_type)
@@ -83,9 +96,9 @@ class AiohttpConsumer(BaseConsumer, protocol={Protocol.HTTP, Protocol.WS}):
 
 class WebSocketResponse(ConnectionResponse):
     def __init__(
-            self,
-            connector: aiohttp.ClientWebSocketResponse,
-            payload_type,
+        self,
+        connector: aiohttp.ClientWebSocketResponse,
+        payload_type,
     ):
         super().__init__(connector)
         self.payload_type = payload_type
@@ -110,7 +123,7 @@ class WebSocketResponse(ConnectionResponse):
             else:
                 res = await self._connector.receive_bytes()
         except TypeError as e:
-            if str(e) == 'Received message 8:1000 is not str':
+            if str(e) == "Received message 8:1000 is not str":
                 return
             raise e
         else:
@@ -125,11 +138,11 @@ class WebSocketResponse(ConnectionResponse):
 
 def http(secure: str) -> str:
     if secure == constants.Security.INSECURE:
-        return 'http://'
-    return 'https://'
+        return "http://"
+    return "https://"
 
 
 def ws(secure: str) -> str:
     if secure == constants.Security.INSECURE:
-        return 'ws://'
-    return 'wss://'
+        return "ws://"
+    return "wss://"

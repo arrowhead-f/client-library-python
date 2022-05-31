@@ -23,6 +23,7 @@ config = {
     },
 }
 
+
 class StateSetter(BaseModel):
     state_update: int
 
@@ -41,8 +42,8 @@ class ProviderClient(AsyncClient):
             access_policy="CERTIFICATE",
     )
     async def counter(self, req: Request):
-        ret, self.state = self.state, self.state + 1
-        return {"counter": ret}
+        self.state = self.state + 1
+        return {"counter": self.state}
 
     @provided_service(
             service_definition="set-state",
@@ -51,10 +52,10 @@ class ProviderClient(AsyncClient):
             method="PUT",
             payload_format="JSON",
             access_policy="CERTIFICATE",
-            data_model=StateSetter,
     )
-    async def set_state(self, req: Request):
-        return {}
+    async def set_state(self, req: Request[StateSetter]):
+        self.state = req.data.state_update
+        return None
 
 if __name__ == "__main__":
     provider = ProviderClient.create(

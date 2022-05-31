@@ -15,7 +15,7 @@ from arrowhead_client.system import ArrowheadSystem
 from arrowhead_client.service import Service
 from arrowhead_client.security.access_policy import AccessPolicy
 from arrowhead_client import errors
-from arrowhead_client.types import Version, Metadata
+from arrowhead_client.types import Version, Metadata, M
 from arrowhead_client.request import Request
 
 
@@ -30,6 +30,7 @@ class OrchestrationRule:
             provider_system: ArrowheadSystem,
             method: str = '',
             authorization_token: str = '',
+            data_model: type[M] | None = None
     ):
         """
         Args:
@@ -42,6 +43,7 @@ class OrchestrationRule:
         self._provider_system = provider_system
         self._method = method
         self._authorization_token = authorization_token
+        self.data_model = data_model
         self.active = True
 
     @property
@@ -121,7 +123,7 @@ class RegistrationRule:
             method: str,
             func: Callable[[Request], Any],
             access_policy: AccessPolicy = None,
-            data_model: Optional[BaseModel] = None,
+            data_model: Optional[type[BaseModel]] = None,
     ):
         """
             provided_service: Service provided by the ``provider_system``.

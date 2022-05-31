@@ -82,4 +82,4 @@ def make_arrowhead_request(request, payload_type) -> Request:
     if request.method == 'GET':
         return Request(b'{}', payload_type)
 
-    return Request(request.data, payload_type)
+    return Request(request.body, payload_type)

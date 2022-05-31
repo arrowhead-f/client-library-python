@@ -1,7 +1,9 @@
 from abc import ABC
+from typing import ClassVar
 
 
 class ProtocolMixin(ABC):
+    _protocol: ClassVar[str]
     def __init_subclass__(cls, protocol='', **kwargs):
         if protocol == '':
             raise ValueError('No protocol specified.')

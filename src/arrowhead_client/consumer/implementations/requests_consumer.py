@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import requests
 
 from arrowhead_client.consumer.base import BaseConsumer
 from arrowhead_client.response import Response
 from arrowhead_client.rules import OrchestrationRule
 from arrowhead_client import constants
+from arrowhead_client.types import M
 
 
 class RequestsConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
@@ -26,6 +29,7 @@ class RequestsConsumer(BaseConsumer, protocol=constants.Protocol.HTTP):
     def consume_service(
             self,
             rule: OrchestrationRule,
+            data_model: type[M] | None = None,
             **kwargs,
     ) -> Response:
         """ Consume registered provided_service """

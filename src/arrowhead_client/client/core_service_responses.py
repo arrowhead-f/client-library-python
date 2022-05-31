@@ -41,7 +41,7 @@ def core_service_error_handler(func) -> Callable:
 
 @core_service_error_handler
 def process_service_query(
-    query_response: Response,
+    query_response: Response[forms.ServiceQueryResponse],
 ) -> List[Tuple[Service, ArrowheadSystem]]:
     """Handles provided_service query responses and returns a lists of services and systems"""
     # TODO: Status 400 is general for all core systems and should be put in the handler.
@@ -73,7 +73,7 @@ def process_service_query(
 
 
 @core_service_error_handler
-def process_service_register(service_register_response: Response):
+def process_service_register(service_register_response: Response[forms.ServiceRegistryEntry]):
     """Handles service registration responses"""
     if service_register_response.status_code == 400:
         raise errors.CoreServiceInputError(
@@ -95,7 +95,7 @@ def process_service_unregister(service_unregister_response: Response) -> None:
 
 @core_service_error_handler
 def process_orchestration(
-    orchestration_response: Response, method=""
+    orchestration_response: Response[forms.OrchestrationResponseList], method="",
 ) -> List[OrchestrationRule]:
     """
     Turns orchestration response into list of services.
@@ -125,7 +125,7 @@ def process_orchestration(
 
 @core_service_error_handler
 def process_publickey(publickey_response: Response) -> str:
-    encoded_key = publickey_response.payload.decode()
+    encoded_key = publickey_response.body.decode()
 
     return der_to_pem(encoded_key)
 
@@ -157,7 +157,7 @@ def _extract_orchestration_rules(
 
 
 def _extract_service(query_data: forms.OrchestrationResponse) -> Service:
-    """Extracts provided_service data from test_core provided_service response"""
+    """Extracts provided_service body from test_core provided_service response"""
     # TODO: this code guarded against different versions of OrchestrationResponse, not sure why
     """
     if 'serviceDefinition' in query_data.dict():

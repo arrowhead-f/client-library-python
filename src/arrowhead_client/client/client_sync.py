@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from typing import Union, Dict
@@ -10,6 +12,7 @@ from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.rules import EventSubscriptionRule
 from arrowhead_client.service import Service, ServiceInterface
+from arrowhead_client.types import M
 
 class ArrowheadClientSync(ArrowheadClient):
     """
@@ -22,6 +25,7 @@ class ArrowheadClientSync(ArrowheadClient):
     def consume_service(
             self,
             service_definition: str,
+            data_model: type[M] | None = None,
             **kwargs
     ):
         """
@@ -77,6 +81,7 @@ class ArrowheadClientSync(ArrowheadClient):
             payload_format: str = '',
             # TODO: Should **kwargs just be orchestration_flags and preferred_providers?
             orchestration_flags: OrchestrationFlags = OrchestrationFlags.OVERRIDE_STORE,
+            data_model: type[M] | None = None,
             **kwargs,
     ) -> None:
         """

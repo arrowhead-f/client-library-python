@@ -20,6 +20,13 @@ class Request(Generic[M]):
 
     # _request_object: Any
 
+    @property
+    def data(self) -> M:
+        if self.data_model is None:
+            raise RuntimeError("Request.data is only available if Request.data_model is not None")
+
+        return self.data_model(**json.loads(self.body))
+
     def read_json(self, **kwargs):
         if self.payload_type != constants.Payload.JSON:
             raise RuntimeError(f'Body type must be \'{constants.Payload.JSON}\' '
