@@ -8,8 +8,8 @@ import re
 from abc import ABC
 from datetime import datetime, timedelta
 
-from pydantic import BaseModel
-from pydantic.json import timedelta_isoformat, isoformat
+from pydantic.v1 import BaseModel
+from pydantic.v1.json import timedelta_isoformat, isoformat
 
 from arrowhead_client.service import ServiceInterface
 
