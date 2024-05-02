@@ -70,8 +70,8 @@ def get_core_rules(config: Dict, secure: bool) -> List[OrchestrationRule]:
     return rules
 
 
-def _extract_rule(core_service_tuple, config, secure) -> OrchestrationRule:
-    secure = constants.Security.SECURE if secure else constants.Security.INSECURE
+def _extract_rule(core_service_tuple, config, secureflag) -> OrchestrationRule:
+    secure = constants.Security.SECURE if secureflag else constants.Security.INSECURE
     access_policy = constants.AccessPolicy.CERTIFICATE if secure else constants.AccessPolicy.UNRESTRICTED
     interface = ServiceInterface(core_service_tuple.protocol, secure, core_service_tuple.payload)
     core_system = ArrowheadSystem(**config[core_service_tuple.system])
