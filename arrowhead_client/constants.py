@@ -49,6 +49,7 @@ class CoreSystem(str, Enum):
     AUTHORIZATION = 'authorization'
     EVENT_HANDLER = 'event_handler'
 
+
 class OrchestrationFlags(Flag):
     MATCHMAKING = auto()
     METADATA_SEARCH = auto()
