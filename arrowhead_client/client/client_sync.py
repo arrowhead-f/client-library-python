@@ -9,6 +9,7 @@ from arrowhead_client.client.client_core import ArrowheadClient
 from arrowhead_client.client.core_services import CoreServices
 from arrowhead_client.service import Service, ServiceInterface
 
+
 class ArrowheadClientSync(ArrowheadClient):
     """
     Base class for asynchronous Arrowhead Clients.
